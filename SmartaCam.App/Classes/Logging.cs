@@ -1,5 +1,5 @@
-﻿using Serilog;
-using SeriLogThemesLibrary;
+﻿//using Serilog;
+//using SeriLogThemesLibrary;
 using System.Diagnostics;
 
 
@@ -10,21 +10,21 @@ namespace SmartaCam
         public static void Development()
         {
 
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.Console(theme: SeriLogCustomThemes.Theme1())
-                .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", $"{DateTime.Now.Year}-{DateTime.Now.Month}-{DateTime.Now.Day}", "Log.txt"),
-                    rollingInterval: RollingInterval.Infinite,
-                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level}] {Message}{NewLine}{Exception}")
-                .CreateLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //    .MinimumLevel.Verbose()
+            //    .WriteTo.Console(theme: SeriLogCustomThemes.Theme1())
+            //    .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", $"{DateTime.Now.Year}-{DateTime.Now.Month}-{DateTime.Now.Day}", "Log.txt"),
+            //        rollingInterval: RollingInterval.Infinite,
+            //        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level}] {Message}{NewLine}{Exception}")
+            //    .CreateLogger();
         }
 
         public static void Production()
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LogFiles", "Log.txt"),
-                    rollingInterval: RollingInterval.Day)
-                .CreateBootstrapLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //    .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LogFiles", "Log.txt"),
+            //        rollingInterval: RollingInterval.Day)
+            //    .CreateBootstrapLogger();
         }
         public class DbContextToFileLogger
         {

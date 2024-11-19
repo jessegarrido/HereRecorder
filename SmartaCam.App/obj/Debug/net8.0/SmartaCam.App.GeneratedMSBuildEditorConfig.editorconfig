@@ -13,51 +13,51 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = browser
 build_property.RootNamespace = SmartaCam.App
 build_property.RootNamespace = SmartaCam.App
-build_property.ProjectDir = C:\Users\Jesse\Documents\CodeYou\SmartaCam\SmartaCam\SmartaCam.App\
+build_property.ProjectDir = C:\Users\Jesse\Documents\CodeYou\SmartRecorder\SmartaCam.App\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = false
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\Jesse\Documents\CodeYou\SmartaCam\SmartaCam\SmartaCam.App
+build_property.MSBuildProjectDirectory = C:\Users\Jesse\Documents\CodeYou\SmartRecorder\SmartaCam.App
 build_property._RazorSourceGeneratorDebug = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/App.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/App.razor]
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Layout/LoginDisplay.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Layout/LoginDisplay.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XExvZ2luRGlzcGxheS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Layout/RedirectToLogin.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Layout/RedirectToLogin.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XFJlZGlyZWN0VG9Mb2dpbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Authentication.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Pages/Authentication.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aGVudGljYXRpb24ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Counter.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Home.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Weather.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Pages/Weather.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcV2VhdGhlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/_Imports.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Layout/MainLayout.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Layout/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE1haW5MYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-ngjvxt1tjy
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Layout/NavMenu.razor]
+[C:/Users/Jesse/Documents/CodeYou/SmartRecorder/SmartaCam.App/Layout/NavMenu.razor]
 build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE5hdk1lbnUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-3huyqadc0j

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace SmartaCam.App.Services
+namespace SmartaCam
 {
     public class Mp3TagSetService : IMP3TagSetService
     {

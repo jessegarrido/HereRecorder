@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SmartaCam.App.Services;
+using SmartaCam;
 
 namespace SmartaCam.App
 {

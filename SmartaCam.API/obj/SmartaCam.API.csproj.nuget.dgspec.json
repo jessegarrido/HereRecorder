@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Jesse\\Documents\\SmartaCam\\SmartaCam.API\\SmartaCam.API\\SmartaCam.API.csproj": {}
+    "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.API\\SmartaCam.API.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Jesse\\Documents\\SmartaCam\\SmartaCam.API\\SmartaCam.API\\SmartaCam.API.csproj": {
+    "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.API\\SmartaCam.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Jesse\\Documents\\SmartaCam\\SmartaCam.API\\SmartaCam.API\\SmartaCam.API.csproj",
+        "projectUniqueName": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.API\\SmartaCam.API.csproj",
         "projectName": "SmartaCam.API",
-        "projectPath": "C:\\Users\\Jesse\\Documents\\SmartaCam\\SmartaCam.API\\SmartaCam.API\\SmartaCam.API.csproj",
+        "projectPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.API\\SmartaCam.API.csproj",
         "packagesPath": "C:\\Users\\Jesse\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Jesse\\Documents\\SmartaCam\\SmartaCam.API\\SmartaCam.API\\obj\\",
+        "outputPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

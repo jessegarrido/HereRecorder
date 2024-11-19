@@ -20,8 +20,6 @@
     <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly\8.0.11\build\net8.0\Microsoft.AspNetCore.Components.WebAssembly.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly\8.0.11\build\net8.0\Microsoft.AspNetCore.Components.WebAssembly.props')" />
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <PkgMicrosoft_CodeAnalysis_Analyzers Condition=" '$(PkgMicrosoft_CodeAnalysis_Analyzers)' == '' ">C:\Users\Jesse\.nuget\packages\microsoft.codeanalysis.analyzers\1.1.0</PkgMicrosoft_CodeAnalysis_Analyzers>
-    <PkgMicrosoft_AspNetCore_Razor_Design Condition=" '$(PkgMicrosoft_AspNetCore_Razor_Design)' == '' ">C:\Users\Jesse\.nuget\packages\microsoft.aspnetcore.razor.design\2.2.0</PkgMicrosoft_AspNetCore_Razor_Design>
     <PkgMicrosoft_NET_Sdk_WebAssembly_Pack Condition=" '$(PkgMicrosoft_NET_Sdk_WebAssembly_Pack)' == '' ">C:\Users\Jesse\.nuget\packages\microsoft.net.sdk.webassembly.pack\8.0.11</PkgMicrosoft_NET_Sdk_WebAssembly_Pack>
     <PkgMicrosoft_NET_ILLink_Tasks Condition=" '$(PkgMicrosoft_NET_ILLink_Tasks)' == '' ">C:\Users\Jesse\.nuget\packages\microsoft.net.illink.tasks\8.0.10</PkgMicrosoft_NET_ILLink_Tasks>
     <PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer Condition=" '$(PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer)' == '' ">C:\Users\Jesse\.nuget\packages\microsoft.aspnetcore.components.webassembly.devserver\8.0.11</PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer>

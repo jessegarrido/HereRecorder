@@ -1,16 +1,11 @@
 ﻿using Dropbox.Api;
-using Dropbox.Api;
-using Dropbox.Api.Common;
 using Dropbox.Api.Files;
-using Dropbox.Api.Files;
-using Dropbox.Api.Team;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 using NAudio.Lame;
 using NAudio.Wave;
 using PortAudioSharp;
 using SimpleWifi;
-using System.Configuration;
 using System.Data;
 //using Wifi.Linux;
 using System.Device.Gpio;
