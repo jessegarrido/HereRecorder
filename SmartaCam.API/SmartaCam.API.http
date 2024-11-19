@@ -1,0 +1,6 @@
+@SmartaCam.API_HostAddress = http://localhost:5029
+
+GET {{SmartaCam.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

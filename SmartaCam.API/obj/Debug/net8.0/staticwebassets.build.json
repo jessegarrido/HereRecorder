@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "aMCQZiNUDVlED5jEOHLnNufCn01kwD8M3wFEtErlK6Y=",
+  "Source": "SmartaCam.API",
+  "BasePath": "_content/SmartaCam.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
