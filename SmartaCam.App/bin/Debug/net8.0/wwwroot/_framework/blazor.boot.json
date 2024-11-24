@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "SmartaCam.App",
   "resources": {
-    "hash": "sha256-IHJvetEhW7p7qNPhvT0/H4C1U4Vwah6jOFuBeuw9nz0=",
+    "hash": "sha256-ysrVTrVb0TIq7bbjZYEMSH7JvC4ftqk7meyOt+qDm54=",
     "jsModuleNative": {
       "dotnet.native.8.0.11.90g7yml2oe.js": "sha256-VdKq87/z5NIxZKmuM+fv38XF+RcEb/bg3jVBwQSfwP4="
     },
@@ -51,7 +51,6 @@
       "Microsoft.JSInterop.wasm": "sha256-5cqIyKsdUZ1dHGvNaW58/lWROJnvOdig8Ja6mv1p3Qg=",
       "Microsoft.JSInterop.WebAssembly.wasm": "sha256-+wpzFJcg/CuYhygrH1ovEDlvYbxiG8U68YLvihiZM34=",
       "Microsoft.Net.Http.Headers.wasm": "sha256-b59APrldqivzbOYVb0CV+lGgWn4HyUPjMa/cplEp2x8=",
-      "NativeLibraryManager.wasm": "sha256-knQG1gB/FpQFT3t+gHfk2D52drkzhyXRaUcj+Na9ZWs=",
       "NAudio.wasm": "sha256-3j15rJBDgE4SS0QPTvZ+/4ZIT7lnCS92t4An/4+a/cI=",
       "NAudio.Asio.wasm": "sha256-cLq4+4itLXgdGHwbpxRkkFknjpAepyex7r+WFhrZvy0=",
       "NAudio.Core.wasm": "sha256-A4MDi1qeGex9OG+wMiBRRbv7kZPfpICDb+ZBy6FcRzQ=",
@@ -60,10 +59,8 @@
       "NAudio.Wasapi.wasm": "sha256-fYshxlURqo93wR4P9TUIonA8YLfXyKEvfqJ+5t61LEE=",
       "NAudio.WinMM.wasm": "sha256-nHWlTd7j/qT4iMkM6W//Hv0qwpA+3XVEK7N5coduAwY=",
       "Newtonsoft.Json.wasm": "sha256-erKuIr8Gjq+X/Ji4X+pGauW71/eyGT7GHVu8k+7ie8I=",
-      "PortAudioSharp.wasm": "sha256-tq6u/J3LevOgHBU6V0rxef19KJEwON/B7vSZzaRczoI=",
       "SimpleWifi.wasm": "sha256-lloHcGExSm6CiwXl3l+bi5JVQ2K75bSgLpZM3rIV7e8=",
       "System.Configuration.ConfigurationManager.wasm": "sha256-ARMuVFNhFtYjH7sD3sJXevYdS79XuaiQD46lwAwMB48=",
-      "System.Device.Gpio.wasm": "sha256-pN8jm162U1m1mewg2jrGLlLD8IqjvIe5v8S7vo4MEu8=",
       "System.Diagnostics.DiagnosticSource.wasm": "sha256-i5WI/tU+K9RiaDWyaCM1zb0kAxnOfYBfzNHMGkETKnQ=",
       "System.Diagnostics.EventLog.wasm": "sha256-oO0sTv3bR7e5ANssty/EtQg7+wBDXTgZygPAUwV53AQ=",
       "System.IO.Pipelines.wasm": "sha256-JqVBy6SV+3qk+IK3VJiyIDt9CsVk6b1/ytTXmrI4mTM=",
@@ -235,10 +232,10 @@
       "mscorlib.wasm": "sha256-04e4k5XU8HWGB/dq/2+j84xzzGPflTs0IYWI0OxogVc=",
       "netstandard.wasm": "sha256-gnGZURPnoSmjXuYNCOJi5tt8qn2LRImWgue1Ru3/TDQ=",
       "System.Private.CoreLib.wasm": "sha256-6w3jYr0arcp8jnt4aeqh+AmqrLA6q7jl9rQYAwLzE0M=",
-      "SmartaCam.App.wasm": "sha256-dz3U6RvKDjhCtkXWlHMBGLByLe0ZA2UvsiQLxMJ0LJg="
+      "SmartaCam.App.wasm": "sha256-WUmn+dEXGmwaU/8SRsgDJbH2GK4VEHggIWFjhQcolKY="
     },
     "pdb": {
-      "SmartaCam.App.pdb": "sha256-iOnXPpDg/1TWrPd5mCq/0pTHYN8AsB7vWS+o049SYE4="
+      "SmartaCam.App.pdb": "sha256-KEH5tmiPnM9VusV6eePhnr4m9Y2YIRF90tOl7EYDiRM="
     }
   },
   "cacheBootResources": true,

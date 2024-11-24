@@ -700,22 +700,6 @@
           }
         }
       },
-      "NativeLibraryManager/1.0.23": {
-        "type": "package",
-        "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "3.1.4"
-        },
-        "compile": {
-          "lib/netstandard2.0/NativeLibraryManager.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/NativeLibraryManager.dll": {
-            "related": ".xml"
-          }
-        }
-      },
       "NAudio/2.2.1": {
         "type": "package",
         "dependencies": {
@@ -847,18 +831,6 @@
           }
         }
       },
-      "PortAudioSharp/0.3.0": {
-        "type": "package",
-        "dependencies": {
-          "NativeLibraryManager": "1.0.23"
-        },
-        "compile": {
-          "lib/netstandard2.0/PortAudioSharp.dll": {}
-        },
-        "runtime": {
-          "lib/netstandard2.0/PortAudioSharp.dll": {}
-        }
-      },
       "SimpleWifi.netstandard/2.0.0": {
         "type": "package",
         "compile": {
@@ -899,22 +871,6 @@
         },
         "build": {
           "buildTransitive/net8.0/_._": {}
-        }
-      },
-      "System.Device.Gpio/3.2.0": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/System.Device.Gpio.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/System.Device.Gpio.dll": {
-            "related": ".xml"
-          }
-        },
-        "build": {
-          "buildTransitive/net5.0/System.Device.Gpio.targets": {}
         }
       },
       "System.Diagnostics.DiagnosticSource/9.0.0": {
@@ -1776,22 +1732,6 @@
           }
         }
       },
-      "NativeLibraryManager/1.0.23": {
-        "type": "package",
-        "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "3.1.4"
-        },
-        "compile": {
-          "lib/netstandard2.0/NativeLibraryManager.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/NativeLibraryManager.dll": {
-            "related": ".xml"
-          }
-        }
-      },
       "NAudio/2.2.1": {
         "type": "package",
         "dependencies": {
@@ -1923,18 +1863,6 @@
           }
         }
       },
-      "PortAudioSharp/0.3.0": {
-        "type": "package",
-        "dependencies": {
-          "NativeLibraryManager": "1.0.23"
-        },
-        "compile": {
-          "lib/netstandard2.0/PortAudioSharp.dll": {}
-        },
-        "runtime": {
-          "lib/netstandard2.0/PortAudioSharp.dll": {}
-        }
-      },
       "SimpleWifi.netstandard/2.0.0": {
         "type": "package",
         "compile": {
@@ -1975,22 +1903,6 @@
         },
         "build": {
           "buildTransitive/net8.0/_._": {}
-        }
-      },
-      "System.Device.Gpio/3.2.0": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/System.Device.Gpio.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/System.Device.Gpio.dll": {
-            "related": ".xml"
-          }
-        },
-        "build": {
-          "buildTransitive/net5.0/System.Device.Gpio.targets": {}
         }
       },
       "System.Diagnostics.DiagnosticSource/9.0.0": {
@@ -3325,19 +3237,6 @@
         "version.txt"
       ]
     },
-    "NativeLibraryManager/1.0.23": {
-      "sha512": "QINOsTAY2nN+PW8Lomg0VKEQjN72dqqZ1fTfGyIi1skbSzLMQJOrzH5bBq3b2NCeOhKUjYkXS7ByBtvulmMmTQ==",
-      "type": "package",
-      "path": "nativelibrarymanager/1.0.23",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "lib/netstandard2.0/NativeLibraryManager.dll",
-        "lib/netstandard2.0/NativeLibraryManager.xml",
-        "nativelibrarymanager.1.0.23.nupkg.sha512",
-        "nativelibrarymanager.nuspec"
-      ]
-    },
     "NAudio/2.2.1": {
       "sha512": "c0DzwiyyklM0TP39Y7RObwO3QkWecgM6H60ikiEnsV/aEAJPbj5MFCLaD8BSfKuZe0HGuh9GRGWWlJmSxDc9MA==",
       "type": "package",
@@ -3479,18 +3378,6 @@
         "packageIcon.png"
       ]
     },
-    "PortAudioSharp/0.3.0": {
-      "sha512": "9hEuEu8CKX0dcmzj26NU+wba5CkSnMpG1qX6/iarlf9gQVC+3ffE41LDLsne3H/Ki17XGNOry4D1ly/FCg2KPw==",
-      "type": "package",
-      "path": "portaudiosharp/0.3.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "lib/netstandard2.0/PortAudioSharp.dll",
-        "portaudiosharp.0.3.0.nupkg.sha512",
-        "portaudiosharp.nuspec"
-      ]
-    },
     "SimpleWifi.netstandard/2.0.0": {
       "sha512": "lJuk2zjX4snKbrxfDnDEwYb8dTFR/UbyMb9umljexOP1nuXjdYXNX3T2+zrdxZue359ZqvHC8aAAGkgWS6PFFw==",
       "type": "package",
@@ -3560,27 +3447,6 @@
         "system.configuration.configurationmanager.9.0.0.nupkg.sha512",
         "system.configuration.configurationmanager.nuspec",
         "useSharedDesignerContext.txt"
-      ]
-    },
-    "System.Device.Gpio/3.2.0": {
-      "sha512": "jaL93IC1S2wZfCSLWt8/1lQCp/pDAzDNE5dfLq+pubEhCp0BjDZze6rJMu2KdOuCOeRxHmBuhtWrIRlrTKFsTg==",
-      "type": "package",
-      "path": "system.device.gpio/3.2.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "Icon.png",
-        "README.md",
-        "THIRD-PARTY-NOTICES.TXT",
-        "buildTransitive/net5.0/System.Device.Gpio.targets",
-        "lib/net6.0-windows10.0.17763/System.Device.Gpio.dll",
-        "lib/net6.0-windows10.0.17763/System.Device.Gpio.xml",
-        "lib/net6.0/System.Device.Gpio.dll",
-        "lib/net6.0/System.Device.Gpio.xml",
-        "lib/netstandard2.0/System.Device.Gpio.dll",
-        "lib/netstandard2.0/System.Device.Gpio.xml",
-        "system.device.gpio.3.2.0.nupkg.sha512",
-        "system.device.gpio.nuspec"
       ]
     },
     "System.Diagnostics.DiagnosticSource/9.0.0": {
@@ -3928,10 +3794,8 @@
       "Microsoft.NET.Sdk.WebAssembly.Pack >= 8.0.11",
       "NAudio >= 2.2.1",
       "NAudio.Lame >= 2.1.0",
-      "PortAudioSharp >= 0.3.0",
       "SimpleWifi.netstandard >= 2.0.0",
-      "System.Configuration.ConfigurationManager >= 9.0.0",
-      "System.Device.Gpio >= 3.2.0"
+      "System.Configuration.ConfigurationManager >= 9.0.0"
     ]
   },
   "packageFolders": {
@@ -3941,11 +3805,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\SmartaCam.App.csproj",
+      "projectUniqueName": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\SmartaCam.App.csproj",
       "projectName": "SmartaCam.App",
-      "projectPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\SmartaCam.App.csproj",
+      "projectPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\SmartaCam.App.csproj",
       "packagesPath": "C:\\Users\\Jesse\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\obj\\",
+      "outputPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -4033,10 +3897,6 @@
             "target": "Package",
             "version": "[2.1.0, )"
           },
-          "PortAudioSharp": {
-            "target": "Package",
-            "version": "[0.3.0, )"
-          },
           "SimpleWifi.netstandard": {
             "target": "Package",
             "version": "[2.0.0, )"
@@ -4044,10 +3904,6 @@
           "System.Configuration.ConfigurationManager": {
             "target": "Package",
             "version": "[9.0.0, )"
-          },
-          "System.Device.Gpio": {
-            "target": "Package",
-            "version": "[3.2.0, )"
           }
         },
         "imports": [

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\SmartaCam.App.csproj": {}
+    "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\SmartaCam.App.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\SmartaCam.App.csproj": {
+    "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\SmartaCam.App.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\SmartaCam.App.csproj",
+        "projectUniqueName": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\SmartaCam.App.csproj",
         "projectName": "SmartaCam.App",
-        "projectPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\SmartaCam.App.csproj",
+        "projectPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\SmartaCam.App.csproj",
         "packagesPath": "C:\\Users\\Jesse\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\restore\\SmartRecorder\\SmartaCam.App\\obj\\",
+        "outputPath": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -99,10 +99,6 @@
               "target": "Package",
               "version": "[2.1.0, )"
             },
-            "PortAudioSharp": {
-              "target": "Package",
-              "version": "[0.3.0, )"
-            },
             "SimpleWifi.netstandard": {
               "target": "Package",
               "version": "[2.0.0, )"
@@ -110,10 +106,6 @@
             "System.Configuration.ConfigurationManager": {
               "target": "Package",
               "version": "[9.0.0, )"
-            },
-            "System.Device.Gpio": {
-              "target": "Package",
-              "version": "[3.2.0, )"
             }
           },
           "imports": [
