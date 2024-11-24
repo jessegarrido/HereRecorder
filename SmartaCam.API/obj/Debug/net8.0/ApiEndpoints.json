@@ -45,5 +45,21 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Controllers.TransportController",
+    "Method": "PlayRecord",
+    "RelativePath": "api/transport/{action}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

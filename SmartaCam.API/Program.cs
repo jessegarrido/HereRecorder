@@ -1,9 +1,5 @@
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Concurrent;
-using System.Text.Json.Serialization;
+using static SmartaCam.IAudioRepository;
 
 namespace SmartaCam.API
 {
@@ -17,13 +13,14 @@ namespace SmartaCam.API
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-           // builder.Services.AddEndpointsApiExplorer();
+            // builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddTransient<IAudioRepository, AudioRepository>();
             builder.Services.AddTransient<IWavTakeRepository, WavTakeRepository>();
             builder.Services.AddTransient<IMp3TakeRepository, Mp3TakeRepository>();
             builder.Services.AddTransient<IMp3TagSetRepository, Mp3TagSetRepository>();
             builder.Services.AddHostedService<DbInitializerHostedService>();
             builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
-            //builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
             if (builder.Environment.IsDevelopment())
@@ -33,24 +30,29 @@ namespace SmartaCam.API
             }
             app.UseRouting();
 
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
-            // Configure the HTTP request pipeline.
-            //if (app.Environment.IsDevelopment())
-            //{
-            //    app.UseSwagger();
-            //    app.UseSwaggerUI();
-            //}
+           //  Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
-            // app.UseHttpsRedirection();
+            UIRepository uIRepository = new();
+            _ = Task.Run(async () => { await uIRepository.SessionInit(); });
 
-            //app.UseAuthorization();
+             app.UseHttpsRedirection();
 
 
-          //  app.MapControllers();
+
+
+              app.MapControllers();
 
             app.Run();
         }
