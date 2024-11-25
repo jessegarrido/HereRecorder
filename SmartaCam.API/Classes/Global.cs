@@ -25,11 +25,13 @@ namespace SmartaCam
         public static string? RemovableDrivePath { get; set; }
         public static int RemovableDriveCount { get; set; } = 0;
         public static string DropBoxCodeDotTxtContains { get; set; }
+        public static string NowPlayingFileName { get; set; }
         // public static int Takes { get; set; }
         //public static DateOnly LastTakeDate { get; set; };
-        public static List<FileInfo> FilesInDirectory { get; set; } = new DirectoryInfo(LocalRecordingsFolder).GetFiles()
-                                                                      .OrderBy(f => f.LastWriteTime)
-                                                                     .ToList();
+       // public static List<FileInfo> AllLocalWavFiles { get; set; } = new DirectoryInfo(LocalRecordingsFolder).GetFiles()
+                                                                     // .OrderBy(f => f.LastWriteTime)
+                                                                     //.ToList();
+      //  public static (Directory.GetFiles(Path.GetDirectoryName(Global.LocalRecordingsFolder), "*.wav", SearchOption.AllDirectories));
         //   public static DropboxClientConfig dbConfig { get; set; }
 
     }

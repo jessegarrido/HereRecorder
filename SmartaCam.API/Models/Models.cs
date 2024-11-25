@@ -8,18 +8,17 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using SmartaCam;
 
 namespace SmartaCam
 {
-    public interface IWavTakeRepository
+    public interface ITakeRepository
     {
-        public void AddWavTake(WavTake wavTake);
-        public void MarkNormalized(int wavTakeId);
-    }
-    public interface IMp3TakeRepository
-    {
-        public void AddMp3Take(Mp3Take mp3Take);
-        public void MarkUploaded(int mp3TakeId);
+        public void AddTake(Take take);
+        public void MarkNormalized(int takeId);
+
+        public void MarkMp3Created(int takeId);
+        public void MarkUploaded(int takeId);
     }
     public interface IMp3TagSetRepository
     {
@@ -27,7 +26,7 @@ namespace SmartaCam
         public void SetDefaultMp3TagSet(int mp3TagSetId);
         public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
     }
-    public class WavTakeRepository : IWavTakeRepository
+    public class TakeRepository : ITakeRepository
     {
 
         private readonly TakeContext _context = new TakeContext();
@@ -35,66 +34,46 @@ namespace SmartaCam
         {
             return (await _context.SaveChangesAsync()) > 0;
         }
-        public void AddWavTake(WavTake wavTake)
+        public void AddTake(Take take)
         {
-            _context.Add<WavTake>(wavTake);
+            _context.Add<Take>(take);
             _context.SaveChanges();
         }
-        public WavTake GetWavTakeById(int id)
+        public Take GetTakeById(int id)
         {
-            WavTake wavTake = _context.WavTakes
-                .Where(e => String.Equals(e.WavTakeId, id))
+            Take take = _context.Takes
+                .Where(e => String.Equals(e.TakeId, id))
                 .FirstOrDefault();
-            return wavTake;
+            return take;
         }
-        public List<WavTake> GetAllWavTakes()
+        public List<Take> GetAllTakes()
         {
-            List<WavTake> wavTakes = new();
-            foreach (WavTake wavTake in _context.WavTakes)
-                wavTakes.Add(wavTake);
-            return wavTakes;
+            List<Take> takes = new();
+            foreach (Take take in _context.Takes)
+                takes.Add(take);
+            return takes;
         }
-        public void MarkNormalized(int wavTakeId)
+        public void MarkNormalized(int TakeId)
         {
-            var wavTake = _context.WavTakes
-                .Where(t => t.WavTakeId == wavTakeId).FirstOrDefault();
-            wavTake.IsNormalized = true;
+            var take = _context.Takes
+                .Where(t => t.TakeId == TakeId).FirstOrDefault();
+            take.WasNormalized = true;
             _context.SaveChanges();
         }
-    }
-    public class Mp3TakeRepository : IMp3TakeRepository
-    {
-        private readonly TakeContext _context = new TakeContext();
-        public async Task<bool> SaveChangesAsync()
-        {
-            return (await _context.SaveChangesAsync()) > 0;
-        }
-        public void AddMp3Take(Mp3Take mp3Take)
-        {
-            _context.Add<Mp3Take>(mp3Take);
+        public void MarkMp3Created(int TakeId)
+       {
+         var take = _context.Takes
+                .Where(t => t.TakeId == TakeId).FirstOrDefault();
+            take.WasConvertedToMp3 = true;
             _context.SaveChanges();
         }
 
-        public Mp3Take GetMp3TakeById(int id)
+        public void MarkUploaded(int takeId)
         {
-            Mp3Take mp3Take = _context.Mp3Takes
-                .Where(e => e.Mp3TakeId == id)
-                .FirstOrDefault();
-            return mp3Take;
-        }
-        public List<Mp3Take> GetAllMp3Takes()
-        {
-            List<Mp3Take> mp3Takes = new();
-            foreach (Mp3Take mp3Take in _context.Mp3Takes)
-                mp3Takes.Add(mp3Take);
-            return mp3Takes;
-        }
-        public void MarkUploaded(int mp3TakeId)
-        {
-            var mp3Take = _context.Mp3Takes
-                .Where(t => t.Mp3TakeId == mp3TakeId).FirstOrDefault();
-            mp3Take.IsUpLoaded = true;
-            _context.SaveChanges();
+        var take = _context.Takes
+                    .Where(t => t.TakeId == takeId).FirstOrDefault();
+                take.WasUpLoaded = true;
+                _context.SaveChanges();
         }
     }
     public class Mp3TagSetRepository : IMp3TagSetRepository
@@ -136,8 +115,8 @@ namespace SmartaCam
     }
     public class TakeContext : DbContext
     {
-        public DbSet<WavTake> WavTakes { get; set; }
-        public DbSet<Mp3Take> Mp3Takes { get; set; }
+        public DbSet<Take> Takes { get; set; }
+        //public DbSet<Mp3Take> Mp3Takes { get; set; }
         public DbSet<Mp3TagSet> Mp3TagSets { get; set; }
         public string DbPath { get; }
         public TakeContext()
@@ -167,14 +146,19 @@ namespace SmartaCam
          => options
             .UseSqlite($"Data Source={DbPath}");
     }
-    public class WavTake
+    public class Take
     {
-        public int WavTakeId { get; set; }
+        public int TakeId { get; set; }
         public int RunLengthInSeconds { get; set; }
         public decimal OriginalPeakVolume { get; set; }
         public string FileName { get; set; } = string.Empty;
-        public bool IsNormalized { get; set; }
+        public bool WasNormalized { get; set; }
         public bool WasConvertedToMp3 { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Artist { get; set; } = string.Empty;
+        public string Album { get; set; } = string.Empty;
+        public bool WasUpLoaded { get; set; }
+        public DateTime Created { get; set; }
         // public int CreationDate { get; set; }
 
         //public string Url { get; set; }
@@ -182,18 +166,18 @@ namespace SmartaCam
         // public WavTakeI <Post> Posts { get; } = new();
     }
 
-    public class Mp3Take
-    {
-        public int Mp3TakeId { get; set; }
-        public string Title { get; set; }
-        public string FileName { get; set; }
-        public bool IsUpLoaded { get; set; }
+    //public class Mp3Take
+   // {
+        //public int Mp3TakeId { get; set; }
+
+        //public string FileName { get; set; }
+
         // public int CreationDate { get; set; }
         //  public string Content { get; set; }
 
         //  public int BlogId { get; set; }
         //  public Blog Blog { get; set; }
-    }
+//    }
     public class Mp3TagSet
     {
         [Key]

@@ -15,8 +15,8 @@ namespace SmartaCam.API
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             // builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddTransient<IAudioRepository, AudioRepository>();
-            builder.Services.AddTransient<IWavTakeRepository, WavTakeRepository>();
-            builder.Services.AddTransient<IMp3TakeRepository, Mp3TakeRepository>();
+            builder.Services.AddTransient<ITakeRepository, TakeRepository>();
+           // builder.Services.AddTransient<IMp3TakeRepository, Mp3TakeRepository>();
             builder.Services.AddTransient<IMp3TagSetRepository, Mp3TagSetRepository>();
             builder.Services.AddHostedService<DbInitializerHostedService>();
             builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);

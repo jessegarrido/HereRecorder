@@ -1,7 +1,5 @@
 ﻿using Dropbox.Api;
 using Dropbox.Api.Files;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 using NAudio.Lame;
@@ -16,8 +14,10 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
-using static SmartaCam.IAudioRepository;
-
+using System.Text.RegularExpressions;
+using System.IO;
+using System;
+using System.Collections;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -32,6 +32,7 @@ namespace SmartaCam
         public void LoadLameDLL();
         public Task NormalizeTakeAsync();
         public Task RecordButtonPressedAsync();
+        public Task PlayButtonPressedAsync();
         public interface INetworkRepository
         {
             public Task CheckNetworkAsync();
@@ -222,21 +223,80 @@ namespace SmartaCam
                 File.Move($"{Global.wavPathAndName}_normalized.wav", Global.wavPathAndName, true);
 
             }
-            public async Task PlaybackAudioAsync()
+            public IEnumerable<string> CreatePlayQueue() 
             {
-                //playback doesn't work yet, add database first
+                List<string> playlist = new();
+                string path = Path.GetDirectoryName(Global.LocalRecordingsFolder);
+                DirectoryInfo dir = new DirectoryInfo(path);
+                var fileList = dir.GetFiles("*.*", SearchOption.AllDirectories);
+                var queryMatchingFiles = from file in fileList
+                                         where file.Extension == ".wav"
+                                         orderby file.CreationTime
+                                         select file.FullName;                      
+                 return queryMatchingFiles;
+            }
+
+            public class PlaybackQueue
+            {
+                private Queue<string> playlist;
+                private IWavePlayer player;
+                private WaveStream fileWaveStream;
+
+                public PlaybackQueue(IEnumerable<string> startingPlaylist)
+                {
+                    playlist = new Queue<string>(startingPlaylist);
+                }
+                public void PlayATake()
+                {
+                    if (fileWaveStream != null)
+                    {
+                        fileWaveStream.Dispose();
+                    }
+                    if (playlist.Count < 1)
+                    {
+                        return;
+                    }
+                    if (player != null && player.PlaybackState != PlaybackState.Stopped)
+                    {
+                        player.Stop();
+                    }
+                    if (player != null)
+                    {
+                        player.Dispose();
+                        player = null;
+                    }
+                    player = new WaveOutEvent();
+                    fileWaveStream = new AudioFileReader(playlist.Dequeue());
+                    player.Init(fileWaveStream);
+                    player.PlaybackStopped += (sender, evn) => { PlayATake(); };                
+                    player.Play();
+                    Global.NowPlayingFileName = player.ToString();
+                }
+            }
+                public async Task PlaybackAudioAsync(IEnumerable<string> origPlaylist)
+            {
+                if (Global.MyState == 2)
+                {
+                    return;
+                }
                 using var tokenSource = new CancellationTokenSource();
                 var pauseToken = tokenSource.Token;
                 IORepository ioRepository = new();
                 if (Global.OS == "Linux") { await ioRepository.TurnOnLEDAsync(Config.GreenLED); };
-                WaveStream mainOutputStream = new WaveFileReader(Global.lastWavPathAndName);
-                WaveChannel32 volumeStream = new WaveChannel32(mainOutputStream);
-                WaveOutEvent player = new WaveOutEvent();
-                player.Init(volumeStream);
-                player.Play();
-                if (pauseToken.IsCancellationRequested) { player.Pause(); }
+              //  var playlist = CreatePlayQueue();
+                
+                var playbackQueue = new PlaybackQueue(origPlaylist);
+                playbackQueue.PlayATake();
+                Console.WriteLine($"Now playing ");
+                Console.ReadLine();
+            //    if (pauseToken.IsCancellationRequested) { player.Pause(); }
                 if (Global.OS == "Raspberry Pi") { ioRepository.TurnOffLEDAsync(Config.GreenLED); };
             }
+                     // var playlist = new Queue<string>(origPlaylist);
+                     //WaveOutEvent player = new WaveOutEvent();
+                     //WaveStream mainOutputStream = new WaveFileReader(playlist.FirstOrDefault());
+                     //WaveChannel32 volumeStream = new WaveChannel32(mainOutputStream);
+         
             public async Task RecordButtonPressedAsync()
             {
                     if (Global.MyState == 2)
@@ -256,7 +316,26 @@ namespace SmartaCam
                         _ = Task.Run(async () => { await RecordAudioAsync(); });
                         // audioRepository.RecordAudioAsync();
                     }
-        }
+            }
+            public async Task PlayButtonPressedAsync()
+            {
+                if (Global.MyState == 2) 
+                { 
+                    return; 
+                }
+                Global.MyState = 3;
+                var playlist = CreatePlayQueue();
+                await PlaybackAudioAsync(playlist);
+                    //while (!Global.wavPathAndName.IsFileReady())
+                    //{
+                    //    await Task.Delay(1000);
+                    //}
+                    //if (Config.Normalize == true) { await NormalizeTakeAsync(); };
+                    //ConvertWavToMP3(Global.wavPathAndName, Global.mp3PathAndName);
+                    //NetworkRepository.DropBox db = new();
+                    //_ = Task.Run(async () => { await db.PushToDropBoxAsync(); });
+            }
+
 
         }
         public class NetworkRepository : INetworkRepository
@@ -759,7 +838,6 @@ namespace SmartaCam
                 {
                     UIRepository uiRepository = new();
                     string path = Path.Combine(Global.RemovableDrivePath.ToString(), "DropBoxCode.txt");
-                    UtilClass gc = new();
                     while (!path.IsFileReady())
                     {
                         Task.Delay(1000);
@@ -893,7 +971,8 @@ namespace SmartaCam
                         }
                         break;
                     case 2:
-                        await audioRepository.PlaybackAudioAsync();
+                        var playlist = audioRepository.CreatePlayQueue();
+                        await audioRepository.PlaybackAudioAsync(playlist);
                         break;
                 }
                 return;

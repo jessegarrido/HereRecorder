@@ -1,6 +1,6 @@
 [
   {
-    "ContainingType": "SmartaCam.TakeController",
+    "ContainingType": "SmartaCam.Mp3TagSetController",
     "Method": "Get",
     "RelativePath": "api/{action}",
     "HttpMethod": "",
@@ -26,7 +26,7 @@
     ]
   },
   {
-    "ContainingType": "SmartaCam.TakeController",
+    "ContainingType": "SmartaCam.Mp3TagSetController",
     "Method": "GetMp3TagSet",
     "RelativePath": "api/{action}/{id}",
     "HttpMethod": "GET",
@@ -47,10 +47,105 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SmartaCam.TakeController",
+    "Method": "Get",
+    "RelativePath": "api/{action}/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      },
+      {
+        "Name": "id",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.String",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "SmartaCam.Controllers.TransportController",
     "Method": "PlayRecord",
     "RelativePath": "api/transport/{action}",
     "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Controllers.TransportController",
+    "Method": "Stop",
+    "RelativePath": "api/transport/{action}",
+    "HttpMethod": "",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Controllers.TransportController",
+    "Method": "Play",
+    "RelativePath": "api/transport/{action}",
+    "HttpMethod": "",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Controllers.TransportController",
+    "Method": "SkipForward",
+    "RelativePath": "api/transport/{action}",
+    "HttpMethod": "",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Controllers.TransportController",
+    "Method": "SkipBack",
+    "RelativePath": "api/transport/{action}",
+    "HttpMethod": "",
     "IsController": true,
     "Order": 0,
     "Parameters": [

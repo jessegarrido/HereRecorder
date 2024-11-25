@@ -1,6 +1,6 @@
 ﻿namespace SmartaCam.App.Services
 {
-    public class IWavTakeService
+    public class TakeService
     {
     }
 }

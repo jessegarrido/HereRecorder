@@ -20,6 +20,10 @@ namespace SmartaCam.App.Pages
         {
             TransportService.PlayRecordButtonPress();
         }
+        public void Play_Click()
+        {
+            TransportService.PlayButtonPress();
+        }
     }
 
 }
