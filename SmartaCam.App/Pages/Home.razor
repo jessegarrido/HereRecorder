@@ -3,16 +3,18 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-
-<div class="alert alert-warning" role="alert">
-    Before authentication will function correctly, you must configure your provider details in <code>Program.cs</code>
+<h1>SmartaCam</h1>
 
 
-Welcome to your new app.
+<div> 
+	MyState = @StateValue
+
+
 <Button  @onclick="Record_Click" Color="ButtonColor.Danger"> Record </Button>
-<Button  @onclick="Play_Click" Color="ButtonColor.Primary"> Play </Button>
+<Button  @onclick="Play_Click" Color="ButtonColor.Success"> Play </Button>
+<Button @onclick="Stop_Click " Color="ButtonColor.Dark"> Stop </Button>
+<Button onclick=" " Color="ButtonColor.Dark"> Skip Forward </Button>
+<Button onclick=" " Color="ButtonColor.Dark"> Skip Back </Button>
 
 </div>
-
 

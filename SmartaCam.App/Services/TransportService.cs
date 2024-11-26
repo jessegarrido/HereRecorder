@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using static Dropbox.Api.Files.ListRevisionsMode;
+using System.Net.Http;
+using System.Text.Json;
 
 namespace SmartaCam
 {
@@ -9,25 +12,33 @@ namespace SmartaCam
         {
             _httpClient = httpClient;
         }
-        public async Task<IActionResult> PlayRecordButtonPress()
+
+		public async Task<IActionResult> RecordButtonPress()
         {
-            return (IActionResult)await _httpClient.GetAsync("api/transport/playrecord");
+            return (IActionResult)await _httpClient.GetAsync("api/transport/record");
         }
         public async Task<IActionResult> PlayButtonPress()
         {
-            return (IActionResult)await _httpClient.GetAsync("api/transport/play");
+            return (IActionResult)await _httpClient.GetStreamAsync("api/transport/play");
         }
         public async Task<IActionResult> StopButtonPress()
         {
-            return (IActionResult)await _httpClient.GetAsync("api/transport/stop");
+            return (IActionResult)await _httpClient.GetStreamAsync("api/transport/stop");
         }
         public async Task<IActionResult> SkipForwardButtonPress()
         {
-            return (IActionResult)await _httpClient.GetAsync("api/transport/skipforward");
+            return (IActionResult)await _httpClient.GetAsync("api/transport/forward");
         }
         public async Task<IActionResult> SkipBackButtonPress()
         {
-            return (IActionResult)await _httpClient.GetAsync("api/transport/skipback");
+            return (IActionResult)await _httpClient.GetAsync("api/transport/back");
+        }
+        public async Task<int> GetState()
+        {
+			return await JsonSerializer.DeserializeAsync<int>
+	 (await _httpClient.GetStreamAsync($"api/transport/getstate"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+			//var state = (string)await _httpClient.GetStringAsync($"api/transport/getstate");//, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+           // return int.Parse(state);
         }
     }
 }

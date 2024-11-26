@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using static SmartaCam.AudioRepository;
 using static SmartaCam.IAudioRepository;
 
 namespace SmartaCam.API
@@ -13,14 +14,19 @@ namespace SmartaCam.API
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            // builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddTransient<IAudioRepository, AudioRepository>();
             builder.Services.AddTransient<ITakeRepository, TakeRepository>();
-           // builder.Services.AddTransient<IMp3TakeRepository, Mp3TakeRepository>();
             builder.Services.AddTransient<IMp3TagSetRepository, Mp3TagSetRepository>();
             builder.Services.AddHostedService<DbInitializerHostedService>();
             builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+                c.IgnoreObsoleteActions();
+                c.IgnoreObsoleteProperties();
+                c.CustomSchemaIds(type => type.FullName);
+            });
 
             var app = builder.Build();
             if (builder.Environment.IsDevelopment())
@@ -56,12 +62,13 @@ namespace SmartaCam.API
 
             app.Run();
         }
+        
         public class DbInitializerHostedService : IHostedService
         {
             public async Task StartAsync(CancellationToken stoppingToken)
             {
                 // The code in here will run when the application starts, and block the startup process until finished
-                using (var context = new TakeContext())
+                using (var context = new SmartaCamContext())
                 {
                     context.Database.EnsureCreated();
                 }

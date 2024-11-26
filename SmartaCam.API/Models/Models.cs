@@ -9,44 +9,58 @@ using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using SmartaCam;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SmartaCam
 {
     public interface ITakeRepository
     {
-        public void AddTake(Take take);
-        public void MarkNormalized(int takeId);
+        public Task<bool> SaveChangesAsync();
+        public Task AddTakeAsync(Take take);
+        public Task<List<Take>> GetAllTakesAsync();
+        public void MarkNormalized(int id);
 
-        public void MarkMp3Created(int takeId);
-        public void MarkUploaded(int takeId);
-    }
+        public void MarkMp3Created(int id);
+        public void MarkUploaded(int id);
+        public Task<Take> GetTakeByIdAsync(int id);
+        public Task<DateTime> GetLastTakeDateAsync();
+
+	}
     public interface IMp3TagSetRepository
     {
+        public Task<bool> SaveChangesAsync();
         public void AddMp3TagSet(Mp3TagSet mp3TagSet);
-        public void SetDefaultMp3TagSet(int mp3TagSetId);
+        public void SetActiveMp3TagSet(int mp3TagSetId);
         public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
+        public Task<Mp3TagSet> GetActiveMp3TagSetAsync();
     }
     public class TakeRepository : ITakeRepository
     {
 
-        private readonly TakeContext _context = new TakeContext();
+        private readonly SmartaCamContext _context = new SmartaCamContext();
         public async Task<bool> SaveChangesAsync()
         {
             return (await _context.SaveChangesAsync()) > 0;
         }
-        public void AddTake(Take take)
+        public async Task AddTakeAsync(Take take)
         {
             _context.Add<Take>(take);
             _context.SaveChanges();
         }
-        public Take GetTakeById(int id)
+        public async Task<Take> GetTakeByIdAsync(int id)
         {
             Take take = _context.Takes
-                .Where(e => String.Equals(e.TakeId, id))
+                .Where(e => String.Equals(e.Id, id))
                 .FirstOrDefault();
             return take;
         }
-        public List<Take> GetAllTakes()
+		public async Task<DateTime> GetLastTakeDateAsync()
+		{
+            DateTime latest = _context.Takes
+                .Max(d => d.Created);
+            return latest;
+		}
+		public async Task<List<Take>> GetAllTakesAsync()
         {
             List<Take> takes = new();
             foreach (Take take in _context.Takes)
@@ -56,14 +70,14 @@ namespace SmartaCam
         public void MarkNormalized(int TakeId)
         {
             var take = _context.Takes
-                .Where(t => t.TakeId == TakeId).FirstOrDefault();
-            take.WasNormalized = true;
+                .Where(t => t.Id == TakeId).FirstOrDefault();
+            take.Normalized = true;
             _context.SaveChanges();
         }
         public void MarkMp3Created(int TakeId)
        {
          var take = _context.Takes
-                .Where(t => t.TakeId == TakeId).FirstOrDefault();
+                .Where(t => t.Id == TakeId).FirstOrDefault();
             take.WasConvertedToMp3 = true;
             _context.SaveChanges();
         }
@@ -71,14 +85,14 @@ namespace SmartaCam
         public void MarkUploaded(int takeId)
         {
         var take = _context.Takes
-                    .Where(t => t.TakeId == takeId).FirstOrDefault();
+                    .Where(t => t.Id == takeId).FirstOrDefault();
                 take.WasUpLoaded = true;
                 _context.SaveChanges();
         }
     }
     public class Mp3TagSetRepository : IMp3TagSetRepository
     {
-        private readonly TakeContext _context = new TakeContext();
+        private readonly SmartaCamContext _context = new SmartaCamContext();
         public async Task<bool> SaveChangesAsync()
         {
             return (await _context.SaveChangesAsync()) > 0;
@@ -88,7 +102,13 @@ namespace SmartaCam
             _context.Add<Mp3TagSet>(mp3TagSet);
             _context.SaveChanges();
         }
-        public void SetDefaultMp3TagSet(int mp3TagSetId)
+        public async Task<Mp3TagSet> GetActiveMp3TagSetAsync()
+        {
+            var mp3TagSetActive = _context.Mp3TagSets
+                 .Where(t => t.IsDefault == true).FirstOrDefault();
+            return mp3TagSetActive;
+        }
+        public void SetActiveMp3TagSet(int mp3TagSetId)
         {
             var mp3TagSetUnsetDefault = _context.Mp3TagSets
                  .Where(t => t.IsDefault == true).FirstOrDefault();
@@ -105,7 +125,7 @@ namespace SmartaCam
                 .Where(e => (e.Id == id)).FirstOrDefault();
             return mp3TagSet;
         }
-        public List<Mp3TagSet> GetAllMp3TagSets()
+        public async Task<List<Mp3TagSet>> GetAllMp3TagSets()
         {
             List<Mp3TagSet> mp3TagSets = new();
             foreach (Mp3TagSet mp3TagSet in _context.Mp3TagSets)
@@ -113,13 +133,13 @@ namespace SmartaCam
             return mp3TagSets;
         }
     }
-    public class TakeContext : DbContext
+    public class SmartaCamContext : DbContext
     {
         public DbSet<Take> Takes { get; set; }
         //public DbSet<Mp3Take> Mp3Takes { get; set; }
         public DbSet<Mp3TagSet> Mp3TagSets { get; set; }
         public string DbPath { get; }
-        public TakeContext()
+        public SmartaCamContext()
         {
            var folder = Environment.SpecialFolder.LocalApplicationData;
            var path = Environment.GetFolderPath(folder);
@@ -148,36 +168,21 @@ namespace SmartaCam
     }
     public class Take
     {
-        public int TakeId { get; set; }
-        public int RunLengthInSeconds { get; set; }
-        public decimal OriginalPeakVolume { get; set; }
-        public string FileName { get; set; } = string.Empty;
-        public bool WasNormalized { get; set; }
-        public bool WasConvertedToMp3 { get; set; }
+		[Key]
+		public int Id { get; set; }
+        //public int RunLengthInSeconds { get; set; }
+        public float OriginalPeakVolume { get; set; } = 0;
+        public string WavFilePath { get; set; } = string.Empty;
+        public string Mp3FilePath { get; set; } = string.Empty;
+        public bool Normalized { get; set; } = false;
+        public bool WasConvertedToMp3 { get; set; } = false;
         public string Title { get; set; } = string.Empty;
         public string Artist { get; set; } = string.Empty;
         public string Album { get; set; } = string.Empty;
-        public bool WasUpLoaded { get; set; }
-        public DateTime Created { get; set; }
-        // public int CreationDate { get; set; }
-
-        //public string Url { get; set; }
-
-        // public WavTakeI <Post> Posts { get; } = new();
+        public string Session { get; set; } = string.Empty;
+        public bool WasUpLoaded { get; set; } = false;
+        public DateTime Created { get; set; } = DateTime.Now;
     }
-
-    //public class Mp3Take
-   // {
-        //public int Mp3TakeId { get; set; }
-
-        //public string FileName { get; set; }
-
-        // public int CreationDate { get; set; }
-        //  public string Content { get; set; }
-
-        //  public int BlogId { get; set; }
-        //  public Blog Blog { get; set; }
-//    }
     public class Mp3TagSet
     {
         [Key]

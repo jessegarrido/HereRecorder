@@ -1,6 +1,11 @@
-﻿namespace SmartaCam.App.Services
+﻿using System.Text.Json;
+
+namespace SmartaCam
 {
-    public class ITakeService
+    public interface ITakeService
     {
+
+        public Task<IEnumerable<Take>> GetAllTakesAsync();
+
     }
 }

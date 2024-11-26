@@ -8,21 +8,39 @@ namespace SmartaCam
     {
         private ITakeRepository _takeRepository;
 
-        public TakeController(ITakeRepository takeRepo)
+		public TakeController(ITakeRepository takeRepo)
         {
             _takeRepository = takeRepo;
 
         }
-        [HttpGet("{id:int}")]
-        //public async Task<IActionResult> GetMp3TagSet(int id)
-        //{
-        //    return Ok(await _mp3TagSetRepository.GetMp3TagSetByIdAsync(id));
-
-        //}
-        public string Get()
+        // [HttpGet("{id:int}")]
+        [HttpGet("/{id:int}")]
+        public async Task<ActionResult<Take>> GetTakeById(int id)
         {
-            return "Returning from TestController Get Method";
+            return Ok(await _takeRepository.GetTakeByIdAsync(id));
+
         }
+		//[HttpGet]
+		//public async Task<ActionResult<DateTime>> GetLatestTakeDate()
+		//{
+		//	return Ok(await _takeRepository.GetLastTakeDateAsync());
+		//}
+		[HttpGet]
+        public async Task<ActionResult<List<Take>>> GetAllTakes()
+        {
+            return Ok(await _takeRepository.GetAllTakesAsync());
+
+        }
+        [HttpPost]
+        public async Task<ActionResult<Take>> AddTake(Take newTake)
+        {
+            // return Ok(await _takeRepository.AddTakeAsync(newTake));
+            await _takeRepository.AddTakeAsync(newTake);
+            await _takeRepository.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetTakeById), new { id = newTake.Id }, newTake);
+
+        }
+
     }
     
 }

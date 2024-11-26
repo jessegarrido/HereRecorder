@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace SmartaCam.Controllers
 {
@@ -8,12 +9,28 @@ namespace SmartaCam.Controllers
     {
         private IAudioRepository _audioRepository;
 
+        
         public TransportController(IAudioRepository audioRepository)
         {
             _audioRepository = audioRepository;
         }
-        [HttpGet]//Options("playrecord")]
-        public IActionResult PlayRecord()
+
+		[HttpGet]
+		public IActionResult Play()
+        {
+            try
+            {
+                _audioRepository.PlayButtonPressedAsync();
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+		[HttpGet]
+		public IActionResult Record()
         {
             try
             {
@@ -25,11 +42,13 @@ namespace SmartaCam.Controllers
                 return this.StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
-        public IActionResult Stop()
+
+		[HttpGet]
+		public IActionResult Stop()
         {
             try
             {
-                _audioRepository.PlayButtonPressedAsync();
+                _audioRepository.StopButtonPressedAsync();
                 return Ok();
             }
             catch (Exception)
@@ -37,11 +56,13 @@ namespace SmartaCam.Controllers
                 return this.StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
-        public IActionResult Play()
+
+		[HttpGet]
+		public IActionResult SkipForward()
         {
             try
             {
-                _audioRepository.PlayButtonPressedAsync();
+             //   _audioRepository.StopButtonPressedAsync();
                 return Ok();
             }
             catch (Exception)
@@ -49,24 +70,29 @@ namespace SmartaCam.Controllers
                 return this.StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
-        public IActionResult SkipForward()
+
+		[HttpGet]
+		public IActionResult SkipBack()
         {
             try
             {
-                _audioRepository.RecordButtonPressedAsync();
-                return Ok();
+         //       _audioRepository.RStopButtonPressedAsync();
+                return Ok(new {value = Global.MyState});
             }
             catch (Exception)
             {
                 return this.StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
-        public IActionResult SkipBack()
+
+		[HttpGet]
+		public async Task<IActionResult> GetState()
         {
             try
             {
-                _audioRepository.RecordButtonPressedAsync();
-                return Ok();
+               // return Global.MyState;
+                int state = Global.MyState; 
+                return Ok( new { value = state });
             }
             catch (Exception)
             {

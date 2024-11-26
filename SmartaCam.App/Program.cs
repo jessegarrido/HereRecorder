@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SmartaCam.App.Services;
 using SmartaCam;
-
+using Microsoft.AspNetCore.Components;
 namespace SmartaCam.App
 {
     public class Program
@@ -13,9 +13,10 @@ namespace SmartaCam.App
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
-            //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddHttpClient<IMp3TagSetService, Mp3TagSetService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
             builder.Services.AddHttpClient<ITransportService, TransportService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
+           // builder.Services.AddHttpClient<ITakeService, TakeService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
 
 
             builder.Services.AddOidcAuthentication(options =>

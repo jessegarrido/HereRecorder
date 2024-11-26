@@ -1,0 +1,31 @@
+﻿@page "/takes"
+@inherits TakesBase
+
+<h3>Takes</h3>
+<div>
+	 <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Artist</th>
+                <th>Session</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var take in Takes)
+            {
+                <tr>
+                    <td>@take.Id</td>
+                    <td>@take.Title</td>
+                    <td>@take.Artist</td>
+                    <td>@take.Session</td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</div>
+@code {
+
+}

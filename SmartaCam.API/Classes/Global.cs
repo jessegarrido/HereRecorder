@@ -46,6 +46,7 @@ namespace SmartaCam
         public static int SampleRate { get; set; }
         public static int SelectedAudioDevice { get; set; }
         public static bool Normalize { get; set; } = true;
+        public static int Mp3BitRate { get; set; } = 192;
         public static int RedLED { get; set; } = 4; // purple - pin 7
         public static int GreenLED { get; set; } = 2; //orange - pin 3
         public static int YellowLED { get; set; } = 3; // green - pin 5 
