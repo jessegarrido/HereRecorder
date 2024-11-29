@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SmartaCam.App.Services;
 using SmartaCam;
 using Microsoft.AspNetCore.Components;
+using static Dropbox.Api.TeamLog.EventCategory;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace SmartaCam.App
 {
     public class Program
@@ -16,8 +18,7 @@ namespace SmartaCam.App
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddHttpClient<IMp3TagSetService, Mp3TagSetService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
             builder.Services.AddHttpClient<ITransportService, TransportService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
-           // builder.Services.AddHttpClient<ITakeService, TakeService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
-
+            builder.Services.AddHttpClient<ITakeService, TakeService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
 
             builder.Services.AddOidcAuthentication(options =>
             {
@@ -28,5 +29,6 @@ namespace SmartaCam.App
 
             await builder.Build().RunAsync();
         }
+
     }
 }

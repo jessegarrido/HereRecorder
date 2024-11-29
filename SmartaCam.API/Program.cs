@@ -19,7 +19,9 @@ namespace SmartaCam.API
             builder.Services.AddTransient<ITakeRepository, TakeRepository>();
             builder.Services.AddTransient<IMp3TagSetRepository, Mp3TagSetRepository>();
             builder.Services.AddHostedService<DbInitializerHostedService>();
-            builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+           // builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+            //builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+
             builder.Services.AddSwaggerGen(c =>
             {
                 c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
@@ -29,13 +31,18 @@ namespace SmartaCam.API
             });
 
             var app = builder.Build();
+            app.UseHttpsRedirection();
             if (builder.Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
 
             }
             app.UseRouting();
-
+            app.UseCors(x => x
+             .AllowAnyMethod()
+             .AllowAnyHeader()
+             .SetIsOriginAllowed(origin => true) // allow any origin  
+             .AllowCredentials());
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -53,12 +60,16 @@ namespace SmartaCam.API
             UIRepository uIRepository = new();
             _ = Task.Run(async () => { await uIRepository.SessionInit(); });
 
-             app.UseHttpsRedirection();
+
+            
 
 
 
 
               app.MapControllers();
+
+
+
 
             app.Run();
         }

@@ -10,7 +10,7 @@ namespace SmartaCam.App.Services
         {
             _httpClient = httpClient;
         }
-        public async Task<IEnumerable<Take>> GetAllTakesAsync()
+        public async Task<List<Take>> GetAllTakesAsync()
         {
             return await JsonSerializer.DeserializeAsync<List<Take>>
                  (await _httpClient.GetStreamAsync($"api/getalltakes"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

@@ -1,29 +1,26 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Dropbox.Api.Files;
+using Microsoft.AspNetCore.Components;
 using SmartaCam.App.Services;
 using System.Net.Http.Json;
 
 namespace SmartaCam.App.Pages
 {
-    public class TakesBase : ComponentBase
+    public partial class TakesBase
     {
-        [Parameter]
-        public IEnumerable<Take> Takes { get; set; }
         [Inject]
         public TakeService TakesService { get; set; }
 
-        protected override async Task OnInitializedAsync()
-        {
-            Takes = (IEnumerable<Take>)await TakesService.GetAllTakesAsync();
-        }
+      //  [CascadingParameter]
+       // public List<Take> ComponentTakes { get; set; } = new();
 
-        public class Take
-        {
-            public int Id { get; set; }
-            public string Title { get; set; }
-            public string Artist { get; set; }
-            public string Session { get; set; }
+            //public class Take
+            //{
+            //    public int Id { get; set; }
+            //    public string Title { get; set; }
+            //    public string Artist { get; set; }
+            //    public string Session { get; set; }
 
-        }
+            //}
     }
 }
 

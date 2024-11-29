@@ -10,7 +10,7 @@ namespace SmartaCam
 {
     public class Take
     {
-        public int TakeId { get; set; }
+        public int Id { get; set; }
         public int RunLengthInSeconds { get; set; }
         public decimal OriginalPeakVolume { get; set; }
         public string FileName { get; set; } = string.Empty;

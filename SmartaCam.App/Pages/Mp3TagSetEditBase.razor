@@ -1,0 +1,63 @@
+﻿@page "/mp3tagsetedit"
+@inherits HomeBase
+<PageTitle>Mp3TagSetEdit</PageTitle>
+
+@if (ActiveMp3TagSet == null) 
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+<section class="mp3tagset-edit">
+    <div>
+  	  @if (!Saved)
+      {
+
+        <div>
+            
+                     <label for="mp3tagsetpicker" class="col-sm-3">Select an existing Mp3 Tag Template </label>
+                     <InputSelect class="form-select" @bind-Value="Mp3TagSetId" @bind-Value:event=UpdateActiveMp3TagSet>
+                        @foreach (var mp3TagSet in Mp3TagSets)
+                        {
+                            <option value="@mp3TagSet.Id">@mp3TagSet.Id</option>
+                        }
+   </InputSelect>
+        </div
+        <h2>Mp3 Tag Editor</h2>
+
+		<EditForm Model="@CandidateMp3TagSet" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
+                        <DataAnnotationsValidator />
+            <ValidationSummary />
+		<div class="form-group row">
+          <label for="title" class="col-sm-3">Title: </label>
+          @*<input id="lastName" class="form-control col-sm-8" @bind-value="Employee.LastName" placeholder="Enter last name" />*@
+                        <InputText id="Title" class="form-control col-sm-8" @bind-Value="@CandidateTitle"></InputText>
+                           <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => CandidateTitle)" />
+          <label for="artist" class="col-sm-3">Artist: </label>
+                        <InputText id="Artist" class="form-control col-sm-8" @bind-Value="@CandidateArtist" ></InputText>
+         <label for="album" class="col-sm-3">Album: </label>
+                        <InputText id="Album" class="form-control col-sm-8" @bind-Value="@CandidateAlbum"></InputText>
+          <button type="submit" class="btn btn-primary edit-btn">Save Mp3 Tag</button>
+        @if (ActiveMp3TagSet.Id > 0)
+              {
+                  <a class="btn btn-danger" @onclick="@DeleteMp3TagSet">
+                      Delete
+                  </a>
+              }
+              </div>
+          </EditForm>
+        }
+        </div>
+
+              <div>
+
+             <h3>Preview</h3>
+          <ul>
+            <li> <b>Title:</b> @CandidateTitle.TranslateString()</li>
+                <li> <b>Artist:</b> @CandidateArtist</li>
+                <li> <b>Album:</b> @CandidateAlbum.TranslateString()</li>
+          </ul>
+       </div>
+ 
+  </section>
+}

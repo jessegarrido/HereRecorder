@@ -26,7 +26,7 @@ namespace SmartaCam
 		//	return Ok(await _takeRepository.GetLastTakeDateAsync());
 		//}
 		[HttpGet]
-        public async Task<ActionResult<List<Take>>> GetAllTakes()
+        public async Task<ActionResult<IEnumerable<Take>>> GetAllTakes()
         {
             return Ok(await _takeRepository.GetAllTakesAsync());
 

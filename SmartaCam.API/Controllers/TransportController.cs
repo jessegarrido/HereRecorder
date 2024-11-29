@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace SmartaCam.Controllers
@@ -9,19 +10,19 @@ namespace SmartaCam.Controllers
     {
         private IAudioRepository _audioRepository;
 
-        
+
         public TransportController(IAudioRepository audioRepository)
         {
             _audioRepository = audioRepository;
         }
 
-		[HttpGet]
-		public IActionResult Play()
+        [HttpGet]
+        public async Task<IActionResult> Play()
         {
             try
             {
                 _audioRepository.PlayButtonPressedAsync();
-                return Ok();
+                return Ok(await _audioRepository.GetNowPlayingAsync());
             }
             catch (Exception)
             {
@@ -29,12 +30,12 @@ namespace SmartaCam.Controllers
             }
         }
 
-		[HttpGet]
-		public IActionResult Record()
+        [HttpGet]
+        public IActionResult Record()
         {
             try
             {
-               _audioRepository.RecordButtonPressedAsync();
+                _audioRepository.RecordButtonPressedAsync();
                 return Ok();
             }
             catch (Exception)
@@ -43,8 +44,8 @@ namespace SmartaCam.Controllers
             }
         }
 
-		[HttpGet]
-		public IActionResult Stop()
+        [HttpGet]
+        public IActionResult Stop()
         {
             try
             {
@@ -57,12 +58,12 @@ namespace SmartaCam.Controllers
             }
         }
 
-		[HttpGet]
-		public IActionResult SkipForward()
+        [HttpGet]
+        public IActionResult SkipForward()
         {
             try
             {
-             //   _audioRepository.StopButtonPressedAsync();
+                //   _audioRepository.StopButtonPressedAsync();
                 return Ok();
             }
             catch (Exception)
@@ -71,13 +72,13 @@ namespace SmartaCam.Controllers
             }
         }
 
-		[HttpGet]
-		public IActionResult SkipBack()
+        [HttpGet]
+        public IActionResult SkipBack()
         {
             try
             {
-         //       _audioRepository.RStopButtonPressedAsync();
-                return Ok(new {value = Global.MyState});
+                //       _audioRepository.RStopButtonPressedAsync();
+                return Ok(new { value = Global.MyState });
             }
             catch (Exception)
             {
@@ -85,19 +86,46 @@ namespace SmartaCam.Controllers
             }
         }
 
-		[HttpGet]
-		public async Task<IActionResult> GetState()
+        [HttpGet]
+        public async Task<IActionResult> GetState()
         {
             try
             {
-               // return Global.MyState;
-                int state = Global.MyState; 
-                return Ok( new { value = state });
+                var stateTask = Task.Run(() =>
+                {
+                    return Global.MyState;
+                });
+                return Ok(await stateTask);
             }
             catch (Exception)
             {
                 return this.StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
-    }
-}
+        [HttpGet]
+        public async Task<IActionResult> PlayQueue()
+        {
+            try
+            {
+                List<string> playqueue = await _audioRepository.GetPlayQueueAsync();
+                return Ok(playqueue);
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+        [HttpGet]
+        public async Task<IActionResult> NowPlaying()
+            {
+                try
+                {  
+                    return Ok(await _audioRepository.GetNowPlayingAsync());
+                }
+                catch (Exception)
+                {
+                    return this.StatusCode(StatusCodes.Status500InternalServerError);
+                }
+            }
+        }
+    } 

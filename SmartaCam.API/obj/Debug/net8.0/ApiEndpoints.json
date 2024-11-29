@@ -26,6 +26,80 @@
     ]
   },
   {
+    "ContainingType": "SmartaCam.Mp3TagSetController",
+    "Method": "GetActiveMp3TagSet",
+    "RelativePath": "api/{action}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Mp3TagSetController",
+    "Method": "GetAllMp3TagSets",
+    "RelativePath": "api/{action}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Mp3TagSetController",
+    "Method": "AddMp3TagSet",
+    "RelativePath": "api/{action}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "mp3TagSet",
+        "Type": "SmartaCam.Mp3TagSet",
+        "IsRequired": true
+      },
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Mp3TagSetController",
+    "Method": "UpdateActiveMp3TagSet",
+    "RelativePath": "api/{action}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SmartaCam.TakeController",
     "Method": "GetAllTakes",
     "RelativePath": "api/{action}",
@@ -41,7 +115,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.List\u00601[[SmartaCam.Take, SmartaCam.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[SmartaCam.Take, SmartaCam.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -85,6 +159,27 @@
   {
     "ContainingType": "SmartaCam.Mp3TagSetController",
     "Method": "GetMp3TagSet",
+    "RelativePath": "api/{action}/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Mp3TagSetController",
+    "Method": "DeleteMp3TagSet",
     "RelativePath": "api/{action}/{id}",
     "HttpMethod": "GET",
     "IsController": true,
@@ -186,6 +281,38 @@
   {
     "ContainingType": "SmartaCam.Controllers.TransportController",
     "Method": "GetState",
+    "RelativePath": "api/transport/{action}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Controllers.TransportController",
+    "Method": "PlayQueue",
+    "RelativePath": "api/transport/{action}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.Controllers.TransportController",
+    "Method": "NowPlaying",
     "RelativePath": "api/transport/{action}",
     "HttpMethod": "GET",
     "IsController": true,

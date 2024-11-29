@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "SmartaCam.App",
   "resources": {
-    "hash": "sha256-bBa619HKIv6ixGSgfgaJUf/f0rvUA51zY5UL7TWpPyo=",
+    "hash": "sha256-SFnx8Ga3GwjxjAsWBOqwYvapvSG9HSXSKYboQ7Dz6FQ=",
     "jsModuleNative": {
       "dotnet.native.8.0.11.90g7yml2oe.js": "sha256-VdKq87/z5NIxZKmuM+fv38XF+RcEb/bg3jVBwQSfwP4="
     },
@@ -232,10 +232,10 @@
       "mscorlib.wasm": "sha256-04e4k5XU8HWGB/dq/2+j84xzzGPflTs0IYWI0OxogVc=",
       "netstandard.wasm": "sha256-gnGZURPnoSmjXuYNCOJi5tt8qn2LRImWgue1Ru3/TDQ=",
       "System.Private.CoreLib.wasm": "sha256-6w3jYr0arcp8jnt4aeqh+AmqrLA6q7jl9rQYAwLzE0M=",
-      "SmartaCam.App.wasm": "sha256-tMEwjxByyd0VNY0oc2e5lWnz+Iepcy3af9evarnrqrE="
+      "SmartaCam.App.wasm": "sha256-499lqyZhjjfPdKpZgQv2LyKbMY1a42cIFFZlLtxH4Ko="
     },
     "pdb": {
-      "SmartaCam.App.pdb": "sha256-55rLTx+b2dVPaYk0XVLThw1DTsJgqLnLQzLNfIEzUYA="
+      "SmartaCam.App.pdb": "sha256-B91wn1Barc2A7wLzoTJWzCukDNva7acTP9Btf6o55/A="
     }
   },
   "cacheBootResources": true,

@@ -29,10 +29,13 @@ namespace SmartaCam
     public interface IMp3TagSetRepository
     {
         public Task<bool> SaveChangesAsync();
-        public void AddMp3TagSet(Mp3TagSet mp3TagSet);
-        public void SetActiveMp3TagSet(int mp3TagSetId);
+        public Task<Mp3TagSet> AddMp3TagSetAsync(Mp3TagSet mp3TagSet);
+        public Task SetActiveMp3TagSetAsync(int id);
         public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
         public Task<Mp3TagSet> GetActiveMp3TagSetAsync();
+        public Task DeleteMp3TagSetByIdAsync(int id);
+        public Task<IEnumerable<Mp3TagSet>> GetAllMp3TagSetsAsync();
+        public Task<bool> CheckIfMp3TagSetExistsAsync(Mp3TagSet mp3TagSet);
     }
     public class TakeRepository : ITakeRepository
     {
@@ -97,10 +100,19 @@ namespace SmartaCam
         {
             return (await _context.SaveChangesAsync()) > 0;
         }
-        public void AddMp3TagSet(Mp3TagSet mp3TagSet)
+        public async Task<bool> CheckIfMp3TagSetExistsAsync(Mp3TagSet mp3TagSet)
         {
-            _context.Add<Mp3TagSet>(mp3TagSet);
+            Mp3TagSet existingTagSet = _context.Mp3TagSets
+                    .Where(m => m.Title == mp3TagSet.Title &&
+                                m.Artist == mp3TagSet.Artist &&
+                                m.Album == mp3TagSet.Album).FirstOrDefault();
+            return (existingTagSet != null);
+        }
+            public async Task<Mp3TagSet> AddMp3TagSetAsync(Mp3TagSet mp3TagSet)
+        {
+            var addedEntity = _context.Add<Mp3TagSet>(mp3TagSet);
             _context.SaveChanges();
+            return addedEntity.Entity;
         }
         public async Task<Mp3TagSet> GetActiveMp3TagSetAsync()
         {
@@ -108,7 +120,7 @@ namespace SmartaCam
                  .Where(t => t.IsDefault == true).FirstOrDefault();
             return mp3TagSetActive;
         }
-        public void SetActiveMp3TagSet(int mp3TagSetId)
+        public async Task SetActiveMp3TagSetAsync(int mp3TagSetId)
         {
             var mp3TagSetUnsetDefault = _context.Mp3TagSets
                  .Where(t => t.IsDefault == true).FirstOrDefault();
@@ -125,13 +137,19 @@ namespace SmartaCam
                 .Where(e => (e.Id == id)).FirstOrDefault();
             return mp3TagSet;
         }
-        public async Task<List<Mp3TagSet>> GetAllMp3TagSets()
+        public async Task<IEnumerable<Mp3TagSet>> GetAllMp3TagSetsAsync()
         {
             List<Mp3TagSet> mp3TagSets = new();
             foreach (Mp3TagSet mp3TagSet in _context.Mp3TagSets)
                 mp3TagSets.Add(mp3TagSet);
             return mp3TagSets;
         }
+        public async Task DeleteMp3TagSetByIdAsync(int id)
+        {
+            _context.Remove(id);
+            _context.SaveChanges();
+        }
+
     }
     public class SmartaCamContext : DbContext
     {
@@ -169,7 +187,8 @@ namespace SmartaCam
     public class Take
     {
 		[Key]
-		public int Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
         //public int RunLengthInSeconds { get; set; }
         public float OriginalPeakVolume { get; set; } = 0;
         public string WavFilePath { get; set; } = string.Empty;
@@ -188,6 +207,7 @@ namespace SmartaCam
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        [RegularExpression(@"[#]", ErrorMessage = "Title Must Contain [#]")]
         public string Title { get; set; } = string.Empty;
         public string Artist { get; set; } = string.Empty;
         public string Album { get; set; } = string.Empty;

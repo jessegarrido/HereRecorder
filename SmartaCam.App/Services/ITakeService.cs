@@ -5,7 +5,7 @@ namespace SmartaCam
     public interface ITakeService
     {
 
-        public Task<IEnumerable<Take>> GetAllTakesAsync();
+        public Task<List<Take>> GetAllTakesAsync();
 
     }
 }

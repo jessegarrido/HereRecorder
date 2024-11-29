@@ -22,6 +22,8 @@ using SQLitePCL;
 using Microsoft.EntityFrameworkCore;
 using static Dropbox.Api.Files.ListRevisionsMode;
 using Path = System.IO.Path;
+using System.Text.Json;
+using System.Collections.Generic;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -39,6 +41,8 @@ namespace SmartaCam
         public Task PlayButtonPressedAsync();
         public Task StopButtonPressedAsync();
         public List<string> CreatePlayQueue();
+        public Task<List<string>> GetPlayQueueAsync();
+        public Task<string> GetNowPlayingAsync();
     }
         public interface INetworkRepository
         {
@@ -316,16 +320,28 @@ namespace SmartaCam
                                          select file.FullName;                      
                  return queryMatchingFiles.ToList();
             }
+        public async Task<string> GetNowPlayingAsync()
+        {
+            return Global.NowPlayingFileName;
+        }
+        public async Task<List<string>> GetPlayQueueAsync()
+        {
+
+            return CreatePlayQueue(); ; //Global.PlaybackQueue;
+        }
+
 
         public class PlaybackQueue
         {
-            private Queue<string> playlist;
-            private IWavePlayer player;
-            private WaveStream fileWaveStream;
+            
+            private  Queue<string>? playlist;
+            private  IWavePlayer player;
+            private  WaveStream fileWaveStream;
 
-            public PlaybackQueue(IEnumerable<string> startingPlaylist)
+            public  PlaybackQueue(IEnumerable<string> startingPlaylist)
             {
-                playlist = new Queue<string>(startingPlaylist);
+                playlist = new Queue<string?>(startingPlaylist);
+                
             }
             public async Task PlayATakeAsync(CancellationToken ct)
             {
@@ -333,10 +349,19 @@ namespace SmartaCam
                 {
                     fileWaveStream.Dispose();
                 }
-                if (playlist.Count < 1)
+                if (playlist == null)
                 {
                     return;
                 }
+                if (playlist.Count > 0)
+                    {
+                        Global.NowPlayingFileName = playlist.Peek();
+                    }
+                    else
+                    {
+                    playlist = null;
+                    return;
+                    }
                 if (player != null && player.PlaybackState != PlaybackState.Stopped)
                 {
                     player.Stop();
@@ -346,29 +371,41 @@ namespace SmartaCam
                     player.Dispose();
                     player = null;
                 }
-                player = new WaveOutEvent();
-                fileWaveStream = new AudioFileReader(playlist.Dequeue());
-                player.Init(fileWaveStream);
-                player.PlaybackStopped += async (sender, evn)  => { await PlayATakeAsync(ct); };
-                player.Play();
-                do
+                
+                using (player = new WaveOutEvent())
                 {
-                    Thread.Sleep(1000);
-                } while (Global.MyState == 3);
-                Console.WriteLine("Playback stopped");
-                // player = null;
-                playlist.Clear();
-                if (player.PlaybackState != PlaybackState.Stopped)
-                {
-                    player.Stop();
-                }
-                if (fileWaveStream != null)
-                {
-                    fileWaveStream.Dispose();
-                }
-                if (player != null)
-                {
-                    player.Dispose();        
+                    fileWaveStream = new AudioFileReader(playlist.Dequeue());
+                    player.Init(fileWaveStream);
+                    player.PlaybackStopped += async (sender, evn) => { await PlayATakeAsync(ct); };
+                    Global.PlaybackQueue = playlist.ToList();
+                    player.Play();
+                    do
+                    {
+                        Thread.Sleep(1000);
+                    } while (Global.MyState == 3);
+
+                    Console.WriteLine("Playback stopped");
+                    if (playlist != null)
+                    {
+                        playlist.Clear();
+                        playlist = null;
+                    }
+
+                    if (fileWaveStream != null)
+                    {
+                        fileWaveStream.Dispose();
+                    }
+                    if (player != null)
+                    {
+                        if (player.PlaybackState != PlaybackState.Stopped)
+                        {
+                            player.Stop();
+                        }
+                        player.Dispose();
+                        player = null;
+                    }
+
+                    
                 }
                 //  Global.NowPlayingFileName = player.ToString();
             }
@@ -428,6 +465,8 @@ namespace SmartaCam
                 Global.MyState = 3;
                 var playlist = CreatePlayQueue();
                 await PlaybackAudioAsync(playlist);
+
+
                     //while (!Global.wavPathAndName.IsFileReady())
                     //{
                     //    await Task.Delay(1000);
