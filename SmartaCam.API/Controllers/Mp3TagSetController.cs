@@ -23,7 +23,6 @@ namespace SmartaCam
         [HttpGet("{id:int}")]
         public async Task<IActionResult> DeleteMp3TagSet(int id)
         {
-
             try
             {
                 await _mp3TagSetRepository.DeleteMp3TagSetByIdAsync(id);
@@ -46,9 +45,11 @@ namespace SmartaCam
             return Ok(await _mp3TagSetRepository.GetAllMp3TagSetsAsync());
 
         }
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> SetActiveMp3TagSet(int id)
         {
-            return Ok();
+            //await _mp3TagSetRepository.SetActiveMp3TagSetAsync(id);
+            return Ok(await _mp3TagSetRepository.SetActiveMp3TagSetAsync(id));
 
         }
 
@@ -58,15 +59,16 @@ namespace SmartaCam
 
             try
             {
-                var alreadyexists = await _mp3TagSetRepository.CheckIfMp3TagSetExistsAsync(mp3TagSet);
-                if (alreadyexists)
-                {
-                   return BadRequest($"Tag set already exists");
-                } else
-                { 
-                    await _mp3TagSetRepository.AddMp3TagSetAsync(mp3TagSet);
-                    return Ok();
-                }
+                return Ok(await _mp3TagSetRepository.AddMp3TagSetAsync(mp3TagSet));
+               // var alreadyexists = await _mp3TagSetRepository.CheckIfMp3TagSetExistsAsync(mp3TagSet);
+               // if (alreadyexists)
+             //   {
+               //    return BadRequest($"Tag set already exists");
+               // } else
+              //  { 
+              //      await _mp3TagSetRepository.AddMp3TagSetAsync(mp3TagSet);
+              //      return Ok();
+             // }
                 
             }
             catch (Exception)

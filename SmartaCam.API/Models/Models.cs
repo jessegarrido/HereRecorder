@@ -29,8 +29,8 @@ namespace SmartaCam
     public interface IMp3TagSetRepository
     {
         public Task<bool> SaveChangesAsync();
-        public Task<Mp3TagSet> AddMp3TagSetAsync(Mp3TagSet mp3TagSet);
-        public Task SetActiveMp3TagSetAsync(int id);
+        public Task<int> AddMp3TagSetAsync(Mp3TagSet mp3TagSet);
+        public Task<Mp3TagSet> SetActiveMp3TagSetAsync(int id);
         public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
         public Task<Mp3TagSet> GetActiveMp3TagSetAsync();
         public Task DeleteMp3TagSetByIdAsync(int id);
@@ -108,28 +108,46 @@ namespace SmartaCam
                                 m.Album == mp3TagSet.Album).FirstOrDefault();
             return (existingTagSet != null);
         }
-            public async Task<Mp3TagSet> AddMp3TagSetAsync(Mp3TagSet mp3TagSet)
-        {
-            var addedEntity = _context.Add<Mp3TagSet>(mp3TagSet);
-            _context.SaveChanges();
-            return addedEntity.Entity;
+            public async Task<int> AddMp3TagSetAsync(Mp3TagSet mp3TagSet)
+            { 
+            var existingTagSet = _context.Mp3TagSets
+                    .Where(m => m.Title == mp3TagSet.Title &&
+                                m.Artist == mp3TagSet.Artist &&
+                                 m.Album == mp3TagSet.Album).FirstOrDefault();
+            if (existingTagSet == null)
+            {
+                var addedEntity = _context.Add<Mp3TagSet>(mp3TagSet);
+                _context.SaveChanges();
+                int newId = mp3TagSet.Id;
+                return newId;
+            }
+            else return existingTagSet.Id;
         }
         public async Task<Mp3TagSet> GetActiveMp3TagSetAsync()
         {
             var mp3TagSetActive = _context.Mp3TagSets
-                 .Where(t => t.IsDefault == true).FirstOrDefault();
+                 .Where(m => m.IsDefault == true).FirstOrDefault();
             return mp3TagSetActive;
         }
-        public async Task SetActiveMp3TagSetAsync(int mp3TagSetId)
+        public async Task<Mp3TagSet> SetActiveMp3TagSetAsync(int mp3TagSetId)
         {
-            var mp3TagSetUnsetDefault = _context.Mp3TagSets
-                 .Where(t => t.IsDefault == true).FirstOrDefault();
-            mp3TagSetUnsetDefault.IsDefault = false;
+            foreach (var mp3TagSet in _context.Mp3TagSets.ToList())
+                {
+                if (mp3TagSet.Id != mp3TagSetId)
+                    { 
+                        //Console.WriteLine(mp3TagSet.Id);
+                        mp3TagSet.IsDefault = false;
+                    }
+                }
+            Console.WriteLine(mp3TagSetId);
+            
 
-            var mp3TagSetDefault = _context.Mp3TagSets
-                .Where(t => t.Id == mp3TagSetId).FirstOrDefault();
-            mp3TagSetDefault.IsDefault = true;
+            var mp3TagSet2 = _context.Mp3TagSets
+                .Where(m => m.Id == mp3TagSetId).FirstOrDefault();
+            mp3TagSet2.IsDefault = true;
             _context.SaveChanges();
+
+            return await GetActiveMp3TagSetAsync();
         }
         public async Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id)
         {
@@ -146,8 +164,13 @@ namespace SmartaCam
         }
         public async Task DeleteMp3TagSetByIdAsync(int id)
         {
-            _context.Remove(id);
-            _context.SaveChanges();
+            {
+                Console.WriteLine($"delete id {id}");
+                Mp3TagSet mp3TagSetToDelete = _context.Mp3TagSets
+                   .Where(e => e.Id == id).FirstOrDefault();
+                _context.Remove(mp3TagSetToDelete);
+                _context.SaveChanges();
+            }
         }
 
     }
@@ -207,11 +230,11 @@ namespace SmartaCam
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [RegularExpression(@"[#]", ErrorMessage = "Title Must Contain [#]")]
+       // [RegularExpression(@"#", ErrorMessage = "Title Must Contain #")] Cannot make this work wtf
         public string Title { get; set; } = string.Empty;
         public string Artist { get; set; } = string.Empty;
         public string Album { get; set; } = string.Empty;
-        public bool IsDefault { get; set; }
+        public bool IsDefault { get; set; } = true;
 
         //  public string Content { get; set; }
 

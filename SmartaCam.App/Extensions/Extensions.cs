@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,6 @@ namespace SmartaCam
                 return untranslatedstring;
             }
         }
-      
-    }
+
+	}
 }

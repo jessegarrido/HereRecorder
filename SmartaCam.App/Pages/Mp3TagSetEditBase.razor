@@ -1,8 +1,8 @@
 ﻿@page "/mp3tagsetedit"
-@inherits HomeBase
+@* @inherits HomeBase *@
 <PageTitle>Mp3TagSetEdit</PageTitle>
 
-@if (ActiveMp3TagSet == null) 
+@if (Mp3TagSets == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -12,38 +12,37 @@ else
     <div>
   	  @if (!Saved)
       {
-
-        <div>
-            
-                     <label for="mp3tagsetpicker" class="col-sm-3">Select an existing Mp3 Tag Template </label>
-                     <InputSelect class="form-select" @bind-Value="Mp3TagSetId" @bind-Value:event=UpdateActiveMp3TagSet>
-                        @foreach (var mp3TagSet in Mp3TagSets)
+          <div>
+                     <label >Select an existing Mp3 Tag Template </label>
+                        <select class="select-element" value="@SelectedMp3TagSetId" @onchange="UpdateActiveMp3TagFromDropdown">
+                           <option value="0" selected></option>
+                        @foreach (Mp3TagSet tagSet in Mp3TagSets)
                         {
-                            <option value="@mp3TagSet.Id">@mp3TagSet.Id</option>
+                            <option value="@tagSet.Id">@tagSet.Id</option>
                         }
-   </InputSelect>
-        </div
+                      </select>
+        </div>
         <h2>Mp3 Tag Editor</h2>
 
 		<EditForm Model="@CandidateMp3TagSet" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
-                        <DataAnnotationsValidator />
-            <ValidationSummary />
+                         <DataAnnotationsValidator />
+            <ValidationSummary /> 
 		<div class="form-group row">
-          <label for="title" class="col-sm-3">Title: </label>
+          <label for="title" class="col-sm-3"><b>Title:</b> </label>
           @*<input id="lastName" class="form-control col-sm-8" @bind-value="Employee.LastName" placeholder="Enter last name" />*@
-                        <InputText id="Title" class="form-control col-sm-8" @bind-Value="@CandidateTitle"></InputText>
-                           <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => CandidateTitle)" />
-          <label for="artist" class="col-sm-3">Artist: </label>
-                        <InputText id="Artist" class="form-control col-sm-8" @bind-Value="@CandidateArtist" ></InputText>
-         <label for="album" class="col-sm-3">Album: </label>
-                        <InputText id="Album" class="form-control col-sm-8" @bind-Value="@CandidateAlbum"></InputText>
+                        <InputText id="Title" class="form-control col-sm-8" @bind-Value="@CandidateTitle" @bind-Value:after="ShowHideDeleteButton">"</InputText>
+                     @*  <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => CandidateTitle)" /> *@
+          <label for="artist" class="col-sm-3"><b>Artist:</b> </label>
+                        <InputText id="Artist" class="form-control col-sm-8" @bind-Value="@CandidateArtist" @bind-Value:after="ShowHideDeleteButton">"></InputText>
+         <label for="album" class="col-sm-3"><b>Album:</b> </label>
+                        <InputText id="Album" class="form-control col-sm-8" @bind-Value="@CandidateAlbum" @bind-Value:after="ShowHideDeleteButton">"></InputText>
           <button type="submit" class="btn btn-primary edit-btn">Save Mp3 Tag</button>
-        @if (ActiveMp3TagSet.Id > 0)
-              {
-                  <a class="btn btn-danger" @onclick="@DeleteMp3TagSet">
-                      Delete
-                  </a>
-              }
+           @if (ShowDeleteButton) 
+         {
+                  <button class="btn btn-dark" @onclick="@DeleteMp3TagSet"><i class="fa fa-floppy-o" aria-hidden="false"></i> Delete</button> 
+          @*         <button class="btn btn-info dropdown-toggle" @onclick="@DeleteMp3TagSet" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Delete</button> *@
+
+         }
               </div>
           </EditForm>
         }

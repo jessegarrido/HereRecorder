@@ -21,7 +21,7 @@ namespace SmartaCam.Controllers
         {
             try
             {
-                _audioRepository.PlayButtonPressedAsync();
+                await _audioRepository.PlayButtonPressedAsync();
                 return Ok(await _audioRepository.GetNowPlayingAsync());
             }
             catch (Exception)

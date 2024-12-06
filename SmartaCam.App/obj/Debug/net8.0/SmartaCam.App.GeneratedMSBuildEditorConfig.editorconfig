@@ -50,6 +50,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTXAzVGFnU2V0RWRpdEJhc2UucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Settings.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2V0dGluZ3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Takes.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFrZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

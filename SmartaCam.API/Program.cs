@@ -43,7 +43,7 @@ namespace SmartaCam.API
              .AllowAnyHeader()
              .SetIsOriginAllowed(origin => true) // allow any origin  
              .AllowCredentials());
-            app.UseAuthorization();
+        //    app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

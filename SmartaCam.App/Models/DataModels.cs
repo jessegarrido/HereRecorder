@@ -10,6 +10,7 @@ namespace SmartaCam
 {
     public class Take
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int RunLengthInSeconds { get; set; }
         public decimal OriginalPeakVolume { get; set; }
@@ -26,7 +27,7 @@ namespace SmartaCam
     public class Mp3TagSet
     {
         [Key]
-       // [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Artist { get; set; } = string.Empty;

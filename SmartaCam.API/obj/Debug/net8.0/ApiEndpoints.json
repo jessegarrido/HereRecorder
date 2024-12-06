@@ -199,6 +199,27 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SmartaCam.Mp3TagSetController",
+    "Method": "SetActiveMp3TagSet",
+    "RelativePath": "api/{action}/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "action",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SmartaCam.Controllers.TransportController",
     "Method": "Play",
     "RelativePath": "api/transport/{action}",

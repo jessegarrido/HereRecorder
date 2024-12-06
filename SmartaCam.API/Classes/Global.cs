@@ -17,8 +17,8 @@ namespace SmartaCam
         public static string Home { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
         public static string LocalRecordingsFolder { get; set; } = Path.Combine(Home, "SmartaCam", "Recordings");
         public static string wavPathAndName { get; set; }
-        public static string mp3PathAndName { get; set; }
-        public static string lastWavPathAndName { get; set; }
+     //   public static string mp3PathAndName { get; set; }
+      //  public static string lastWavPathAndName { get; set; }
         public static string OS { get; set; }
         public static bool NetworkStatus { get; set; } = true;
         public static bool OAuthStatus { get; set; } = false;
