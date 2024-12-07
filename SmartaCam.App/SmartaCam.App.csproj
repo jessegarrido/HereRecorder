@@ -9,9 +9,13 @@
 
   <ItemGroup>
     <None Include="SmartaCam.Shared.csproj" />
+    <None Include="wwwroot\green.jpg" />
+    <None Include="wwwroot\red.jpg" />
+    <None Include="wwwroot\white.jpg" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BootstrapBlazor" Version="9.1.0" />
     <PackageReference Include="Dropbox.Api" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.11" PrivateAssets="all" />
@@ -30,6 +34,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\" />
   </ItemGroup>
 
 </Project>

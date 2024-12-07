@@ -19,15 +19,20 @@ namespace SmartaCam
         {
             return (IActionResult)await _httpClient.GetAsync("api/transport/record");
         }
-        public async Task<string> PlayButtonPress()
+        public async Task<IActionResult> PlayButtonPress()
         {
-            // return (IActionResult)await _httpClient.GetAsync("api/transport/play");
-            return await System.Text.Json.JsonSerializer.DeserializeAsync<string>
-                   (await _httpClient.GetStreamAsync($"api/transport/play"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            return await _httpClient.GetAsync("api/transport/play") as IActionResult;
+
         }
-        public async Task<IActionResult> StopButtonPress()
+
+        public async Task<IActionResult> PlayATake(int id)
         {
-            return (IActionResult)await _httpClient.GetAsync("api/transport/stop");
+            return await _httpClient.GetAsync($"api/transport/play/{id}") as IActionResult;
+
+        }
+            public async Task<IActionResult> StopButtonPress()
+        {
+            return await _httpClient.GetAsync("api/transport/stop") as IActionResult;
         }
         public async Task<IActionResult> SkipForwardButtonPress()
         {
@@ -47,8 +52,9 @@ namespace SmartaCam
         }
         public async Task<string> NowPlaying()
         {
-            return await System.Text.Json.JsonSerializer.DeserializeAsync<string>
-         (await _httpClient.GetStreamAsync($"api/transport/nowplaying"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            // return await System.Text.Json.JsonSerializer.DeserializeAsync<string>
+            //   (await _httpClient.GetStreamAsync($"api/transport/nowplaying"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            return await _httpClient.GetStringAsync($"api/transport/nowplaying");
         }
         public async Task<IEnumerable<string>> PlayQueue()
         {

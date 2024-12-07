@@ -37,6 +37,10 @@
       "PackagePath": "staticwebassets\\favicon.png"
     },
     {
+      "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\green.jpg",
+      "PackagePath": "staticwebassets\\green.jpg"
+    },
+    {
       "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\icon-192.png",
       "PackagePath": "staticwebassets\\icon-192.png"
     },
@@ -45,8 +49,20 @@
       "PackagePath": "staticwebassets\\index.html"
     },
     {
+      "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\red.jpg",
+      "PackagePath": "staticwebassets\\red.jpg"
+    },
+    {
       "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\sample-data\\weather.json",
       "PackagePath": "staticwebassets\\sample-data\\weather.json"
+    },
+    {
+      "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\white.jpg",
+      "PackagePath": "staticwebassets\\white.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\white.png",
+      "PackagePath": "staticwebassets\\white.png"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.SmartaCam.App.Microsoft.AspNetCore.StaticWebAssets.props",

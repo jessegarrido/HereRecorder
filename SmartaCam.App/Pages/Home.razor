@@ -1,10 +1,10 @@
-﻿@page "/"
+﻿@* 
 @inherits HomeBase
+
 
 
 <PageTitle>Home</PageTitle>
 
-<h1>SmartaCam</h1>
 @if (PlayQueue == null)
 {
     <p><em>Loading...</em></p>
@@ -13,25 +13,17 @@ else
 {
 
 <div>
-<label> Now Playing: @NowPlaying
-<label @bind=NowPlaying /> </label>
-
-<label> Playback Queue: @PlayQueue
-<label @bind=PlayQueue /> </label>
-
-<label> MyState: @MyState 
-<label @bind=MyState /> </label>
-</div>
-
-<div>
 <Button  @onclick="Record_Click" Color="ButtonColor.Danger"> Record </Button>
-<Button  @onclick="() => Play_Click()" Color="ButtonColor.Success"> Play </Button>
+<Button  @onclick="Play_Click" Color="ButtonColor.Success"> Play </Button>
 <Button @onclick="Stop_Click" Color="ButtonColor.Dark"> Stop </Button>
 <Button onclick=" " Color="ButtonColor.Dark"> Skip Forward </Button>
 <Button onclick=" " Color="ButtonColor.Dark"> Skip Back </Button>
 <Button @onclick="() => UpdateState_Click()" Color="ButtonColor.Dark"> Check MyState </Button>
+
+<br>
+<br>
 <Takes></Takes>
 
 </div>
-
 }
+ *@

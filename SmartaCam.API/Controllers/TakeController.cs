@@ -13,7 +13,12 @@ namespace SmartaCam
             _takeRepository = takeRepo;
 
         }
-        // [HttpGet("{id:int}")]
+        [HttpGet]
+        public async Task<ActionResult<List<Take>>> GetAllTakes()
+        {
+            return Ok(await _takeRepository.GetAllTakesAsync());
+
+        }
         [HttpGet("/{id:int}")]
         public async Task<ActionResult<Take>> GetTakeById(int id)
         {
@@ -25,12 +30,7 @@ namespace SmartaCam
 		//{
 		//	return Ok(await _takeRepository.GetLastTakeDateAsync());
 		//}
-		[HttpGet]
-        public async Task<ActionResult<IEnumerable<Take>>> GetAllTakes()
-        {
-            return Ok(await _takeRepository.GetAllTakesAsync());
 
-        }
         [HttpPost]
         public async Task<ActionResult<Take>> AddTake(Take newTake)
         {

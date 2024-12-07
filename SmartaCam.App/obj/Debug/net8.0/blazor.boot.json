@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "SmartaCam.App",
   "resources": {
-    "hash": "sha256-4scj3rgPHYuexBnsXkRG1ymtoNiKsj363QIWp+nB8cs=",
+    "hash": "sha256-3dklpAsyL1z0SxIhyroPMjEhxKKjtjUE9DvS7vSrfZU=",
     "jsModuleNative": {
       "dotnet.native.8.0.11.90g7yml2oe.js": "sha256-VdKq87/z5NIxZKmuM+fv38XF+RcEb/bg3jVBwQSfwP4="
     },
@@ -17,6 +17,7 @@
       "icudt_no_CJK.dat": "sha256-L7sV7NEYP37/Qr2FPCePo5cJqRgTXRwGHuwF5Q+0Nfs="
     },
     "assembly": {
+      "BootstrapBlazor.wasm": "sha256-sPOGk8Frp5XRTBnoRtpHrR8hmsNurAxLi7z7jmPj6bc=",
       "Dropbox.Api.wasm": "sha256-umLkV7VoEDEVHFPuZfkfw0zatK6pp2BXaYq2Z3DJ7SA=",
       "Microsoft.AspNetCore.Authorization.wasm": "sha256-W1OqRV83imd3SG/v4PAlCa5m/3RA9n5ysXT7G46jKKc=",
       "Microsoft.AspNetCore.Components.wasm": "sha256-BbzyjRS+gcf0R8v27CSNdTK4vm9XoqKz4NEhk7LK+dY=",
@@ -30,6 +31,8 @@
       "Microsoft.AspNetCore.Metadata.wasm": "sha256-Mvq2Fy4bw77m1ECnG7otq2ctOhvymfaC9ksNUcgOa7M=",
       "Microsoft.AspNetCore.Mvc.Abstractions.wasm": "sha256-u5seiCdiI0C2g31h9Q6VHp03zeLVwEiAN/gb8uE7RfU=",
       "Microsoft.AspNetCore.Routing.Abstractions.wasm": "sha256-JLA2a68UlQExL1dYl5UT71qQywUwA2fm/xweayPu4qg=",
+      "Microsoft.Extensions.Caching.Abstractions.wasm": "sha256-ygxx8pKlN4YllvAX2HADU+dKWSOZRMNfSP4nHkPMH+8=",
+      "Microsoft.Extensions.Caching.Memory.wasm": "sha256-BiuYQmEQD4IoGofbzRbJdxGd8JmaZxAMTfs8kXli8EA=",
       "Microsoft.Extensions.Configuration.wasm": "sha256-UDGEQR7J3WTfzYMgOzxVIBwFQtKEeJvO8UgrWagypdE=",
       "Microsoft.Extensions.Configuration.Abstractions.wasm": "sha256-yNdqbqDWGiJo943D7LPak5xryCBEsNH0wtdiuU1R9VE=",
       "Microsoft.Extensions.Configuration.Binder.wasm": "sha256-fNNlyyW44y8Gp6dvOtsvHoVNzpT8lrKmPleg5CDhRAo=",
@@ -43,6 +46,8 @@
       "Microsoft.Extensions.FileProviders.Physical.wasm": "sha256-MS+zB0xkKhKk/QdE32ZwKtdlrLMLI/y2NAKPUWhcBVg=",
       "Microsoft.Extensions.FileSystemGlobbing.wasm": "sha256-AnWUKd0qJ8ZNKkRC0AFK2cjjszB7reXiP+bXdIi8bic=",
       "Microsoft.Extensions.Http.wasm": "sha256-oIcDl7xeIiyW2a1fkqPHIoWWHLK424HLHtSpKEjCI+Q=",
+      "Microsoft.Extensions.Localization.wasm": "sha256-HL5ZTwHZjs1WqTRm5CjBxjM9c08alNdydCEFjjRusUU=",
+      "Microsoft.Extensions.Localization.Abstractions.wasm": "sha256-UB1c072rmEM46gQ9NbB/sfJORrV8wp83oCtIG8azRck=",
       "Microsoft.Extensions.Logging.wasm": "sha256-pa0M3exxNvk6g5anUwlaPC99Afawsi1GZvJeU1q/ZGM=",
       "Microsoft.Extensions.Logging.Abstractions.wasm": "sha256-glWux6/5FFNJxVrbRPQ/PhLriEkSd3TllLfjmvZbpKw=",
       "Microsoft.Extensions.Options.wasm": "sha256-5/m+yVFGRuY+N4jQnD+QETKH0AfhAsnVze5dJ5ogIVM=",
@@ -232,10 +237,10 @@
       "mscorlib.wasm": "sha256-04e4k5XU8HWGB/dq/2+j84xzzGPflTs0IYWI0OxogVc=",
       "netstandard.wasm": "sha256-gnGZURPnoSmjXuYNCOJi5tt8qn2LRImWgue1Ru3/TDQ=",
       "System.Private.CoreLib.wasm": "sha256-6w3jYr0arcp8jnt4aeqh+AmqrLA6q7jl9rQYAwLzE0M=",
-      "SmartaCam.App.wasm": "sha256-mM7+1DFzEU3qNLGsVMeyrMmcLWVOw02ipcqzirstExg="
+      "SmartaCam.App.wasm": "sha256-foqsugc2SxqTUezip3WWGVGweLfXh1tepBXZ9Tf9K78="
     },
     "pdb": {
-      "SmartaCam.App.pdb": "sha256-/x/hc7gRPP99O6K9CBBRuhXX2g7rc8/1CdKBLL7HU9U="
+      "SmartaCam.App.pdb": "sha256-Zwa+OELvuhoW6LteO9kXn27PDguQ4cJolzj75SobNqw="
     }
   },
   "cacheBootResources": true,

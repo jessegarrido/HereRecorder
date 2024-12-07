@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using static Dropbox.Api.Files.ListRevisionsMode;
 
 namespace SmartaCam.Controllers
 {
@@ -9,11 +10,13 @@ namespace SmartaCam.Controllers
     public class TransportController : ControllerBase
     {
         private IAudioRepository _audioRepository;
+        private ITakeRepository _takeRepository;
 
 
-        public TransportController(IAudioRepository audioRepository)
+        public TransportController(IAudioRepository audioRepository, ITakeRepository takeRepository)
         {
             _audioRepository = audioRepository;
+            _takeRepository = takeRepository;
         }
 
         [HttpGet]
@@ -21,8 +24,23 @@ namespace SmartaCam.Controllers
         {
             try
             {
+
                 await _audioRepository.PlayButtonPressedAsync();
-                return Ok(await _audioRepository.GetNowPlayingAsync());
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> Play(int id)
+        {
+            try
+            {
+                string takeFilePath = await _takeRepository.GetTakeFilePathByIdAsync(id);
+                await _audioRepository.PlayOneTakeAsync(takeFilePath);
+                return Ok();
             }
             catch (Exception)
             {

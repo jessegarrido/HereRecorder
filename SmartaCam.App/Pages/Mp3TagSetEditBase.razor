@@ -1,5 +1,4 @@
 ﻿@page "/mp3tagsetedit"
-@* @inherits HomeBase *@
 <PageTitle>Mp3TagSetEdit</PageTitle>
 
 @if (Mp3TagSets == null)
@@ -12,22 +11,13 @@ else
     <div>
   	  @if (!Saved)
       {
-          <div>
-                     <label >Select an existing Mp3 Tag Template </label>
-                        <select class="select-element" value="@SelectedMp3TagSetId" @onchange="UpdateActiveMp3TagFromDropdown">
-                           <option value="0" selected></option>
-                        @foreach (Mp3TagSet tagSet in Mp3TagSets)
-                        {
-                            <option value="@tagSet.Id">@tagSet.Id</option>
-                        }
-                      </select>
-        </div>
         <h2>Mp3 Tag Editor</h2>
 
 		<EditForm Model="@CandidateMp3TagSet" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
                          <DataAnnotationsValidator />
             <ValidationSummary /> 
-		<div class="form-group row">
+		<div>
+            <div class="form-group row">
           <label for="title" class="col-sm-3"><b>Title:</b> </label>
           @*<input id="lastName" class="form-control col-sm-8" @bind-value="Employee.LastName" placeholder="Enter last name" />*@
                         <InputText id="Title" class="form-control col-sm-8" @bind-Value="@CandidateTitle" @bind-Value:after="ShowHideDeleteButton">"</InputText>
@@ -36,7 +26,8 @@ else
                         <InputText id="Artist" class="form-control col-sm-8" @bind-Value="@CandidateArtist" @bind-Value:after="ShowHideDeleteButton">"></InputText>
          <label for="album" class="col-sm-3"><b>Album:</b> </label>
                         <InputText id="Album" class="form-control col-sm-8" @bind-Value="@CandidateAlbum" @bind-Value:after="ShowHideDeleteButton">"></InputText>
-          <button type="submit" class="btn btn-primary edit-btn">Save Mp3 Tag</button>
+        </div>
+                        <button type="submit" class="btn btn-primary edit-btn">Save Mp3 Tag</button>
            @if (ShowDeleteButton) 
          {
                   <button class="btn btn-dark" @onclick="@DeleteMp3TagSet"><i class="fa fa-floppy-o" aria-hidden="false"></i> Delete</button> 
@@ -49,7 +40,7 @@ else
         </div>
 
               <div>
-
+            <br><br>
              <h3>Preview</h3>
           <ul>
             <li> <b>Title:</b> @CandidateTitle.TranslateString()</li>
@@ -57,6 +48,15 @@ else
                 <li> <b>Album:</b> @CandidateAlbum.TranslateString()</li>
           </ul>
        </div>
- 
+        <div>
+            <label>Select an existing Mp3 Tag Template </label>
+            <select class="select-element" value="@SelectedMp3TagSetId" @onchange="UpdateActiveMp3TagFromDropdown">
+                <option value="0" selected></option>
+                @foreach (Mp3TagSet tagSet in Mp3TagSets)
+                {
+                    <option value="@tagSet.Id">@tagSet.Id</option>
+                }
+            </select>
+        </div>
   </section>
 }

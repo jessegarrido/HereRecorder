@@ -24,8 +24,10 @@ namespace SmartaCam
         public void MarkUploaded(int id);
         public Task<Take> GetTakeByIdAsync(int id);
         public Task<DateTime> GetLastTakeDateAsync();
+        public Task<string> GetTakeFilePathByIdAsync(int id);
 
-	}
+
+    }
     public interface IMp3TagSetRepository
     {
         public Task<bool> SaveChangesAsync();
@@ -57,7 +59,14 @@ namespace SmartaCam
                 .FirstOrDefault();
             return take;
         }
-		public async Task<DateTime> GetLastTakeDateAsync()
+        public async Task<string> GetTakeFilePathByIdAsync(int id)
+        {
+            Take take = _context.Takes
+                .Where(e => String.Equals(e.Id, id))
+                .FirstOrDefault();
+            return take.WavFilePath;
+        }
+        public async Task<DateTime> GetLastTakeDateAsync()
 		{
             DateTime latest = _context.Takes
                 .Max(d => d.Created);

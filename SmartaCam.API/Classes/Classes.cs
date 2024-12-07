@@ -39,6 +39,7 @@ namespace SmartaCam
         public Task NormalizeTakeAsync(int id);
         public Task RecordButtonPressedAsync();
         public Task PlayButtonPressedAsync();
+        public Task PlayOneTakeAsync(string wavPath);
         public Task StopButtonPressedAsync();
         public List<string> CreatePlayQueue();
         public Task<List<string>> GetPlayQueueAsync();
@@ -412,8 +413,8 @@ namespace SmartaCam
         }
                 public async Task PlaybackAudioAsync(List<string> origPlaylist)
                 {
-                     if ( Global.MyState == 2) { return; };
-                     if (Global.MyState == 3) { Global.MyState = 1; };
+                    // if ( Global.MyState == 2) { return; };
+                    // if (Global.MyState == 3) { Global.MyState = 1; };
                      Global.MyState = 3;
                      using var tokenSource = new CancellationTokenSource();
                      //var pauseToken = tokenSource.Token;
@@ -422,24 +423,27 @@ namespace SmartaCam
                      var playbackQueue = new PlaybackQueue(origPlaylist);
                      await playbackQueue.PlayATakeAsync(tokenSource.Token);
                      Console.WriteLine($"Now playing ");
-                     Console.ReadLine();
                      while (Global.MyState == 3)
                      {
-                     await Task.Delay(1000);
+                     await Task.Delay(200);
                      }
                      //tokenSource.Cancel();
                 // if (pauseToken.IsCancellationRequested) { playbackQueue.Pause(); }
                      if (Global.OS == "Raspberry Pi") { ioRepository.TurnOffLEDAsync(Config.GreenLED); };
                 }
-                     // var playlist = new Queue<string>(origPlaylist);
-                     //WaveOutEvent player = new WaveOutEvent();
-                     //WaveStream mainOutputStream = new WaveFileReader(playlist.FirstOrDefault());
-                     //WaveChannel32 volumeStream = new WaveChannel32(mainOutputStream);
-         
+        public async Task PlayOneTakeAsync(string wavPath)
+        {
+            List<string> singleTakeList = new();
+            singleTakeList.Add(wavPath);
+            _ = Task.Run(async () =>
+            {
+                await PlaybackAudioAsync(singleTakeList);
+            });
+        }
         public async Task StopButtonPressedAsync()
         {
             Global.MyState = 1;
-       }
+        }
 
 
         public async Task RecordButtonPressedAsync()
@@ -456,26 +460,19 @@ namespace SmartaCam
                     await RecordAudioAsync();
                     }
             }
-            public async Task PlayButtonPressedAsync()
+        public async Task PlayButtonPressedAsync()
+        {
+            if (Global.MyState == 2)
             {
-                if (Global.MyState == 2) 
-                { 
-                    return; 
-                }
-                Global.MyState = 3;
-                var playlist = CreatePlayQueue();
-                await PlaybackAudioAsync(playlist);
-
-
-                    //while (!Global.wavPathAndName.IsFileReady())
-                    //{
-                    //    await Task.Delay(1000);
-                    //}
-                    //if (Config.Normalize == true) { await NormalizeTakeAsync(); };
-                    //ConvertWavToMP3(Global.wavPathAndName, Global.mp3PathAndName);
-                    //NetworkRepository.DropBox db = new();
-                    //_ = Task.Run(async () => { await db.PushToDropBoxAsync(); });
+                return;
             }
+            Global.MyState = 3;
+            var playlist = CreatePlayQueue();
+            _ = Task.Run( async () =>
+            {
+                await PlaybackAudioAsync(playlist);
+            });
+        }
 
 
         }
