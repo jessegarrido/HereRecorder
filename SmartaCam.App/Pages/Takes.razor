@@ -1,8 +1,6 @@
 ﻿@page "/"
 
 <h2>Recordings</h2>
-
-
 @if (@AllTakes == null)
 {
     <p><em>Loading...</em></p>
@@ -20,10 +18,10 @@ else
         </style>
     </head>
 
-    <label> <b>Now Playing:</b> @NowPlaying</label>
+@*     <label> <b>Now Playing:</b> @NowPlaying</label> *@
     <br><br>
 
-    <div>
+ <div>
 <Button  style="background-color:@recordButtonColor" @onclick="(() => RecordStop_Click())">,<b>@recordButtonText</b></Button>
 @* <Button @onclick="StopAudio" Color="black"> Stop </Button>  *@
 
@@ -31,13 +29,14 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Id</th>
-                <th>Play</th>
+                <th></th>
                 <th>Title</th>
                 <th>Artist</th>
                 <th>Session</th>
+                <th>Length</th>
                 <th>Normalized</th>
                 <th>Peak</th>
+                <th>Converted</th>
                 <th>Uploaded</th>
 
             </tr>
@@ -46,13 +45,15 @@ else
             @foreach (var take in @AllTakes)
             {
                 <tr>
-                    <td>@take.Id</td>
                     <td> <button style="background-color:@ButtonColor[take.Id]" type="submit" class="btn btn-primary" @onclick="(() => PlayStop_Click(take.Id))" >@ButtonText[take.Id]</button></td>
                     <td>@take.Title</td>
                     <td>@take.Artist</td>
                     <td>@take.Album</td>
-                    <td>@take.WasNormalized</td>
-                    <td>@take.OriginalPeakVolume</td>
+                @*     <td>@take.Duration.ToString("g")</td> *@
+                  <td>@take.Duration.ToString(@"mm\:ss")</td> 
+                    <td>@take.Normalized</td>
+                    <td>@FormatPeakDecimal(take.OriginalPeakVolume)</td>
+                    <td>@take.WasConvertedToMp3</td>
                     <td>@take.WasUpLoaded</td>
                 </tr>
             }

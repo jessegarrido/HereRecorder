@@ -15,5 +15,10 @@ namespace SmartaCam.App.Services
             return await JsonSerializer.DeserializeAsync<List<Take>>
                  (await _httpClient.GetStreamAsync($"api/getalltakes"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         }
+        public async Task<TimeSpan> GetDurationById(int id)
+        {
+            return await JsonSerializer.DeserializeAsync<TimeSpan>
+                 (await _httpClient.GetStreamAsync($"api/gettakeduration/{id}"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        }
     }
 }

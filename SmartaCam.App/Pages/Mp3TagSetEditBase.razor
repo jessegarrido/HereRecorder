@@ -11,12 +11,29 @@ else
     <div>
   	  @if (!Saved)
       {
-        <h2>Mp3 Tag Editor</h2>
+        <h3>Tag Editor</h3>
+        <div>
+            Create ID3 tags for audio.<br>
+            Title must include <i>[#]</i>, to be subsituted with count.
+            <i>[Date]</i> will substitute with today's date.<br>
+            <br>
+            <label>Or Activate a Saved Template </label>
 
+            <select class="select-element" value="@SelectedMp3TagSetId" @onchange="UpdateActiveMp3TagFromDropdown">
+                <option value="0" selected></option>
+                @foreach (Mp3TagSet tagSet in Mp3TagSets)
+                {
+                    <option value="@tagSet.Id">@tagSet.Id</option>
+                }
+            </select>
+        <br>
+
+        </div>
 		<EditForm Model="@CandidateMp3TagSet" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
                          <DataAnnotationsValidator />
             <ValidationSummary /> 
 		<div>
+                                    <br>
             <div class="form-group row">
           <label for="title" class="col-sm-3"><b>Title:</b> </label>
           @*<input id="lastName" class="form-control col-sm-8" @bind-value="Employee.LastName" placeholder="Enter last name" />*@
@@ -27,7 +44,7 @@ else
          <label for="album" class="col-sm-3"><b>Album:</b> </label>
                         <InputText id="Album" class="form-control col-sm-8" @bind-Value="@CandidateAlbum" @bind-Value:after="ShowHideDeleteButton">"></InputText>
         </div>
-                        <button type="submit" class="btn btn-primary edit-btn">Save Mp3 Tag</button>
+                          <button type="submit" class="btn btn-primary edit-btn">Save And Set Active</button>
            @if (ShowDeleteButton) 
          {
                   <button class="btn btn-dark" @onclick="@DeleteMp3TagSet"><i class="fa fa-floppy-o" aria-hidden="false"></i> Delete</button> 
@@ -48,15 +65,6 @@ else
                 <li> <b>Album:</b> @CandidateAlbum.TranslateString()</li>
           </ul>
        </div>
-        <div>
-            <label>Select an existing Mp3 Tag Template </label>
-            <select class="select-element" value="@SelectedMp3TagSetId" @onchange="UpdateActiveMp3TagFromDropdown">
-                <option value="0" selected></option>
-                @foreach (Mp3TagSet tagSet in Mp3TagSets)
-                {
-                    <option value="@tagSet.Id">@tagSet.Id</option>
-                }
-            </select>
-        </div>
+
   </section>
 }

@@ -15,13 +15,14 @@ namespace SmartaCam
         public int RunLengthInSeconds { get; set; }
         public decimal OriginalPeakVolume { get; set; }
         public string FileName { get; set; } = string.Empty;
-        public bool WasNormalized { get; set; }
+        public bool Normalized { get; set; }
         public bool WasConvertedToMp3 { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Artist { get; set; } = string.Empty;
         public string Album { get; set; } = string.Empty;
         public bool WasUpLoaded { get; set; }
         public DateTime Created { get; set; }
+        public TimeSpan Duration { get; set; }
     }
 
     public class Mp3TagSet

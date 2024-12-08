@@ -12,28 +12,21 @@ namespace SmartaCam
 {
     public static class Global
     {
-        public static int MyState { get; set; } = 0;
-        public static string SessionName { get; set; } = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
-        public static string Home { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-        public static string LocalRecordingsFolder { get; set; } = Path.Combine(Home, "SmartaCam", "Recordings");
-        public static string wavPathAndName { get; set; }
+     //   public static int MyState { get; set; } = 0;
+       // public static string SessionName { get; set; } = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
+     //   public static string Home { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+   //     public static string wavPathAndName { get; set; }
      //   public static string mp3PathAndName { get; set; }
       //  public static string lastWavPathAndName { get; set; }
-        public static string OS { get; set; }
-        public static bool NetworkStatus { get; set; } = true;
-        public static bool OAuthStatus { get; set; } = false;
-        public static string? RemovableDrivePath { get; set; }
-        public static int RemovableDriveCount { get; set; } = 0;
-        public static string DropBoxCodeDotTxtContains { get; set; }
-        public static string NowPlayingFileName { get; set; }
-        public static List<string> PlaybackQueue { get; set; }
-        // public static int Takes { get; set; }
-        //public static DateOnly LastTakeDate { get; set; };
-        // public static List<FileInfo> AllLocalWavFiles { get; set; } = new DirectoryInfo(LocalRecordingsFolder).GetFiles()
-        // .OrderBy(f => f.LastWriteTime)
-        //.ToList();
-        //  public static (Directory.GetFiles(Path.GetDirectoryName(Global.LocalRecordingsFolder), "*.wav", SearchOption.AllDirectories));
-        //   public static DropboxClientConfig dbConfig { get; set; }
+     //   public static string OS { get; set; }
+     //   public static bool NetworkStatus { get; set; } = true;
+     //   public static bool OAuthStatus { get; set; } = false;
+      //  public static string? RemovableDrivePath { get; set; }
+       // public static int RemovableDriveCount { get; set; } = 0;
+       // public static string DropBoxCodeDotTxtContains { get; set; }
+      //  public static string NowPlayingFileName { get; set; }
+      //  public static List<string> PlaybackQueue { get; set; }
+
 
     }
     public class Config
@@ -45,9 +38,11 @@ namespace SmartaCam
         public static string DbApiKey { get; set; }
         public static string DbApiSecret { get; set; }
         public static int SampleRate { get; set; }
-        public static int SelectedAudioDevice { get; set; }
+        public static int SelectedAudioDevice { get; set; } = 0;
         public static bool Normalize { get; set; } = true;
         public static int Mp3BitRate { get; set; } = 192;
+        public static string LocalRecordingsFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"SmartaCam","Recordings");
+
         public static int RedLED { get; set; } = 4; // purple - pin 7
         public static int GreenLED { get; set; } = 2; //orange - pin 3
         public static int YellowLED { get; set; } = 3; // green - pin 5 

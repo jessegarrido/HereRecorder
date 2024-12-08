@@ -10,6 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using SmartaCam;
 using Microsoft.AspNetCore.Mvc;
+using SmartaCam.API;
 
 namespace SmartaCam
 {
@@ -25,6 +26,7 @@ namespace SmartaCam
         public Task<Take> GetTakeByIdAsync(int id);
         public Task<DateTime> GetLastTakeDateAsync();
         public Task<string> GetTakeFilePathByIdAsync(int id);
+        public Task<TimeSpan> GetTakeDurationByIdAsync(int id);
 
 
     }
@@ -78,6 +80,13 @@ namespace SmartaCam
             foreach (Take take in _context.Takes)
                 takes.Add(take);
             return takes;
+        }
+        public async Task<TimeSpan> GetTakeDurationByIdAsync(int id)
+        {
+            Take take = _context.Takes
+                           .Where(e => String.Equals(e.Id, id))
+                           .FirstOrDefault();
+            return take.Duration;
         }
         public void MarkNormalized(int TakeId)
         {
@@ -181,6 +190,12 @@ namespace SmartaCam
                 _context.SaveChanges();
             }
         }
+        public void TranslateMp3TagField(string unsubstitutedTagSet, string session)
+        {
+            //var session = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
+            var substitutedTag = unsubstitutedTagSet.Replace("[Date]", session);
+            substitutedTag = substitutedTag.Replace("[#]", Settings.Default.Takes.ToString());
+        }
 
     }
     public class SmartaCamContext : DbContext
@@ -191,9 +206,11 @@ namespace SmartaCam
         public string DbPath { get; }
         public SmartaCamContext()
         {
-           var folder = Environment.SpecialFolder.LocalApplicationData;
-           var path = Environment.GetFolderPath(folder);
-           DbPath = System.IO.Path.Join(path, "db.db");
+           // var folder = Environment.SpecialFolder.LocalApplicationData;
+            var folder = Environment.SpecialFolder.Personal;
+            var path = Environment.GetFolderPath(folder);
+           // DbPath = System.IO.Path.Join(path, "db.db");
+            DbPath = System.IO.Path.Combine(path,"Smartacam","db.db");
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -233,6 +250,7 @@ namespace SmartaCam
         public string Session { get; set; } = string.Empty;
         public bool WasUpLoaded { get; set; } = false;
         public DateTime Created { get; set; } = DateTime.Now;
+        public TimeSpan Duration { get; set; }
     }
     public class Mp3TagSet
     {

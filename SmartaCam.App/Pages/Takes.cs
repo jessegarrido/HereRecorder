@@ -30,7 +30,7 @@ namespace SmartaCam.App.Pages
 
         protected string bgUrl = string.Empty;
         protected string buttonBgColor = string.Empty;
-        protected string recordButtonText = "New Recording";
+        protected string recordButtonText = "Create New Recording";
         protected string recordButtonColor = "red";
         protected async override Task OnInitializedAsync()
 
@@ -46,18 +46,33 @@ namespace SmartaCam.App.Pages
                 await TransportService.StopButtonPress();
                 MyStateDisplay = 1;
                 ButtonText[id] = "Play";
-                ButtonColor[id] = "green";
-                
+                ButtonColor[id] = "green";    
                 InitPlayStopLabelList();
                 NowPlaying = null;
             }
             else if (MyStateDisplay != 2)  //not recording
             {
                 MyStateDisplay = 3;
+                Update_Background();
                 ButtonText[id] = "Stop";
                 ButtonColor[id] = "red";
-                await TransportService.PlayATake(id);
+                await InvokeAsync(StateHasChanged);
+                _ = Task.Run(async () => { await TransportService.PlayATake(id); });
                 NowPlaying = await TransportService.NowPlaying();
+                var waitTime = await TakeService.GetDurationById(id);
+                while ( MyStateDisplay == 3 )
+                    {
+                    await Task.Delay(waitTime.Add(new TimeSpan(0,0,1)));
+                    await CheckState();
+                    }
+                ButtonText[id] = "Play";
+                ButtonColor[id] = "green";
+                InitPlayStopLabelList();
+                NowPlaying = null;
+                //  await TransportService.StopButtonPress();
+
+
+
             }
             Update_Background();
         }
@@ -81,11 +96,11 @@ namespace SmartaCam.App.Pages
         public async Task RecordStop_Click()
         {
             MyStateDisplay = await TransportService.GetState();
-            if (MyStateDisplay == 1)
+            if (MyStateDisplay < 2)
             {
                 MyStateDisplay = 2;
                 Update_Background();
-                recordButtonText = "Stop";
+                recordButtonText = "Stop Recording";
                 recordButtonColor = "white";
                 _ = Task.Run ( async () => { await TransportService.RecordButtonPress(); });
             } else
@@ -96,9 +111,15 @@ namespace SmartaCam.App.Pages
                 InitPlayStopLabelList();
                 NowPlaying = null;
                // await StopAudio();
-                recordButtonText = "New Recording";
+                recordButtonText = "Create New Recording";
                 recordButtonColor = "red";
+
             }
+        }
+        public string FormatPeakDecimal(decimal value)
+        {
+            return $"{value:F3}"; 
+
         }
         //public async Task Stop_Click()
         //{

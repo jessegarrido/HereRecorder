@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SmartaCam.API;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,20 @@ namespace SmartaCam
             catch (Exception)
             {
                 return false;
+            }
+        }
+        public static string? TranslateMp3TagString(this string untranslatedstring)
+        {
+            try
+            {
+                int take = Settings.Default.Takes++;
+                var translatedstring = untranslatedstring.Replace("[Date]", DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd"), StringComparison.CurrentCultureIgnoreCase);
+                translatedstring = translatedstring.Replace("[#]", take.ToString());
+                return translatedstring;
+            }
+            catch (Exception)
+            {
+                return untranslatedstring;
             }
         }
     }

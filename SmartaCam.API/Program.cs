@@ -58,7 +58,7 @@ namespace SmartaCam.API
             }
 
             UIRepository uIRepository = new();
-            _ = Task.Run(async () => { await uIRepository.SessionInit(); });
+            _ = Task.Run(async () => { await uIRepository.SessionInitAsync(); });
 
 
             

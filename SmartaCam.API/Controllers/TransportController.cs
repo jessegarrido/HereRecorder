@@ -13,6 +13,7 @@ namespace SmartaCam.Controllers
         private ITakeRepository _takeRepository;
 
 
+
         public TransportController(IAudioRepository audioRepository, ITakeRepository takeRepository)
         {
             _audioRepository = audioRepository;
@@ -39,6 +40,7 @@ namespace SmartaCam.Controllers
             try
             {
                 string takeFilePath = await _takeRepository.GetTakeFilePathByIdAsync(id);
+                Console.WriteLine($"Asked to play {takeFilePath}");
                 await _audioRepository.PlayOneTakeAsync(takeFilePath);
                 return Ok();
             }
@@ -77,32 +79,32 @@ namespace SmartaCam.Controllers
         }
 
         [HttpGet]
-        public IActionResult SkipForward()
-        {
-            try
-            {
-                //   _audioRepository.StopButtonPressedAsync();
-                return Ok();
-            }
-            catch (Exception)
-            {
-                return this.StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
+        //public IActionResult SkipForward()
+        //{
+        //    try
+        //    {
+        //        //   _audioRepository.StopButtonPressedAsync();
+        //        return Ok();
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return this.StatusCode(StatusCodes.Status500InternalServerError);
+        //    }
+        //}
 
-        [HttpGet]
-        public IActionResult SkipBack()
-        {
-            try
-            {
-                //       _audioRepository.RStopButtonPressedAsync();
-                return Ok(new { value = Global.MyState });
-            }
-            catch (Exception)
-            {
-                return this.StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
+        //[HttpGet]
+        //public IActionResult SkipBack()
+        //{
+        //    try
+        //    {
+        //        //       _audioRepository.RStopButtonPressedAsync();
+        //        return Ok(new { value = MyState });
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return this.StatusCode(StatusCodes.Status500InternalServerError);
+        //    }
+        //}
 
         [HttpGet]
         public async Task<IActionResult> GetState()
@@ -111,7 +113,7 @@ namespace SmartaCam.Controllers
             {
                 var stateTask = Task.Run(() =>
                 {
-                    return Global.MyState;
+                    return _audioRepository.GetMyState();
                 });
                 return Ok(await stateTask);
             }

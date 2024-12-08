@@ -1,15 +1,15 @@
 [
   {
     "ContainingType": "SmartaCam.TakeController",
-    "Method": "GetTakeById",
-    "RelativePath": "{id}",
-    "HttpMethod": "GET",
+    "Method": "AddTake",
+    "RelativePath": "api",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "id",
-        "Type": "System.Int32",
+        "Name": "newTake",
+        "Type": "SmartaCam.Take",
         "IsRequired": true
       }
     ],
@@ -100,63 +100,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "SmartaCam.TakeController",
-    "Method": "GetAllTakes",
-    "RelativePath": "api/{action}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "action",
-        "Type": "",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.List\u00601[[SmartaCam.Take, SmartaCam.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "SmartaCam.TakeController",
-    "Method": "AddTake",
-    "RelativePath": "api/{action}",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "newTake",
-        "Type": "SmartaCam.Take",
-        "IsRequired": true
-      },
-      {
-        "Name": "action",
-        "Type": "",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "SmartaCam.Take",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
     "ContainingType": "SmartaCam.Mp3TagSetController",
     "Method": "GetMp3TagSet",
     "RelativePath": "api/{action}/{id}",
@@ -220,6 +163,78 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SmartaCam.TakeController",
+    "Method": "GetAllTakes",
+    "RelativePath": "api/getalltakes",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[SmartaCam.Take, SmartaCam.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartaCam.TakeController",
+    "Method": "GetTakeById",
+    "RelativePath": "api/gettake/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SmartaCam.Take",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SmartaCam.TakeController",
+    "Method": "GetDurationById",
+    "RelativePath": "api/gettakeduration/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.TimeSpan",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "SmartaCam.Controllers.TransportController",
     "Method": "Play",
     "RelativePath": "api/transport/{action}",
@@ -254,38 +269,6 @@
   {
     "ContainingType": "SmartaCam.Controllers.TransportController",
     "Method": "Stop",
-    "RelativePath": "api/transport/{action}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "action",
-        "Type": "",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SmartaCam.Controllers.TransportController",
-    "Method": "SkipForward",
-    "RelativePath": "api/transport/{action}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "action",
-        "Type": "",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SmartaCam.Controllers.TransportController",
-    "Method": "SkipBack",
     "RelativePath": "api/transport/{action}",
     "HttpMethod": "GET",
     "IsController": true,

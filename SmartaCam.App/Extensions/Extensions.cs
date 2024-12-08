@@ -13,7 +13,7 @@ namespace SmartaCam
         {
             try
             {
-                var translatedstring = untranslatedstring.Replace("[Date]", DateOnly.FromDateTime(DateTime.Now).ToString(), StringComparison.CurrentCultureIgnoreCase);
+                var translatedstring = untranslatedstring.Replace("[Date]", DateOnly.FromDateTime(DateTime.Now).ToString(("yyyy-MM-dd")), StringComparison.CurrentCultureIgnoreCase);
                 translatedstring = translatedstring.Replace("[#]", "X");
                 return translatedstring;
             }
