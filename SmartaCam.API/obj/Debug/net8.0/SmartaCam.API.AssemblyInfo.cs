@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartaCam.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0ea2cd54c9355b19d611bd9a400c1bf053eb8a00")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4d08d324ccf4bcb40c7e5ecacf24dd94c3f487a9")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartaCam.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartaCam.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

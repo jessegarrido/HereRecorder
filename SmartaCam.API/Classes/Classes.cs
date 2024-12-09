@@ -177,7 +177,7 @@ namespace SmartaCam
                         Thread.Sleep(500);
                     } while (MyState == 2);
                     stream.Stop();
-                    if (_os == "Raspberry Pi") { ioRepository.TurnOffLEDAsync(Config.RedLED); };
+                    if (_os == "Raspberry Pi") { await ioRepository.TurnOffLEDAsync(Config.RedLED); };
                     Console.WriteLine("Recording Stopped.");
 
                     //  newTake.WavFileNameAndPath = Path.Combine(Global.LocalRecordingsFolder, Path.GetDirectoryName(newTake.WavFileNameAndPath);
@@ -508,7 +508,7 @@ namespace SmartaCam
             }
             //tokenSource.Cancel();
             // if (pauseToken.IsCancellationRequested) { playbackQueue.Pause(); }
-            if (_os == "Raspberry Pi") { ioRepository.TurnOffLEDAsync(Config.GreenLED); };
+            if (_os == "Raspberry Pi") { await ioRepository.TurnOffLEDAsync(Config.GreenLED); };
         }
         public async Task PlayOneTakeAsync(string wavPath)
         {
@@ -629,7 +629,7 @@ namespace SmartaCam
                     Console.WriteLine($"DBAUth Status: {OAuthStatus}");
                     if (!OAuthStatus)// && outerAuthTask.Status.Equals(null))
                     {
-                        if (os == "Raspberry Pi") { ioRepository.LongBlinkLEDAsync(Config.YellowLED, 10000, LEDcanceltoken); };
+                        if (os == "Raspberry Pi") { await ioRepository.LongBlinkLEDAsync(Config.YellowLED, 10000, LEDcanceltoken); };
                         var dbAuth = await db.DropBoxAuth();
                         if (dbAuth) { if (os == "Raspberry Pi") { tokenSource.Cancel(); }; };
                     }
@@ -694,7 +694,7 @@ namespace SmartaCam
                     var take = await _takeRepository.GetTakeByIdAsync(id);
                     using var tokenSource = new CancellationTokenSource();
                     var LEDcanceltoken = tokenSource.Token;
-                    if (os == "Raspberry Pi") { ioRepository.BlinkOneLED(Config.YellowLED, 1000, LEDcanceltoken); };
+                    if (os == "Raspberry Pi") { await ioRepository.BlinkOneLED(Config.YellowLED, 1000, LEDcanceltoken); };
                     var client = new DropboxClient(Settings.Default.RefreshToken, Config.DbApiKey);
                     // string folder = $"/{Path.GetDirectoryName(take.WavFilePath)}";
                     string folder = $"/{take.Session}";
@@ -1574,7 +1574,7 @@ namespace SmartaCam
                     {
                         BlinkLED(pin, duration);
                     }
-                    TurnOnLEDAsync(pin);
+					TurnOnLEDAsync(pin);
                 });
                 await blinkTask;
             }
