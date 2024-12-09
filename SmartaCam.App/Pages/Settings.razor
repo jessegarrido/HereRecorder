@@ -1,0 +1,26 @@
+﻿@page "/settings"
+
+
+<div class="mb-3">
+	<label>Normalize</label>
+    <InputCheckbox @bind-Value="@Normalize" @bind-Value:after="@OnSettingsChange">Normalize</InputCheckbox>
+	<br>
+	<label>Copy To USB</label>
+	<InputCheckbox @bind-Value="@CopyToUsb" Disabled="true" @bind-Value:after="@OnSettingsChange">Copy</InputCheckbox>
+	<br>
+	<label>Upload To Dropbox</label>
+	<InputCheckbox @bind-Value="@PushToCloud" Disabled="true" @bind-Value:after="@OnSettingsChange">Upload</InputCheckbox>
+<br>
+Network Status : @NetworkStatus
+<br />
+	@*
+	DropBoxAuthentication Status : 
+<br />
+	[ Press To Authenticate ]
+
+[ Clear Saved Recordings ]
+<br />
+<br>
+[ System Reset ]
+	*@
+</div> 
