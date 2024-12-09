@@ -41,6 +41,20 @@ namespace SmartaCam
         public Task<IEnumerable<Mp3TagSet>> GetAllMp3TagSetsAsync();
         public Task<bool> CheckIfMp3TagSetExistsAsync(Mp3TagSet mp3TagSet);
     }
+    public interface ISettingsRepository
+    {
+        public Task<bool> GetNormalizeAsync();
+        public Task SetNormalizeAsync(bool willNormalize);
+        public Task<bool> GetUploadAsync();
+        public Task SetUploadAsync(bool willUpload);
+        public Task<bool> GetCopyToUsbAsync();
+        public Task SetCopyToUsbAsync(bool willCopy);
+        public Task<bool> GetNetworkStatus();
+        //public Task CheckAuthentication();
+        //public Task SetLocalRecordingsFolder();
+        //public Task<bool> CheckNetworkStatus();
+
+    }
     public class TakeRepository : ITakeRepository
     {
 
@@ -197,6 +211,45 @@ namespace SmartaCam
             substitutedTag = substitutedTag.Replace("[#]", Settings.Default.Takes.ToString());
         }
 
+    }
+
+    public class SettingsRepository : ISettingsRepository
+    {
+        public async Task<bool> GetNormalizeAsync()
+        {
+            return Config.Normalize;
+        }
+        public async Task SetNormalizeAsync(bool willNormalize)
+        {
+            Config.Normalize = willNormalize;
+            Settings.Default.Normalize = willNormalize;
+            Settings.Default.Save();
+        }
+        public async Task<bool> GetUploadAsync()
+        {
+            return Config.PushToCloud;
+        }
+        public async Task SetUploadAsync(bool willUpload)
+        {
+            Config.PushToCloud = willUpload;
+            Settings.Default.PushToCloud = willUpload;
+            Settings.Default.Save();
+        }
+        public async Task<bool> GetCopyToUsbAsync()
+        {
+            return Config.CopyToUsb;
+        }
+        public async Task SetCopyToUsbAsync(bool willCopy)
+        {
+            Config.CopyToUsb = willCopy;
+            Settings.Default.PushToCloud = willCopy;
+            Settings.Default.Save();
+        }
+        public async Task<bool> GetNetworkStatus()
+        {
+            NetworkRepository networkRepo = new();
+            return networkRepo.GetNetworkStatus();
+        }
     }
     public class SmartaCamContext : DbContext
     {

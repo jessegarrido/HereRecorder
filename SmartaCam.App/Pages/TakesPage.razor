@@ -1,0 +1,63 @@
+﻿@page "/"
+
+@* @if (@AllTakes == null) *@
+@if ((@MyStateDisplay == 0) || (@AllTakes == null))
+@*     @if  (@AllTakes == null) *@
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <head>
+        <style>
+            body {
+                background-image: url(@bgUrl);
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-size: 100% 100%;
+            }
+        </style>
+    </head>
+
+@*     <label> <b>Now Playing:</b> @NowPlaying</label> *@
+    <br><br>
+
+ <div>
+<Button  style="background-color:@recordButtonColor" @onclick="(() => RecordStop_Click())">,<b>@recordButtonText</b></Button>
+@* <Button @onclick="StopAudio" Color="black"> Stop </Button>  *@
+
+</div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Title</th>
+                <th>Artist</th>
+                <th>Session</th>
+                <th>Length</th>
+                <th>Normalized</th>
+                <th>Peak</th>
+                <th>Converted</th>
+                <th>Uploaded</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var take in @AllTakes)
+            {
+                <tr>
+                    <td> <button style="background-color:@ButtonColor[take.Id]" type="submit" class="btn btn-primary" @onclick="(() => PlayStop_Click(take.Id))" >@ButtonText[take.Id]</button></td>
+                    <td>@take.Title</td>
+                    <td>@take.Artist</td>
+                    <td>@take.Album</td>
+                @*     <td>@take.Duration.ToString("g")</td> *@
+                  <td>@take.Duration.ToString(@"mm\:ss")</td> 
+                    <td>@take.Normalized</td>
+                    <td>@FormatPeakDecimal(take.OriginalPeakVolume)</td>
+                    <td>@take.WasConvertedToMp3</td>
+                    <td>@take.WasUpLoaded</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

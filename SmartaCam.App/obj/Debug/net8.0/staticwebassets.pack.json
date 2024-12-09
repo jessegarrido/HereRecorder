@@ -49,6 +49,14 @@
       "PackagePath": "staticwebassets\\index.html"
     },
     {
+      "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\portacam.jpg",
+      "PackagePath": "staticwebassets\\portacam.jpg"
+    },
+    {
+      "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\portacam_small.jpg",
+      "PackagePath": "staticwebassets\\portacam_small.jpg"
+    },
+    {
       "Id": "C:\\Users\\Jesse\\Documents\\CodeYou\\SmartaCam\\SmartaCam\\SmartaCam.App\\wwwroot\\red.jpg",
       "PackagePath": "staticwebassets\\red.jpg"
     },

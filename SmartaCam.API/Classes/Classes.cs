@@ -53,6 +53,7 @@ namespace SmartaCam
         public Task CheckAndConnectCloudAsync();
         public Task EstablishWifiAsync();
         public class DropBox();
+        public bool GetNetworkStatus();
     }
     public interface IUIRepository
     {
@@ -205,16 +206,15 @@ namespace SmartaCam
         }
         public async Task PostProcessAudioAsync(int takeId)
         {
-            if (Config.Normalize == true)
-            {
-                await NormalizeTakeAsync(takeId);
-                _takeRepository.MarkNormalized(takeId);
-                _takeRepository.SaveChangesAsync();
-            }
+            UIRepository uIRepository = new();
+            await NormalizeTakeAsync(takeId);
             await ConvertWavToMp3Async(takeId);
-            NetworkRepository.DropBox db = new();
-            await db.PushToDropBoxAsync(takeId);
-
+            if (Config.CopyToUsb == true) { await uIRepository.CopyToUsb(takeId); };
+            if (Config.PushToCloud == true)
+            {
+                NetworkRepository.DropBox db = new();
+                await db.PushToDropBoxAsync(takeId);
+            }
         }
         public async Task<int> AddNewTakeToDatabaseAsync(string wavPathAndName, DateTime startTime)
         {
@@ -262,6 +262,65 @@ namespace SmartaCam
         {
             LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
         }
+        //public async Task NormalizeTakeAsync(int id)
+        //// from https://markheath.net/post/normalize-audio-naudio
+        //{
+        //    var take = await _takeRepository.GetTakeByIdAsync(id);
+        //    UIRepository uiRepository = new();
+        //    var inPath = take.WavFilePath;
+        //    Console.WriteLine($"Analyzing {inPath}");
+
+        //    float max = 0;
+
+        //    while (!inPath.IsFileReady())
+        //    {
+        //        await Task.Delay(1000);
+        //    }
+        //    using (var reader = new AudioFileReader(inPath))
+        //    {
+        //        // find the max peak
+        //        float[] buffer = new float[reader.WaveFormat.SampleRate];
+        //        int read;
+        //        do
+        //        {
+        //            read = reader.Read(buffer, 0, buffer.Length);
+        //            for (int n = 0; n < read; n++)
+        //            {
+        //                var abs = Math.Abs(buffer[n]);
+        //                if (abs > max) max = abs;
+        //            }
+        //        } while (read > 0);
+        //        Console.WriteLine($"Max sample value: {max}");
+
+        //        if (max == 0 || max > 1.0f)
+
+        //            throw new InvalidOperationException("File cannot be normalized");
+
+        //        if (Config.Normalize)
+        //        {
+        //            var outPath = Path.GetDirectoryName(inPath);
+        //            outPath = Path.Combine(outPath, $"{Path.GetFileNameWithoutExtension(inPath)}_normalized.wav");
+        //            //var outPath = $"{inPath}_normalized.wav";
+        //            Console.WriteLine($"Normalizing {inPath}");
+        //            Console.WriteLine($"Normalizing to {outPath}");
+        //            // rewind and amplify
+        //            reader.Position = 0;
+        //            reader.Volume = 1.0f / max;
+
+        //            WaveFileWriter.CreateWaveFile16(outPath, reader);
+        //            take.Normalized = true;
+        //            while (!outPath.IsFileReady())
+        //            {
+        //                await Task.Delay(1000);
+        //            }
+        //            File.Move(outPath, inPath, true);
+
+        //        }
+        //    }
+        //    take.OriginalPeakVolume = max;
+        //    await _takeRepository.SaveChangesAsync();
+        //}
+
         public async Task NormalizeTakeAsync(int id)
         // from https://markheath.net/post/normalize-audio-naudio
         {
@@ -269,7 +328,7 @@ namespace SmartaCam
 
             var take = await _takeRepository.GetTakeByIdAsync(id);
             UIRepository uiRepository = new();
-            
+
             //var inPath = Path.Combine(take.WavFilePath, $"{take.Title}.wav");
             // Path.Combine(take.WavFilePath, $"{take.Title}_normalized.wav");
             var inPath = take.WavFilePath;
@@ -304,8 +363,15 @@ namespace SmartaCam
 
                 // rewind and amplify
                 reader.Position = 0;
-                reader.Volume = 1.0f / max;
+                if (Config.Normalize)
+                {
+                    reader.Volume = 1.0f / max;
+                    take.Normalized = true;
 
+                } else
+                {
+                    reader.Volume = 1.0f;
+                }               
                 // write out to a new WAV file
                 //  WaveFileWriter.CreateWaveFile16(outPath, reader);
                 WaveFileWriter.CreateWaveFile16(outPath, reader);
@@ -317,12 +383,12 @@ namespace SmartaCam
             }
             //Console.WriteLine($"Next step is file move");
             File.Move(outPath, inPath, true);
-            take.Normalized = true;
+            
             take.OriginalPeakVolume = max;
             await _takeRepository.SaveChangesAsync();
-
         }
-        public List<string> CreatePlayQueue()
+
+            public List<string> CreatePlayQueue()
         {
             List<string> playlist = new();
             string path = Path.GetDirectoryName(Config.LocalRecordingsFolder);
@@ -342,13 +408,10 @@ namespace SmartaCam
         public async Task<List<string>> GetPlayQueueAsync()
         {
 
-            return CreatePlayQueue(); ; //Global.PlaybackQueue;
+            return CreatePlayQueue(); 
         }
-
-
         public class PlaybackQueue
         {
-
             private Queue<string>? playlist;
             private IWavePlayer player;
             private WaveStream fileWaveStream;
@@ -614,6 +677,10 @@ namespace SmartaCam
                         break;
                 }
             }
+        public bool GetNetworkStatus()
+        {
+            return NetworkStatus;
+        }
             public class DropBox
             {
                 private TakeRepository _takeRepository = new TakeRepository();
@@ -1037,6 +1104,7 @@ namespace SmartaCam
         public class UIRepository : IUIRepository
         {
             private TakeRepository _takeRepository = new TakeRepository();
+            private AudioRepository _audioRepository = new AudioRepository();
             private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
             private static string _session = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
             private static string _os = string.Empty;
@@ -1346,8 +1414,35 @@ namespace SmartaCam
                 {
                     Console.WriteLine($"({DateTime.Now}) {(args.ChangeType is PinEventTypes.Rising ? Alert : Ready)}");
                 }
+
             }
-            public string GetNowPlaying()
+        public async Task CopyToUsb(int takeId)
+        {
+            var take = await _takeRepository.GetTakeByIdAsync(takeId); 
+            var inPath = take.WavFilePath;
+ 
+            string newWavPath = Path.Combine(_removableDrivePath,"SmartaCam",_session);
+            string newMp3Path = Path.Combine(newWavPath, "mp3");
+            List<string> songfilepaths = new List<string> { newWavPath, newMp3Path };
+            foreach (string path in songfilepaths)
+            {
+                if (Directory.Exists(path))
+                {
+                    //Console.WriteLine($"Path {path} exists");
+                }
+                else
+                {
+                    DirectoryInfo di = Directory.CreateDirectory(path);
+                    Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
+                }
+            }
+            string newWavFile = Path.Combine(newWavPath, $"{take.Title}.wav");
+            string newMp3File = Path.Combine(newMp3Path, $"{take.Title}.mp3");
+            File.Copy(take.WavFilePath, newWavFile, true );
+            File.Copy(take.Mp3FilePath, newMp3File, true);
+
+        }
+        public string GetNowPlaying()
             {
                  return _nowPlaying;
             }
@@ -1356,6 +1451,7 @@ namespace SmartaCam
                _nowPlaying = nowPlaying;
             }
         }
+
         public class IORepository : IIORepository
         {
             public string GetUSBDeviceName(nint name)

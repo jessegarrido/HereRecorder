@@ -38,12 +38,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aGVudGljYXRpb24ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Counter.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/SettingsPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2V0dGluZ3NQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/TagEditor.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFnRWRpdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/TakesPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFrZXNQYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/_Imports.razor]

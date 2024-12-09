@@ -38,28 +38,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aGVudGljYXRpb24ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Counter.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
+[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Settings.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2V0dGluZ3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Home.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/TagEditor.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFnRWRpdG9yLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Mp3TagSetEditBase.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTXAzVGFnU2V0RWRpdEJhc2UucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/SettingsPage.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2V0dGluZ3NQYWdlLnJhem9y
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Takes.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFrZXMucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/Weather.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcV2VhdGhlci5yYXpvcg==
+[C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/Pages/TakesPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFrZXNQYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Jesse/Documents/CodeYou/SmartaCam/SmartaCam/SmartaCam.App/_Imports.razor]

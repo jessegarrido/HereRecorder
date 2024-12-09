@@ -18,6 +18,7 @@ namespace SmartaCam.API
             builder.Services.AddTransient<IAudioRepository, AudioRepository>();
             builder.Services.AddTransient<ITakeRepository, TakeRepository>();
             builder.Services.AddTransient<IMp3TagSetRepository, Mp3TagSetRepository>();
+            builder.Services.AddTransient<ISettingsRepository, SettingsRepository>();
             builder.Services.AddHostedService<DbInitializerHostedService>();
            // builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
             //builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);

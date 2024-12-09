@@ -183,6 +183,46 @@
     ]
   },
   {
+    "ContainingType": "SmartaCam.API.Controllers.SettingsController",
+    "Method": "GetCopy",
+    "RelativePath": "api/getcopy",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.API.Controllers.SettingsController",
+    "Method": "GetNetworkStatus",
+    "RelativePath": "api/getnetwork",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.API.Controllers.SettingsController",
+    "Method": "GetNormalize",
+    "RelativePath": "api/getnormalize",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.API.Controllers.SettingsController",
+    "Method": "GetUpload",
+    "RelativePath": "api/getpush",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SmartaCam.TakeController",
     "Method": "GetTakeById",
     "RelativePath": "api/gettake/{id}",
@@ -233,6 +273,54 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "SmartaCam.API.Controllers.SettingsController",
+    "Method": "SetCopy",
+    "RelativePath": "api/setcopy/{willCopy}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "willCopy",
+        "Type": "System.Boolean",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.API.Controllers.SettingsController",
+    "Method": "SetNormalize",
+    "RelativePath": "api/setnormalize/{willNormalize}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "willNormalize",
+        "Type": "System.Boolean",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SmartaCam.API.Controllers.SettingsController",
+    "Method": "SetUpload",
+    "RelativePath": "api/setpush/{willUpload}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "willUpload",
+        "Type": "System.Boolean",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "SmartaCam.Controllers.TransportController",

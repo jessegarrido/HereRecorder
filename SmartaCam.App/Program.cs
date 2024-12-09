@@ -19,6 +19,7 @@ namespace SmartaCam.App
             builder.Services.AddHttpClient<IMp3TagSetService, Mp3TagSetService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
             builder.Services.AddHttpClient<ITransportService, TransportService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
             builder.Services.AddHttpClient<ITakeService, TakeService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
+            builder.Services.AddHttpClient<ISettingsService, SettingsService>(client => client.BaseAddress = new Uri("https://localhost:7152/"));
 
             builder.Services.AddOidcAuthentication(options =>
             {
