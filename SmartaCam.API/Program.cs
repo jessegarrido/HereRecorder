@@ -61,16 +61,7 @@ namespace SmartaCam.API
             UIRepository uIRepository = new();
             _ = Task.Run(async () => { await uIRepository.SessionInitAsync(); });
 
-
-            
-
-
-
-
               app.MapControllers();
-
-
-
 
             app.Run();
         }
@@ -79,8 +70,13 @@ namespace SmartaCam.API
         {
             public async Task StartAsync(CancellationToken stoppingToken)
             {
-                // The code in here will run when the application starts, and block the startup process until finished
-                using (var context = new SmartaCamContext())
+				// The code in here will run when the application starts, and block the startup process until finished
+				var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "SmartaCam");
+				if (!Directory.Exists(dbPath))
+				{
+					DirectoryInfo di = Directory.CreateDirectory(dbPath);
+				}
+				using (var context = new SmartaCamContext())
                 {
                     context.Database.EnsureCreated();
                 }
