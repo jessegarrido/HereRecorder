@@ -1,3 +1,0 @@
-C:\Users\Jesse\Documents\CodeYou\SmartaCam\SmartaCam\SmartaCam.App\obj\Release\net8.0\browser-wasm\PubTmp\Out\libmp3lame.32.dll
-C:\Users\Jesse\Documents\CodeYou\SmartaCam\SmartaCam\SmartaCam.App\obj\Release\net8.0\browser-wasm\PubTmp\Out\libmp3lame.64.dll
-C:\Users\Jesse\Documents\CodeYou\SmartaCam\SmartaCam\SmartaCam.App\obj\Release\net8.0\browser-wasm\PubTmp\Out\web.config
