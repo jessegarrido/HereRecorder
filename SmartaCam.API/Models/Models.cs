@@ -14,22 +14,7 @@ using SmartaCam.API;
 
 namespace SmartaCam
 {
-    public interface ITakeRepository
-    {
-        public Task<bool> SaveChangesAsync();
-        public Task AddTakeAsync(Take take);
-        public Task<List<Take>> GetAllTakesAsync();
-        public void MarkNormalized(int id);
 
-        public void MarkMp3Created(int id);
-        public void MarkUploaded(int id);
-        public Task<Take> GetTakeByIdAsync(int id);
-        public Task<DateTime> GetLastTakeDateAsync();
-        public Task<string> GetTakeFilePathByIdAsync(int id);
-        public Task<TimeSpan> GetTakeDurationByIdAsync(int id);
-
-
-    }
     public interface IMp3TagSetRepository
     {
         public Task<bool> SaveChangesAsync();
@@ -55,6 +40,21 @@ namespace SmartaCam
         //public Task<bool> CheckNetworkStatus();
 
     }
+    public interface ITakeRepository
+    {
+        public Task<bool> SaveChangesAsync();
+        public Task AddTakeAsync(Take take);
+        public Task<List<Take>> GetAllTakesAsync();
+        public void MarkNormalized(int id);
+
+        public void MarkMp3Created(int id);
+        public void MarkUploaded(int id);
+        public Task<Take> GetTakeByIdAsync(int id);
+        public Task<DateTime> GetLastTakeDateAsync();
+        public Task<string> GetTakeFilePathByIdAsync(int id);
+        public Task<TimeSpan> GetTakeDurationByIdAsync(int id);
+        public Task DeleteTakeById(int id);
+    }
     public class TakeRepository : ITakeRepository
     {
 
@@ -75,6 +75,7 @@ namespace SmartaCam
                 .FirstOrDefault();
             return take;
         }
+
         public async Task<string> GetTakeFilePathByIdAsync(int id)
         {
             Take take = _context.Takes
@@ -123,6 +124,16 @@ namespace SmartaCam
                     .Where(t => t.Id == takeId).FirstOrDefault();
                 take.WasUpLoaded = true;
                 _context.SaveChanges();
+        }
+        public async Task DeleteTakeById(int id)
+        {
+            {
+                Console.WriteLine($"delete id {id}");
+                Take takeToDelete = _context.Takes
+                   .Where(e => e.Id == id).FirstOrDefault();
+                _context.Remove(takeToDelete);
+                _context.SaveChanges();
+            }
         }
     }
     public class Mp3TagSetRepository : IMp3TagSetRepository

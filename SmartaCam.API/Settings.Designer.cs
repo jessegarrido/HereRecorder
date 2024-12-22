@@ -97,7 +97,7 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("52h52wp1coelut7")]
         public string DbApiKey {
             get {
                 return ((string)(this["DbApiKey"]));
@@ -109,7 +109,7 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("njx7stfmm9glv55")]
         public string DbApiSecret {
             get {
                 return ((string)(this["DbApiSecret"]));

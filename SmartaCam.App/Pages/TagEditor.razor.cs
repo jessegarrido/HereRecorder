@@ -76,16 +76,17 @@ namespace SmartaCam.App.Pages
             Saved = false;
             Mp3TagSets = await Mp3TagSetService.GetAllMp3TagSets();
             //// = (List<Mp3TagSet>)Mp3TagSetEnum;
-            //ActiveMp3TagSet = await Mp3TagSetService.GetActiveMp3TagSet();
+            ActiveMp3TagSet = await Mp3TagSetService.GetActiveMp3TagSet();
 
 
 
             ////CandidateMp3TagSet.Id = 0;
-            //SelectedMp3TagSetId = ActiveMp3TagSet.Id;   
-            //         CandidateTitle = ActiveMp3TagSet.Title;
-            //         CandidateArtist = ActiveMp3TagSet.Artist;
-            //         CandidateAlbum = ActiveMp3TagSet.Album;
-            //         ShowHideDeleteButton();
+            SelectedMp3TagSetId = ActiveMp3TagSet.Id;   
+
+                    CandidateTitle = ActiveMp3TagSet.Title;
+                    CandidateArtist = ActiveMp3TagSet.Artist;
+                    CandidateAlbum = ActiveMp3TagSet.Album;
+                    ShowHideDeleteButton();
 
             //         // TranslatedTitle = NextTitle.TranslateString();
             //         // TranslatedSession = NextSession.TranslateString();

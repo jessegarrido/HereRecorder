@@ -12,10 +12,10 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="SSID" Type="System.String" Scope="User">
-      <Value Profile="(Default)"></Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="SSIDpw" Type="System.String" Scope="User">
-      <Value Profile="(Default)"></Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="DbCode" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

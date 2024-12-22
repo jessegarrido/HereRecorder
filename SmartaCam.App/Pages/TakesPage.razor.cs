@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using SmartaCam.App.Services;
 using System.Data;
 using System.Net.Http.Json;
+using static Dropbox.Api.Paper.UserOnPaperDocFilter;
 
 namespace SmartaCam.App.Pages
 {
@@ -120,8 +121,21 @@ namespace SmartaCam.App.Pages
                // await StopAudio();
                 recordButtonText = "Create New Recording";
                 recordButtonColor = "red";
+                NavigateToHome();
 
             }
+        }
+        protected async Task DeleteTake(int id)
+        {
+            await TakeService.DeleteTakeById(id);
+            StatusClass = "alert-success";
+            Message = "Deleted successfully";
+            NavigateToHome(); 
+
+        }
+        void NavigateToHome()
+        {
+            _navigationManager.NavigateTo("/",true);
         }
         public string FormatPeakDecimal(decimal value)
         {

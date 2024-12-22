@@ -31,6 +31,19 @@ namespace SmartaCam
             return Ok(await _takeRepository.GetAllTakesAsync());
 
         }
+        [HttpGet("deletetake/{id:int}")]
+        public async Task<IActionResult> DeleteTake(int id)
+        {
+            try
+            {
+                await _takeRepository.DeleteTakeById(id);
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
 
         //[HttpGet]
         //public async Task<ActionResult<DateTime>> GetLatestTakeDate()

@@ -1,5 +1,8 @@
 ﻿@page "/"
 
+@inject NavigationManager _navigationManager
+
+
 @* @if (@AllTakes == null) *@
 @if ((@MyStateDisplay == 0) || (@AllTakes == null))
 @*     @if  (@AllTakes == null) *@
@@ -39,6 +42,7 @@ else
                 <th>Peak</th>
                 <th>Converted</th>
                 <th>Uploaded</th>
+                <th>Delete</th>
 
             </tr>
         </thead>
@@ -56,6 +60,8 @@ else
                     <td>@FormatPeakDecimal(take.OriginalPeakVolume)</td>
                     <td>@take.WasConvertedToMp3</td>
                     <td>@take.WasUpLoaded</td>
+                    <td> <button style="background-color:black" type="submit" class="btn btn-primary" @onclick="(() => DeleteTake(take.Id))">X</button></td>
+
                 </tr>
             }
         </tbody>

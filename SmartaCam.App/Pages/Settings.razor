@@ -6,10 +6,10 @@
     <InputCheckbox @bind-Value="@Normalize" @bind-Value:after="@OnSettingsChange">Normalize</InputCheckbox>
 	<br>
 	<label>Copy To USB</label>
-	<InputCheckbox @bind-Value="@CopyToUsb" Disabled="true" @bind-Value:after="@OnSettingsChange">Copy</InputCheckbox>
+	<InputCheckbox @bind-Value="@CopyToUsb"  @bind-Value:after="@OnSettingsChange">Copy</InputCheckbox>
 	<br>
 	<label>Upload To Dropbox</label>
-	<InputCheckbox @bind-Value="@PushToCloud" Disabled="true" @bind-Value:after="@OnSettingsChange">Upload</InputCheckbox>
+	<InputCheckbox @bind-Value="@PushToCloud" @bind-Value:after="@OnSettingsChange">Upload</InputCheckbox>
 <br>
 Network Status : @NetworkStatus
 <br />
