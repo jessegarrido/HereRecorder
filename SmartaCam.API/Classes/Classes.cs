@@ -30,39 +30,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SmartaCam
 {
-    public interface IAudioRepository
-    {
-        public void AudioDeviceInitAndEnumerate(bool enumerate);
-        public int QueryAudioDevice(int? configSelectedIndex);
-        public Task RecordAudioAsync();
-        public Task ConvertWavToMp3Async(int id);
-        public void LoadLameDLL();
-        public Task NormalizeTakeAsync(int id);
-        public Task RecordButtonPressedAsync();
-        public Task PlayButtonPressedAsync();
-        public Task PlayOneTakeAsync(string wavPath);
-        public Task StopButtonPressedAsync();
-        public List<string> CreatePlayQueue();
-        public Task<List<string>> GetPlayQueueAsync();
-        public Task<string> GetNowPlayingAsync();
-        public int GetMyState();
-        public void SetMyState(int newState);
-    }
+    
 
-    public interface IUIRepository
-    {
-        public Task ClearDailyTakesCount();
-        public Task AskKeepOrEraseFilesAsync();
-        public Task<string> IdentifyOS();
-        public Task MainMenuAsync();
-        public Task<string> SetupLocalRecordingFileAsync();
-        public int FindRemovableDrives(bool displayDetails);
-        public int GetValidUserSelection(List<int> validOptions);
-        public void LoadConfig();
-        public Task<string> RunBashCatAsync(string command);
-        public Task SessionInitAsync();
 
-    }
     public interface IIORepository
     {
         public string GetUSBDeviceName(nint name);
@@ -75,7 +45,25 @@ namespace SmartaCam
         public Task BlinkOneLED(int pin, int duration, CancellationToken ct);
     }
 
-    public class AudioRepository : IAudioRepository
+	public interface IAudioRepository
+	{
+		public void AudioDeviceInitAndEnumerate(bool enumerate);
+		public int QueryAudioDevice(int? configSelectedIndex);
+		public Task RecordAudioAsync();
+		public Task ConvertWavToMp3Async(int id);
+		public void LoadLameDLL();
+		public Task NormalizeTakeAsync(int id);
+		public Task RecordButtonPressedAsync();
+		public Task PlayButtonPressedAsync();
+		public Task PlayOneTakeAsync(string wavPath);
+		public Task StopButtonPressedAsync();
+		public List<string> CreatePlayQueue();
+		public Task<List<string>> GetPlayQueueAsync();
+		public Task<string> GetNowPlayingAsync();
+		public int GetMyState();
+		public void SetMyState(int newState);
+	}
+	public class AudioRepository : IAudioRepository
     {
         private static int MyState = 0;
         private TakeRepository _takeRepository = new TakeRepository();
@@ -191,7 +179,7 @@ namespace SmartaCam
 
             }
 			var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
-			Settings.Default.Takes = takeId++;
+			Settings.Default.Takes = takeId;
 			Settings.Default.Save();
 			Console.WriteLine("Added To db, starting postprocess");
 			await PostProcessAudioAsync(takeId);
@@ -1129,7 +1117,21 @@ namespace SmartaCam
 
             }
         }
-        public class UIRepository : IUIRepository
+	public interface IUIRepository
+	{
+		public Task ClearDailyTakesCount();
+		public Task AskKeepOrEraseFilesAsync();
+		public Task<string> IdentifyOS();
+		public Task MainMenuAsync();
+		public Task<string> SetupLocalRecordingFileAsync();
+		public int FindRemovableDrives(bool displayDetails);
+		public int GetValidUserSelection(List<int> validOptions);
+		public void LoadConfig();
+		public Task<string> RunBashCatAsync(string command);
+		public Task SessionInitAsync();
+
+	}
+	public class UIRepository : IUIRepository
         {
             private TakeRepository _takeRepository = new TakeRepository();
             private AudioRepository _audioRepository = new AudioRepository();
