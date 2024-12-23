@@ -56,5 +56,28 @@ namespace SmartaCam.API.Controllers
         {
             return Ok(await _settingsRepository.GetNetworkStatus());
         }
-    }
+		[HttpGet("getdropboxstatus")]
+		public async Task<IActionResult> GetDropBoxAuthStatus()
+		{
+			return Ok(await _settingsRepository.GetDropBoxAuthStatusAsync());
+		}
+		[HttpGet("getdropboxcode")]
+		public async Task<IActionResult> GetDropBoxCode()
+		{
+			return Ok(await _settingsRepository.GetDropBoxCode());
+		}
+		[HttpGet("setdropboxcode/{dropBoxCode}")]
+		public async Task<IActionResult> SetDropBoxCode(string dropBoxCode)
+		{
+			await _settingsRepository.SetDropBoxCode(dropBoxCode);
+			return Ok();
+		}
+		[HttpGet("unauthdropbox")]
+		public async Task<IActionResult> UnAuthDropBox()
+		{
+			await _settingsRepository.UnAuthDropBoxAsync();
+			return Ok();
+
+		}
+	}
 }

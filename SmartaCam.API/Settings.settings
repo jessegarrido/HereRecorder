@@ -11,20 +11,8 @@
     <Setting Name="Uid" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="SSID" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="SSIDpw" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="DbCode" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="DbApiKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)"></Value>
-    </Setting>
-    <Setting Name="DbApiSecret" Type="System.String" Scope="User">
-      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="SampleRate" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">48000</Value>
@@ -35,17 +23,26 @@
     <Setting Name="Takes" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="fgh" Type="System.DateTime" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="Normalize" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="PushToCloud" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="CopyToUSB" Type="System.String" Scope="User">
+    <Setting Name="CopyToUSB" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="SSID" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SSIDpw" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DbApiKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DbApiSecret" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

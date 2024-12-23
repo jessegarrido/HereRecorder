@@ -24,6 +24,7 @@ using static Dropbox.Api.Files.ListRevisionsMode;
 using Path = System.IO.Path;
 using System.Text.Json;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -47,14 +48,7 @@ namespace SmartaCam
         public int GetMyState();
         public void SetMyState(int newState);
     }
-    public interface INetworkRepository
-    {
-        public Task CheckNetworkAsync();
-        public Task CheckAndConnectCloudAsync();
-        public Task EstablishWifiAsync();
-        public class DropBox();
-        public bool GetNetworkStatus();
-    }
+
     public interface IUIRepository
     {
         public Task ClearDailyTakesCount();
@@ -196,11 +190,12 @@ namespace SmartaCam
                 };
 
             }
-            var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
-            Console.WriteLine("Added To db, starting postprocess");
-            await PostProcessAudioAsync(takeId);
-            Settings.Default.Takes = takeId++;
-            Settings.Default.Save();
+			var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
+			Settings.Default.Takes = takeId++;
+			Settings.Default.Save();
+			Console.WriteLine("Added To db, starting postprocess");
+			await PostProcessAudioAsync(takeId);
+
 
 
         }
@@ -562,7 +557,17 @@ namespace SmartaCam
             return MyState;
         } 
     }
-        public class NetworkRepository : INetworkRepository
+	public interface INetworkRepository
+	{
+		public Task CheckNetworkAsync();
+		public Task CheckAndConnectCloudAsync();
+		public Task EstablishWifiAsync();
+		public class DropBox();
+		public bool GetNetworkStatus();
+        public void SetDropBoxCode(string dropboxcode);
+        public Task<bool> GetDropBoxAuthStatusAsync();
+	}
+	public class NetworkRepository : INetworkRepository
         {
         public static bool NetworkStatus = false;
         public static bool OAuthStatus = false;
@@ -681,7 +686,20 @@ namespace SmartaCam
         {
             return NetworkStatus;
         }
-            public class DropBox
+		public async Task<bool> GetDropBoxAuthStatusAsync()
+		{
+            await CheckAndConnectCloudAsync();
+            return OAuthStatus;
+		}
+		public string GetDropBoxCode()
+		{
+			return Config.DropBoxCodeTxt;
+		}
+		public void SetDropBoxCode(string dropboxcode)
+		{
+			Config.DropBoxCodeTxt = dropboxcode;
+		}
+		public class DropBox
             {
                 private TakeRepository _takeRepository = new TakeRepository();
                 private string _dbauthcode { get; set; } = string.Empty;
@@ -944,20 +962,24 @@ namespace SmartaCam
                             var OAuthFlow = new PKCEOAuthFlow();
                             var authorizeUri = OAuthFlow.GetAuthorizeUri(OAuthResponseType.Code, Config.DbApiKey, state: "N", tokenAccessType: TokenAccessType.Offline, scopeList: scopeList, includeGrantedScopes: includeGrantedScopes);
 
-                            Console.WriteLine("Visit this webpage and get credentials:");
+
                             _dbcodetextcontents = authorizeUri + Environment.NewLine;
-                            UIRepository uIRepository = new();
+					       	Console.WriteLine($"Visit this webpage and get credentials: {_dbcodetextcontents}");
+                            Config.DropBoxCodeTxt = _dbcodetextcontents;
+							UIRepository uIRepository = new();
                             string removableDrivePath = uIRepository.GetUSBDevicePath();
                             Console.WriteLine($"DropBox Code Path: {removableDrivePath}");
                             File.WriteAllText(Path.Combine(removableDrivePath, "DropBoxCode.txt"), _dbcodetextcontents);
 
                             Console.WriteLine("Waiting For DropBox Authorization Code");
-                            while (_dbcodetextcontents.StartsWith("https:")) // ADD condition for not already authorized
+						    Task.Run( () =>
+						    {
+						    	WatchDropBoxCodeFile().GetAwaiter().GetResult();
+						    });
+						    while (Config.DropBoxCodeTxt.StartsWith("http")) // ADD condition for not already authorized
                             {
-                                WatchDropBoxCodeFile().GetAwaiter().GetResult();
-                                //await Task.Delay(1000);
+                                 await Task.Delay(1000);
                             }
-
                             //string accessCodenil = Console.ReadLine();
                             //var 
                             //Settings.Default.AccessToken = accessToken;
@@ -984,7 +1006,7 @@ namespace SmartaCam
                             // Returns:
                             //     The authorization response, containing the access token and uid of the authorized
                             //     user.
-                            var accessCode = _dbcodetextcontents;
+                            var accessCode = Config.DropBoxCodeTxt;
                             Console.WriteLine("Exchanging code for token");
                             // tokenResult.DefaultIkenizedUri = OAuthFlow.ProcessCodeFlowAsync(accessCode, Global.DbApiKey);
 
@@ -1013,6 +1035,7 @@ namespace SmartaCam
                             Settings.Default.AccessToken = accessToken;
                             Settings.Default.Uid = uid;
                             Settings.Default.Save();
+                            OAuthStatus = true;
                             /*
                                                 var dbClient = new RestClient("https://api.dropbox.com/oauth2/token");
                                                 RestRequest request = new RestRequest("Smart", Method.Post);
@@ -1028,7 +1051,8 @@ namespace SmartaCam
                             //  http.Stop();
                             return "Recorder";// uid;
                         }
-                        catch (Exception e)
+
+						catch (Exception e)
                         {
                             Console.WriteLine("Error: {0}", e.Message);
                             return null;
@@ -1058,8 +1082,12 @@ namespace SmartaCam
                     await tcs.Task.ConfigureAwait(true);
                     Console.WriteLine("USB event detected");
                     await Task.Delay(1000);
-                    _dbcodetextcontents = GetDropBoxCodeFromUSB();
-                    Console.WriteLine(_dbcodetextcontents);
+                    bool usbTextChanged = !GetDropBoxCodeFromUSB().StartsWith("http");
+                	if (usbTextChanged)
+                    {
+                    Config.DropBoxCodeTxt = GetDropBoxCodeFromUSB();
+				    }
+	
                 }
                 //public void USBDetected()
                 //{
@@ -1331,7 +1359,10 @@ namespace SmartaCam
                 Config.DbCode = Settings.Default.DbCode;
                 Config.SelectedAudioDevice = Settings.Default.SelectedAudioDevice;
                 Config.SampleRate = Settings.Default.SampleRate;
-            }
+			    Config.CopyToUsb = Settings.Default.CopyToUSB;
+		 	    Config.PushToCloud = Settings.Default.PushToCloud;
+
+		}
             public async Task<string> RunBashCatAsync(string command)
             {
                 var bashTask = Task.Run(() =>
@@ -1360,7 +1391,7 @@ namespace SmartaCam
                     NetworkRepository.DropBox db = new();
                     // db.DropBoxAuthResetAsync();
                     await uiRepository.ClearDailyTakesCount();
-                    uiRepository.LoadConfig();
+                    uiRepository.LoadConfig(); 
                     Console.WriteLine("Welcome to SmartaCam");
                     _os = await uiRepository.IdentifyOS();
                     _os = await uiRepository.IdentifyOS();

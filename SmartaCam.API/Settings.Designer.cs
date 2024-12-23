@@ -62,60 +62,12 @@ namespace SmartaCam.API {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SSID {
-            get {
-                return ((string)(this["SSID"]));
-            }
-            set {
-                this["SSID"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SSIDpw {
-            get {
-                return ((string)(this["SSIDpw"]));
-            }
-            set {
-                this["SSIDpw"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string DbCode {
             get {
                 return ((string)(this["DbCode"]));
             }
             set {
                 this["DbCode"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("52h52wp1coelut7")]
-        public string DbApiKey {
-            get {
-                return ((string)(this["DbApiKey"]));
-            }
-            set {
-                this["DbApiKey"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("njx7stfmm9glv55")]
-        public string DbApiSecret {
-            get {
-                return ((string)(this["DbApiSecret"]));
-            }
-            set {
-                this["DbApiSecret"] = value;
             }
         }
         
@@ -157,17 +109,6 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.DateTime fgh {
-            get {
-                return ((global::System.DateTime)(this["fgh"]));
-            }
-            set {
-                this["fgh"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool Normalize {
             get {
@@ -193,12 +134,60 @@ namespace SmartaCam.API {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public string CopyToUSB {
+        public bool CopyToUSB {
             get {
-                return ((string)(this["CopyToUSB"]));
+                return ((bool)(this["CopyToUSB"]));
             }
             set {
                 this["CopyToUSB"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SSID {
+            get {
+                return ((string)(this["SSID"]));
+            }
+            set {
+                this["SSID"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SSIDpw {
+            get {
+                return ((string)(this["SSIDpw"]));
+            }
+            set {
+                this["SSIDpw"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DbApiKey {
+            get {
+                return ((string)(this["DbApiKey"]));
+            }
+            set {
+                this["DbApiKey"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DbApiSecret {
+            get {
+                return ((string)(this["DbApiSecret"]));
+            }
+            set {
+                this["DbApiSecret"] = value;
             }
         }
     }

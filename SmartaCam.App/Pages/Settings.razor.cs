@@ -16,8 +16,14 @@ namespace SmartaCam.App.Pages
         public bool PushToCloud { get; set; } = false;
         [Parameter]
         public bool NetworkStatus { get; set; } = true;
+		[Parameter]
+		public bool DropBoxAuthStatus { get; set; } = true;
+		[Parameter]
+        public string? DropBoxCode { get; set; } = string.Empty;
+		[Parameter]
+		public string DropBoxAuthUrl { get; set; } = string.Empty;
 
-        bool cloudauth = true;
+		bool cloudauth = true;
         bool network = true;
         private bool disabled = true;
         protected async override Task OnInitializedAsync()
@@ -27,7 +33,17 @@ namespace SmartaCam.App.Pages
             PushToCloud = await SettingsService.GetUpload();
             CopyToUsb = await SettingsService.GetCopyToUsb();
             NetworkStatus = await SettingsService.GetNetworkStatus();
-        }
+            DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
+			await InvokeAsync(StateHasChanged);
+			DropBoxCode = await SettingsService.GetDropBoxCode();
+            if (DropBoxCode.StartsWith("http"))
+                {
+                DropBoxAuthUrl = DropBoxCode;
+                DropBoxCode = null;
+				}
+			
+
+		}
         public void OnSettingsChange()
         {
             SettingsService.SetNormalize(Normalize);
@@ -36,6 +52,25 @@ namespace SmartaCam.App.Pages
             
             InvokeAsync(StateHasChanged);
         }
+        public async Task AuthorizeDropBoxAsync()
+        {
+            await SettingsService.SetDropBoxCode(DropBoxCode);
+			DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
+            PushToCloud = true;
+			NavigateToSettings();
 
+		}
+		public async Task UnAuthorizeDropBoxAsync()
+		{
+			await SettingsService.UnAuthorizeDropBox();
+			NavigateToSettings();
+			DropBoxAuthStatus = false;
+			PushToCloud = false;
+
+		}
+        void NavigateToSettings()
+        {
+            _navigationManager.NavigateTo("/settings", true);
+        }
     }
 }

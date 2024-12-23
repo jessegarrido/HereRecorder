@@ -16,7 +16,12 @@ namespace SmartaCam
         Task<IActionResult> SetCopyToUsb(bool willCopy);
         Task<bool> GetCopyToUsb();
         Task<bool> GetNetworkStatus();
-    }
+        Task<bool> GetDropBoxAuthStatus();
+		Task<string> GetDropBoxCode();
+        Task<IActionResult> SetDropBoxCode(string dropboxcode);
+        Task<IActionResult> UnAuthorizeDropBox();
+
+	}
 
     public class SettingsService : ISettingsService
     {
@@ -61,6 +66,28 @@ namespace SmartaCam
             // return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
             (await _httpClient.GetStreamAsync($"api/getnetwork"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         }
+		public async Task<bool> GetDropBoxAuthStatus()
+		{
+			return await System.Text.Json.JsonSerializer.DeserializeAsync<bool>
+			// return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
+			(await _httpClient.GetStreamAsync($"api/getdropboxstatus"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+		}
+		public async Task<string> GetDropBoxCode()
+		{
+			return await _httpClient.GetStringAsync($"api/getdropboxcode");
+		//	return await System.Text.Json.JsonSerializer.DeserializeAsync<string>
+		//	(await _httpClient.GetStringAsync($"api/getdropboxcode"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+		}
+		public async Task<IActionResult> SetDropBoxCode(string dropboxcode)
+		{
+			return await _httpClient.GetAsync($"api/setdropboxcode/{dropboxcode}") as IActionResult;
 
-    }
+		}
+		public async Task<IActionResult> UnAuthorizeDropBox()
+		{
+			return await _httpClient.GetAsync($"api/unauthdropbox") as IActionResult;
+
+		}
+
+	}
     }
