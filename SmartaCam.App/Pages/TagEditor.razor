@@ -38,19 +38,23 @@ else
                         <div class="form-group row">
                             <label for="title" class="col-sm-3"><b>Title:</b> </label>
                             @*<input id="lastName" class="form-control col-sm-8" @bind-value="Employee.LastName" placeholder="Enter last name" />*@
-                            <InputText id="Title" class="form-control col-sm-8" @bind-Value="@CandidateTitle" @bind-Value:after="ShowHideDeleteButton">"</InputText>
+                            <InputText id="Title" class="form-control col-sm-8" @bind-Value="@CandidateTitle" @bind-Value:after="ShowHideButtons">"</InputText>
                             @*  <ValidationMessage class="offset-sm-3 col-sm-8" For="@(() => CandidateTitle)" /> *@
                             <label for="artist" class="col-sm-3"><b>Artist:</b> </label>
-                            <InputText id="Artist" class="form-control col-sm-8" @bind-Value="@CandidateArtist" @bind-Value:after="ShowHideDeleteButton">"></InputText>
+                            <InputText id="Artist" class="form-control col-sm-8" @bind-Value="@CandidateArtist" @bind-Value:after="ShowHideButtons">"></InputText>
                             <label for="album" class="col-sm-3"><b>Album:</b> </label>
-                            <InputText id="Album" class="form-control col-sm-8" @bind-Value="@CandidateAlbum" @bind-Value:after="ShowHideDeleteButton">"></InputText>
+                            <InputText id="Album" class="form-control col-sm-8" @bind-Value="@CandidateAlbum" @bind-Value:after="ShowHideButtons">"></InputText>
                         </div>
-                        <button type="submit" class="btn btn-primary edit-btn">Save And Set Active</button>
-                        @if (ShowDeleteButton)
+                        
+                        @if (@ShowDeleteButton)
                         {
                             <button class="btn btn-dark" @onclick="@DeleteMp3TagSet"><i class="fa fa-floppy-o" aria-hidden="false"></i> Delete</button>
                             @*         <button class="btn btn-info dropdown-toggle" @onclick="@DeleteMp3TagSet" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Delete</button> *@
 
+                        }
+                        @if (@ShowSaveButton)
+                        {
+                            <button type="submit" class="btn btn-primary edit-btn" aria-hidden="false">Save And Set Active</button>
                         }
                     </div>
                 </EditForm>

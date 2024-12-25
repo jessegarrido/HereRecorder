@@ -1,7 +1,14 @@
 ﻿@page "/settings"
 
+@inherits TakesPage
+
 @inject NavigationManager _navigationManager
 
+@if (MyStateDisplay < 1)
+@*     @if  (@AllTakes == null) *@
+{
+	<p><em>Loading...</em></p>
+} else{
 <div class="mb-3">
 	<ul>
 	<li><b>Network Status :</b> @NetworkStatus</li>
@@ -58,3 +65,4 @@
 [ System Reset ]
 	*@
 </div> 
+}

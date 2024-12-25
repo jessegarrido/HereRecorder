@@ -30,20 +30,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SmartaCam
 {
-    
-
-
-    public interface IIORepository
-    {
-        public string GetUSBDeviceName(nint name);
-        public Task LEDBlinkAsync(int pin, int duration);
-        public Task LongBlinkLEDAsync(int pin, int duration, CancellationToken ct);
-        public void BlinkLED(int pin, int duration);
-        public Task TurnOffLEDAsync(int pin);
-        public Task TurnOnLEDAsync(int pin);
-        public Task BlinkAllLEDs(CancellationToken ct);
-        public Task BlinkOneLED(int pin, int duration, CancellationToken ct);
-    }
 
 	public interface IAudioRepository
 	{
@@ -1386,22 +1372,21 @@ namespace SmartaCam
             {
                 {
 
-                    UIRepository uiRepository = new();
+                    //UIRepository uiRepository = new();
                     AudioRepository audioRepository = new();
                     NetworkRepository networkRepository = new();
                     // IORepository ioRepository = new();
                     NetworkRepository.DropBox db = new();
                     // db.DropBoxAuthResetAsync();
-                    await uiRepository.ClearDailyTakesCount();
-                    uiRepository.LoadConfig(); 
+                    await ClearDailyTakesCount();
+                    LoadConfig(); 
                     Console.WriteLine("Welcome to SmartaCam");
-                    _os = await uiRepository.IdentifyOS();
-                    _os = await uiRepository.IdentifyOS();
+                    _os = await IdentifyOS();
                     Console.WriteLine($"Platform: {_os}");
                     Console.WriteLine($"Session Name: {_session}");
                     Console.WriteLine($"Local Recordings Folder: {Config.LocalRecordingsFolder}");
-                    if (_os == "Raspberry Pi") { await uiRepository.AskKeepOrEraseFilesAsync(); }
-                    uiRepository.FindRemovableDrives(true);
+                    if (_os == "Raspberry Pi") { await AskKeepOrEraseFilesAsync(); }
+                    FindRemovableDrives(true);
                     //    Global.RemovableDrivePath = d.RootDirectory.ToString();
                     //Global.RemovableDrivePath = Path.Combine("F:");
                     _ = Task.Run(async () => { await networkRepository.CheckNetworkAsync(); });
@@ -1411,7 +1396,7 @@ namespace SmartaCam
                     audioRepository.SetMyState(1);
                     do
                     {
-                        await uiRepository.MainMenuAsync();
+                        await MainMenuAsync();
                     }
                     while (true);
                 }
@@ -1485,7 +1470,18 @@ namespace SmartaCam
             }
         }
 
-        public class IORepository : IIORepository
+	public interface IIORepository
+	{
+		public string GetUSBDeviceName(nint name);
+		public Task LEDBlinkAsync(int pin, int duration);
+		public Task LongBlinkLEDAsync(int pin, int duration, CancellationToken ct);
+		public void BlinkLED(int pin, int duration);
+		public Task TurnOffLEDAsync(int pin);
+		public Task TurnOnLEDAsync(int pin);
+		public Task BlinkAllLEDs(CancellationToken ct);
+		public Task BlinkOneLED(int pin, int duration, CancellationToken ct);
+	}
+	public class IORepository : IIORepository
         {
             public string GetUSBDeviceName(nint name)
             {

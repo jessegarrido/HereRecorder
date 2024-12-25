@@ -113,7 +113,19 @@ namespace SmartaCam
             }
         }
     }
-    public class Mp3TagSetRepository : IMp3TagSetRepository
+
+	public interface IMp3TagSetRepository
+	{
+		public Task<bool> SaveChangesAsync();
+		public Task<int> AddMp3TagSetAsync(Mp3TagSet mp3TagSet);
+		public Task<Mp3TagSet> SetActiveMp3TagSetAsync(int id);
+		public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
+		public Task<Mp3TagSet> GetActiveMp3TagSetAsync();
+		public Task DeleteMp3TagSetByIdAsync(int id);
+		public Task<IEnumerable<Mp3TagSet>> GetAllMp3TagSetsAsync();
+		public Task<bool> CheckIfMp3TagSetExistsAsync(Mp3TagSet mp3TagSet);
+	}
+	public class Mp3TagSetRepository : IMp3TagSetRepository
     {
         private readonly SmartaCamContext _context = new SmartaCamContext();
         public async Task<bool> SaveChangesAsync()
@@ -201,17 +213,6 @@ namespace SmartaCam
 
     }
 
-	public interface IMp3TagSetRepository
-	{
-		public Task<bool> SaveChangesAsync();
-		public Task<int> AddMp3TagSetAsync(Mp3TagSet mp3TagSet);
-		public Task<Mp3TagSet> SetActiveMp3TagSetAsync(int id);
-		public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
-		public Task<Mp3TagSet> GetActiveMp3TagSetAsync();
-		public Task DeleteMp3TagSetByIdAsync(int id);
-		public Task<IEnumerable<Mp3TagSet>> GetAllMp3TagSetsAsync();
-		public Task<bool> CheckIfMp3TagSetExistsAsync(Mp3TagSet mp3TagSet);
-	}
 	public interface ISettingsRepository
 	{
 		public Task<bool> GetNormalizeAsync();

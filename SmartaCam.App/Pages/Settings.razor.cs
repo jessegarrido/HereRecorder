@@ -3,7 +3,7 @@ using static Dropbox.Api.Paper.UserOnPaperDocFilter;
 
 namespace SmartaCam.App.Pages
 {
-    public partial class Settings
+    public partial class Settings : TakesPage
 
     {
         [Inject]
@@ -29,7 +29,12 @@ namespace SmartaCam.App.Pages
         protected async override Task OnInitializedAsync()
 
         {
-            Normalize = await SettingsService.GetNormalize();
+			while (MyStateDisplay == 0)
+			{
+				await Task.Delay(1000);
+				MyStateDisplay = await TransportService.GetState();
+			}
+			Normalize = await SettingsService.GetNormalize();
             PushToCloud = await SettingsService.GetUpload();
             CopyToUsb = await SettingsService.GetCopyToUsb();
             NetworkStatus = await SettingsService.GetNetworkStatus();
@@ -72,5 +77,6 @@ namespace SmartaCam.App.Pages
         {
             _navigationManager.NavigateTo("/settings", true);
         }
+
     }
 }
