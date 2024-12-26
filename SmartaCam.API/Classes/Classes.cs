@@ -38,7 +38,7 @@ namespace SmartaCam
 		public Task RecordAudioAsync();
 		public Task ConvertWavToMp3Async(int id);
 		public void LoadLameDLL();
-		public Task NormalizeTakeAsync(int id);
+		public Task AnalyzeAndNormalizeTakeAsync(int id);
 		public Task RecordButtonPressedAsync();
 		public Task PlayButtonPressedAsync();
 		public Task PlayOneTakeAsync(string wavPath);
@@ -165,8 +165,6 @@ namespace SmartaCam
 
             }
 			var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
-			Settings.Default.Takes = takeId;
-			Settings.Default.Save();
 			Console.WriteLine("Added To db, starting postprocess");
 			await PostProcessAudioAsync(takeId);
 
@@ -174,9 +172,11 @@ namespace SmartaCam
 
         }
         public async Task PostProcessAudioAsync(int takeId)
+
+
         {
             UIRepository uIRepository = new();
-            await NormalizeTakeAsync(takeId);
+            await AnalyzeAndNormalizeTakeAsync(takeId); 
             await ConvertWavToMp3Async(takeId);
             if (Config.CopyToUsb == true) { await uIRepository.CopyToUsb(takeId); };
             if (Config.PushToCloud == true)
@@ -231,80 +231,14 @@ namespace SmartaCam
         {
             LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
         }
-        //public async Task NormalizeTakeAsync(int id)
-        //// from https://markheath.net/post/normalize-audio-naudio
-        //{
-        //    var take = await _takeRepository.GetTakeByIdAsync(id);
-        //    UIRepository uiRepository = new();
-        //    var inPath = take.WavFilePath;
-        //    Console.WriteLine($"Analyzing {inPath}");
-
-        //    float max = 0;
-
-        //    while (!inPath.IsFileReady())
-        //    {
-        //        await Task.Delay(1000);
-        //    }
-        //    using (var reader = new AudioFileReader(inPath))
-        //    {
-        //        // find the max peak
-        //        float[] buffer = new float[reader.WaveFormat.SampleRate];
-        //        int read;
-        //        do
-        //        {
-        //            read = reader.Read(buffer, 0, buffer.Length);
-        //            for (int n = 0; n < read; n++)
-        //            {
-        //                var abs = Math.Abs(buffer[n]);
-        //                if (abs > max) max = abs;
-        //            }
-        //        } while (read > 0);
-        //        Console.WriteLine($"Max sample value: {max}");
-
-        //        if (max == 0 || max > 1.0f)
-
-        //            throw new InvalidOperationException("File cannot be normalized");
-
-        //        if (Config.Normalize)
-        //        {
-        //            var outPath = Path.GetDirectoryName(inPath);
-        //            outPath = Path.Combine(outPath, $"{Path.GetFileNameWithoutExtension(inPath)}_normalized.wav");
-        //            //var outPath = $"{inPath}_normalized.wav";
-        //            Console.WriteLine($"Normalizing {inPath}");
-        //            Console.WriteLine($"Normalizing to {outPath}");
-        //            // rewind and amplify
-        //            reader.Position = 0;
-        //            reader.Volume = 1.0f / max;
-
-        //            WaveFileWriter.CreateWaveFile16(outPath, reader);
-        //            take.Normalized = true;
-        //            while (!outPath.IsFileReady())
-        //            {
-        //                await Task.Delay(1000);
-        //            }
-        //            File.Move(outPath, inPath, true);
-
-        //        }
-        //    }
-        //    take.OriginalPeakVolume = max;
-        //    await _takeRepository.SaveChangesAsync();
-        //}
-
-        public async Task NormalizeTakeAsync(int id)
+        public async Task AnalyzeAndNormalizeTakeAsync(int id)
         // from https://markheath.net/post/normalize-audio-naudio
         {
-            //TakeRepository _takeRepository = new();
-
             var take = await _takeRepository.GetTakeByIdAsync(id);
             UIRepository uiRepository = new();
-
-            //var inPath = Path.Combine(take.WavFilePath, $"{take.Title}.wav");
-            // Path.Combine(take.WavFilePath, $"{take.Title}_normalized.wav");
             var inPath = take.WavFilePath;
-            Console.WriteLine($"Normalizing {inPath}");
+            Console.WriteLine($"Analyzing volume: {inPath}");
             var outPath = $"{inPath}_normalized";
-            //Console.WriteLine($"{inPath}");
-            //Console.WriteLine($"{outPath}");
             float max = 0;
 
             while (!inPath.IsFileReady())
@@ -337,12 +271,11 @@ namespace SmartaCam
                     reader.Volume = 1.0f / max;
                     take.Normalized = true;
 
-                } else
-                {
-                    reader.Volume = 1.0f;
-                }               
+                } //else
+                //{
+                //    reader.Volume = 1.0f;
+                //}               
                 // write out to a new WAV file
-                //  WaveFileWriter.CreateWaveFile16(outPath, reader);
                 WaveFileWriter.CreateWaveFile16(outPath, reader);
 
             }
@@ -350,9 +283,7 @@ namespace SmartaCam
             {
                 await Task.Delay(1000);
             }
-            //Console.WriteLine($"Next step is file move");
-            File.Move(outPath, inPath, true);
-            
+            File.Move(outPath, inPath, true); 
             take.OriginalPeakVolume = max;
             await _takeRepository.SaveChangesAsync();
         }
@@ -1235,7 +1166,7 @@ namespace SmartaCam
                         if (_myState == 2)
                         {
                             audioRepository.SetMyState(1);
-                            //  await audioRepository.NormalizeTakeAsync();
+                            //  await audioRepository.AnalyzeAndNormalizeTakeAsync();
                             //  audioRepository.ConvertWavToMP3(Global.wavPathAndName, Global.mp3PathAndName);
                             //  NetworkRepository.DropBox db = new();
                             //  db.PushToDropBoxAsync();

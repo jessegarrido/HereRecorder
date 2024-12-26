@@ -1,5 +1,6 @@
 ﻿using Dropbox.Api.Files;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using SmartaCam.App.Services;
 using System.Data;
 using System.Net.Http.Json;
@@ -45,7 +46,10 @@ namespace SmartaCam.App.Pages
             }
             AllTakes = await TakeService.GetAllTakesAsync();
             InitPlayStopLabelList();
-        }
+			// Subscribe to the event
+			_navigationManager.LocationChanged += LocationChanged;
+			base.OnInitialized();
+		}
         public async Task PlayStop_Click(int id)
         {
             await CheckState();
@@ -141,6 +145,17 @@ namespace SmartaCam.App.Pages
         {
             return $"{value:F3}"; 
 
+        }
+        void LocationChanged(object sender, LocationChangedEventArgs e)
+        {
+            string navigationMethod = e.IsNavigationIntercepted ? "HTML" : "code";
+            //System.Diagnostics.Debug.WriteLine($"Notified of navigation via {navigationMethod} to {e.Location}");
+            TransportService.StopButtonPress();
+        }
+        void IDisposable.Dispose()
+        {
+            // Unsubscribe from the event when our component is disposed
+            _navigationManager.LocationChanged -= LocationChanged;
         }
         //public async Task Stop_Click()
         //{
