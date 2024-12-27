@@ -1,5 +1,6 @@
 ﻿@page "/"
 
+@implements IDisposable
 @inject NavigationManager _navigationManager
 
 
@@ -54,14 +55,12 @@ else
                     <td>@take.Title</td>
                     <td>@take.Artist</td>
                     <td>@take.Album</td>
-                @*     <td>@take.Duration.ToString("g")</td> *@
-                  <td>@take.Duration.ToString(@"mm\:ss")</td> 
+                    <td>@take.Duration.ToString(@"mm\:ss")</td> 
                     <td>@take.Normalized</td>
                     <td>@FormatPeakDecimal(take.OriginalPeakVolume)</td>
                     <td>@take.WasConvertedToMp3</td>
                     <td>@take.WasUpLoaded</td>
                     <td> <button style="background-color:black" type="submit" class="btn btn-primary" @onclick="(() => DeleteTake(take.Id))">X</button></td>
-
                 </tr>
             }
         </tbody>

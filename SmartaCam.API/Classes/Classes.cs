@@ -24,64 +24,32 @@ using static Dropbox.Api.Files.ListRevisionsMode;
 using Path = System.IO.Path;
 using System.Text.Json;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
 namespace SmartaCam
 {
-    public interface IAudioRepository
-    {
-        public void AudioDeviceInitAndEnumerate(bool enumerate);
-        public int QueryAudioDevice(int? configSelectedIndex);
-        public Task RecordAudioAsync();
-        public Task ConvertWavToMp3Async(int id);
-        public void LoadLameDLL();
-        public Task NormalizeTakeAsync(int id);
-        public Task RecordButtonPressedAsync();
-        public Task PlayButtonPressedAsync();
-        public Task PlayOneTakeAsync(string wavPath);
-        public Task StopButtonPressedAsync();
-        public List<string> CreatePlayQueue();
-        public Task<List<string>> GetPlayQueueAsync();
-        public Task<string> GetNowPlayingAsync();
-        public int GetMyState();
-        public void SetMyState(int newState);
-    }
-    public interface INetworkRepository
-    {
-        public Task CheckNetworkAsync();
-        public Task CheckAndConnectCloudAsync();
-        public Task EstablishWifiAsync();
-        public class DropBox();
-        public bool GetNetworkStatus();
-    }
-    public interface IUIRepository
-    {
-        public Task ClearDailyTakesCount();
-        public Task AskKeepOrEraseFilesAsync();
-        public Task<string> IdentifyOS();
-        public Task MainMenuAsync();
-        public Task<string> SetupLocalRecordingFileAsync();
-        public int FindRemovableDrives(bool displayDetails);
-        public int GetValidUserSelection(List<int> validOptions);
-        public void LoadConfig();
-        public Task<string> RunBashCatAsync(string command);
-        public Task SessionInitAsync();
 
-    }
-    public interface IIORepository
-    {
-        public string GetUSBDeviceName(nint name);
-        public Task LEDBlinkAsync(int pin, int duration);
-        public Task LongBlinkLEDAsync(int pin, int duration, CancellationToken ct);
-        public void BlinkLED(int pin, int duration);
-        public Task TurnOffLEDAsync(int pin);
-        public Task TurnOnLEDAsync(int pin);
-        public Task BlinkAllLEDs(CancellationToken ct);
-        public Task BlinkOneLED(int pin, int duration, CancellationToken ct);
-    }
-
-    public class AudioRepository : IAudioRepository
+	public interface IAudioRepository
+	{
+		public void AudioDeviceInitAndEnumerate(bool enumerate);
+		public int QueryAudioDevice(int? configSelectedIndex);
+		public Task RecordAudioAsync();
+		public Task ConvertWavToMp3Async(int id);
+		public void LoadLameDLL();
+		public Task AnalyzeAndNormalizeTakeAsync(int id);
+		public Task RecordButtonPressedAsync();
+		public Task PlayButtonPressedAsync();
+		public Task PlayOneTakeAsync(string wavPath);
+		public Task StopButtonPressedAsync();
+		public List<string> CreatePlayQueue();
+		public Task<List<string>> GetPlayQueueAsync();
+		public Task<string> GetNowPlayingAsync();
+		public int GetMyState();
+		public void SetMyState(int newState);
+	}
+	public class AudioRepository : IAudioRepository
     {
         private static int MyState = 0;
         private TakeRepository _takeRepository = new TakeRepository();
@@ -196,18 +164,19 @@ namespace SmartaCam
                 };
 
             }
-            var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
-            Console.WriteLine("Added To db, starting postprocess");
-            await PostProcessAudioAsync(takeId);
-            Settings.Default.Takes = takeId++;
-            Settings.Default.Save();
+			var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
+			Console.WriteLine("Added To db, starting postprocess");
+			await PostProcessAudioAsync(takeId);
+
 
 
         }
         public async Task PostProcessAudioAsync(int takeId)
+
+
         {
             UIRepository uIRepository = new();
-            await NormalizeTakeAsync(takeId);
+            await AnalyzeAndNormalizeTakeAsync(takeId); 
             await ConvertWavToMp3Async(takeId);
             if (Config.CopyToUsb == true) { await uIRepository.CopyToUsb(takeId); };
             if (Config.PushToCloud == true)
@@ -262,80 +231,14 @@ namespace SmartaCam
         {
             LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
         }
-        //public async Task NormalizeTakeAsync(int id)
-        //// from https://markheath.net/post/normalize-audio-naudio
-        //{
-        //    var take = await _takeRepository.GetTakeByIdAsync(id);
-        //    UIRepository uiRepository = new();
-        //    var inPath = take.WavFilePath;
-        //    Console.WriteLine($"Analyzing {inPath}");
-
-        //    float max = 0;
-
-        //    while (!inPath.IsFileReady())
-        //    {
-        //        await Task.Delay(1000);
-        //    }
-        //    using (var reader = new AudioFileReader(inPath))
-        //    {
-        //        // find the max peak
-        //        float[] buffer = new float[reader.WaveFormat.SampleRate];
-        //        int read;
-        //        do
-        //        {
-        //            read = reader.Read(buffer, 0, buffer.Length);
-        //            for (int n = 0; n < read; n++)
-        //            {
-        //                var abs = Math.Abs(buffer[n]);
-        //                if (abs > max) max = abs;
-        //            }
-        //        } while (read > 0);
-        //        Console.WriteLine($"Max sample value: {max}");
-
-        //        if (max == 0 || max > 1.0f)
-
-        //            throw new InvalidOperationException("File cannot be normalized");
-
-        //        if (Config.Normalize)
-        //        {
-        //            var outPath = Path.GetDirectoryName(inPath);
-        //            outPath = Path.Combine(outPath, $"{Path.GetFileNameWithoutExtension(inPath)}_normalized.wav");
-        //            //var outPath = $"{inPath}_normalized.wav";
-        //            Console.WriteLine($"Normalizing {inPath}");
-        //            Console.WriteLine($"Normalizing to {outPath}");
-        //            // rewind and amplify
-        //            reader.Position = 0;
-        //            reader.Volume = 1.0f / max;
-
-        //            WaveFileWriter.CreateWaveFile16(outPath, reader);
-        //            take.Normalized = true;
-        //            while (!outPath.IsFileReady())
-        //            {
-        //                await Task.Delay(1000);
-        //            }
-        //            File.Move(outPath, inPath, true);
-
-        //        }
-        //    }
-        //    take.OriginalPeakVolume = max;
-        //    await _takeRepository.SaveChangesAsync();
-        //}
-
-        public async Task NormalizeTakeAsync(int id)
+        public async Task AnalyzeAndNormalizeTakeAsync(int id)
         // from https://markheath.net/post/normalize-audio-naudio
         {
-            //TakeRepository _takeRepository = new();
-
             var take = await _takeRepository.GetTakeByIdAsync(id);
             UIRepository uiRepository = new();
-
-            //var inPath = Path.Combine(take.WavFilePath, $"{take.Title}.wav");
-            // Path.Combine(take.WavFilePath, $"{take.Title}_normalized.wav");
             var inPath = take.WavFilePath;
-            Console.WriteLine($"Normalizing {inPath}");
+            Console.WriteLine($"Analyzing volume: {inPath}");
             var outPath = $"{inPath}_normalized";
-            //Console.WriteLine($"{inPath}");
-            //Console.WriteLine($"{outPath}");
             float max = 0;
 
             while (!inPath.IsFileReady())
@@ -368,12 +271,11 @@ namespace SmartaCam
                     reader.Volume = 1.0f / max;
                     take.Normalized = true;
 
-                } else
-                {
-                    reader.Volume = 1.0f;
-                }               
+                } //else
+                //{
+                //    reader.Volume = 1.0f;
+                //}               
                 // write out to a new WAV file
-                //  WaveFileWriter.CreateWaveFile16(outPath, reader);
                 WaveFileWriter.CreateWaveFile16(outPath, reader);
 
             }
@@ -381,9 +283,7 @@ namespace SmartaCam
             {
                 await Task.Delay(1000);
             }
-            //Console.WriteLine($"Next step is file move");
-            File.Move(outPath, inPath, true);
-            
+            File.Move(outPath, inPath, true); 
             take.OriginalPeakVolume = max;
             await _takeRepository.SaveChangesAsync();
         }
@@ -562,7 +462,17 @@ namespace SmartaCam
             return MyState;
         } 
     }
-        public class NetworkRepository : INetworkRepository
+	public interface INetworkRepository
+	{
+		public Task CheckNetworkAsync();
+		public Task CheckAndConnectCloudAsync();
+		public Task EstablishWifiAsync();
+		public class DropBox();
+		public bool GetNetworkStatus();
+        public void SetDropBoxCode(string dropboxcode);
+        public Task<bool> GetDropBoxAuthStatusAsync();
+	}
+	public class NetworkRepository : INetworkRepository
         {
         public static bool NetworkStatus = false;
         public static bool OAuthStatus = false;
@@ -681,7 +591,20 @@ namespace SmartaCam
         {
             return NetworkStatus;
         }
-            public class DropBox
+		public async Task<bool> GetDropBoxAuthStatusAsync()
+		{
+            await CheckAndConnectCloudAsync();
+            return OAuthStatus;
+		}
+		public string GetDropBoxCode()
+		{
+			return Config.DropBoxCodeTxt;
+		}
+		public void SetDropBoxCode(string dropboxcode)
+		{
+			Config.DropBoxCodeTxt = dropboxcode;
+		}
+		public class DropBox
             {
                 private TakeRepository _takeRepository = new TakeRepository();
                 private string _dbauthcode { get; set; } = string.Empty;
@@ -944,20 +867,24 @@ namespace SmartaCam
                             var OAuthFlow = new PKCEOAuthFlow();
                             var authorizeUri = OAuthFlow.GetAuthorizeUri(OAuthResponseType.Code, Config.DbApiKey, state: "N", tokenAccessType: TokenAccessType.Offline, scopeList: scopeList, includeGrantedScopes: includeGrantedScopes);
 
-                            Console.WriteLine("Visit this webpage and get credentials:");
+
                             _dbcodetextcontents = authorizeUri + Environment.NewLine;
-                            UIRepository uIRepository = new();
+					       	Console.WriteLine($"Visit this webpage and get credentials: {_dbcodetextcontents}");
+                            Config.DropBoxCodeTxt = _dbcodetextcontents;
+							UIRepository uIRepository = new();
                             string removableDrivePath = uIRepository.GetUSBDevicePath();
                             Console.WriteLine($"DropBox Code Path: {removableDrivePath}");
                             File.WriteAllText(Path.Combine(removableDrivePath, "DropBoxCode.txt"), _dbcodetextcontents);
 
                             Console.WriteLine("Waiting For DropBox Authorization Code");
-                            while (_dbcodetextcontents.StartsWith("https:")) // ADD condition for not already authorized
+						    Task.Run( () =>
+						    {
+						    	WatchDropBoxCodeFile().GetAwaiter().GetResult();
+						    });
+						    while (Config.DropBoxCodeTxt.StartsWith("http")) // ADD condition for not already authorized
                             {
-                                WatchDropBoxCodeFile().GetAwaiter().GetResult();
-                                //await Task.Delay(1000);
+                                 await Task.Delay(1000);
                             }
-
                             //string accessCodenil = Console.ReadLine();
                             //var 
                             //Settings.Default.AccessToken = accessToken;
@@ -984,7 +911,7 @@ namespace SmartaCam
                             // Returns:
                             //     The authorization response, containing the access token and uid of the authorized
                             //     user.
-                            var accessCode = _dbcodetextcontents;
+                            var accessCode = Config.DropBoxCodeTxt;
                             Console.WriteLine("Exchanging code for token");
                             // tokenResult.DefaultIkenizedUri = OAuthFlow.ProcessCodeFlowAsync(accessCode, Global.DbApiKey);
 
@@ -1013,6 +940,7 @@ namespace SmartaCam
                             Settings.Default.AccessToken = accessToken;
                             Settings.Default.Uid = uid;
                             Settings.Default.Save();
+                            OAuthStatus = true;
                             /*
                                                 var dbClient = new RestClient("https://api.dropbox.com/oauth2/token");
                                                 RestRequest request = new RestRequest("Smart", Method.Post);
@@ -1028,7 +956,8 @@ namespace SmartaCam
                             //  http.Stop();
                             return "Recorder";// uid;
                         }
-                        catch (Exception e)
+
+						catch (Exception e)
                         {
                             Console.WriteLine("Error: {0}", e.Message);
                             return null;
@@ -1058,8 +987,12 @@ namespace SmartaCam
                     await tcs.Task.ConfigureAwait(true);
                     Console.WriteLine("USB event detected");
                     await Task.Delay(1000);
-                    _dbcodetextcontents = GetDropBoxCodeFromUSB();
-                    Console.WriteLine(_dbcodetextcontents);
+                    bool usbTextChanged = !GetDropBoxCodeFromUSB().StartsWith("http");
+                	if (usbTextChanged)
+                    {
+                    Config.DropBoxCodeTxt = GetDropBoxCodeFromUSB();
+				    }
+	
                 }
                 //public void USBDetected()
                 //{
@@ -1101,7 +1034,21 @@ namespace SmartaCam
 
             }
         }
-        public class UIRepository : IUIRepository
+	public interface IUIRepository
+	{
+		public Task ClearDailyTakesCount();
+		public Task AskKeepOrEraseFilesAsync();
+		public Task<string> IdentifyOS();
+		public Task MainMenuAsync();
+		public Task<string> SetupLocalRecordingFileAsync();
+		public int FindRemovableDrives(bool displayDetails);
+		public int GetValidUserSelection(List<int> validOptions);
+		public void LoadConfig();
+		public Task<string> RunBashCatAsync(string command);
+		public Task SessionInitAsync();
+
+	}
+	public class UIRepository : IUIRepository
         {
             private TakeRepository _takeRepository = new TakeRepository();
             private AudioRepository _audioRepository = new AudioRepository();
@@ -1219,7 +1166,7 @@ namespace SmartaCam
                         if (_myState == 2)
                         {
                             audioRepository.SetMyState(1);
-                            //  await audioRepository.NormalizeTakeAsync();
+                            //  await audioRepository.AnalyzeAndNormalizeTakeAsync();
                             //  audioRepository.ConvertWavToMP3(Global.wavPathAndName, Global.mp3PathAndName);
                             //  NetworkRepository.DropBox db = new();
                             //  db.PushToDropBoxAsync();
@@ -1331,7 +1278,10 @@ namespace SmartaCam
                 Config.DbCode = Settings.Default.DbCode;
                 Config.SelectedAudioDevice = Settings.Default.SelectedAudioDevice;
                 Config.SampleRate = Settings.Default.SampleRate;
-            }
+			    Config.CopyToUsb = Settings.Default.CopyToUSB;
+		 	    Config.PushToCloud = Settings.Default.PushToCloud;
+
+		}
             public async Task<string> RunBashCatAsync(string command)
             {
                 var bashTask = Task.Run(() =>
@@ -1353,22 +1303,21 @@ namespace SmartaCam
             {
                 {
 
-                    UIRepository uiRepository = new();
+                    //UIRepository uiRepository = new();
                     AudioRepository audioRepository = new();
                     NetworkRepository networkRepository = new();
                     // IORepository ioRepository = new();
                     NetworkRepository.DropBox db = new();
                     // db.DropBoxAuthResetAsync();
-                    await uiRepository.ClearDailyTakesCount();
-                    uiRepository.LoadConfig();
+                    await ClearDailyTakesCount();
+                    LoadConfig(); 
                     Console.WriteLine("Welcome to SmartaCam");
-                    _os = await uiRepository.IdentifyOS();
-                    _os = await uiRepository.IdentifyOS();
+                    _os = await IdentifyOS();
                     Console.WriteLine($"Platform: {_os}");
                     Console.WriteLine($"Session Name: {_session}");
                     Console.WriteLine($"Local Recordings Folder: {Config.LocalRecordingsFolder}");
-                    if (_os == "Raspberry Pi") { await uiRepository.AskKeepOrEraseFilesAsync(); }
-                    uiRepository.FindRemovableDrives(true);
+                    if (_os == "Raspberry Pi") { await AskKeepOrEraseFilesAsync(); }
+                    FindRemovableDrives(true);
                     //    Global.RemovableDrivePath = d.RootDirectory.ToString();
                     //Global.RemovableDrivePath = Path.Combine("F:");
                     _ = Task.Run(async () => { await networkRepository.CheckNetworkAsync(); });
@@ -1378,7 +1327,7 @@ namespace SmartaCam
                     audioRepository.SetMyState(1);
                     do
                     {
-                        await uiRepository.MainMenuAsync();
+                        await MainMenuAsync();
                     }
                     while (true);
                 }
@@ -1452,7 +1401,18 @@ namespace SmartaCam
             }
         }
 
-        public class IORepository : IIORepository
+	public interface IIORepository
+	{
+		public string GetUSBDeviceName(nint name);
+		public Task LEDBlinkAsync(int pin, int duration);
+		public Task LongBlinkLEDAsync(int pin, int duration, CancellationToken ct);
+		public void BlinkLED(int pin, int duration);
+		public Task TurnOffLEDAsync(int pin);
+		public Task TurnOnLEDAsync(int pin);
+		public Task BlinkAllLEDs(CancellationToken ct);
+		public Task BlinkOneLED(int pin, int duration, CancellationToken ct);
+	}
+	public class IORepository : IIORepository
         {
             public string GetUSBDeviceName(nint name)
             {

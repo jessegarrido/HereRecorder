@@ -27,7 +27,7 @@ namespace SmartaCam
         {
             try
             {
-                int take = Settings.Default.Takes++;
+                int take = Settings.Default.Takes;
                 var translatedstring = untranslatedstring.Replace("[Date]", DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd"), StringComparison.CurrentCultureIgnoreCase);
                 translatedstring = translatedstring.Replace("[#]", take.ToString());
                 return translatedstring;

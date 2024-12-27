@@ -1,6 +1,7 @@
 ﻿using Dropbox.Api;
 using Microsoft.Extensions.Configuration;
 using PortAudioSharp;
+using SmartaCam.API;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -22,11 +23,12 @@ namespace SmartaCam
         public static int SelectedAudioDevice { get; set; } = 0;
         public static bool Normalize { get; set; } = true;
         public static bool PushToCloud { get; set; } = false;
-        public static bool CopyToUsb { get; set; } = false;
+		public static bool CopyToUsb { get; set; } = false;
         public static int Mp3BitRate { get; set; } = 192;
         public static string LocalRecordingsFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"SmartaCam","Recordings");
+        public static string DropBoxCodeTxt { get; set; } = string.Empty;
 
-        public static int RedLED { get; set; } = 4; // purple - pin 7
+		public static int RedLED { get; set; } = 4; // purple - pin 7
         public static int GreenLED { get; set; } = 2; //orange - pin 3
         public static int YellowLED { get; set; } = 3; // green - pin 5 
         public static int PlayButton { get; set; } = 14; // grey - pin 8

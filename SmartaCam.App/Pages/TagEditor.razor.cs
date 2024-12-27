@@ -35,7 +35,9 @@ namespace SmartaCam.App.Pages
 
         public int SelectedMp3TagSetId { get; set; } = 1;
         [Parameter]
-        public bool ShowDeleteButton { get; set; } = true;
+        public bool ShowDeleteButton { get; set; } = false;
+        [Parameter]
+        public bool ShowSaveButton { get; set; } = false;
         //{
         //    get
         //    {
@@ -73,25 +75,24 @@ namespace SmartaCam.App.Pages
         protected async override Task OnInitializedAsync()
 
         {
-            Saved = false;
+           // Saved = false;
             Mp3TagSets = await Mp3TagSetService.GetAllMp3TagSets();
             //// = (List<Mp3TagSet>)Mp3TagSetEnum;
             ActiveMp3TagSet = await Mp3TagSetService.GetActiveMp3TagSet();
 
-
-
-            ////CandidateMp3TagSet.Id = 0;
             SelectedMp3TagSetId = ActiveMp3TagSet.Id;   
 
                     CandidateTitle = ActiveMp3TagSet.Title;
                     CandidateArtist = ActiveMp3TagSet.Artist;
                     CandidateAlbum = ActiveMp3TagSet.Album;
-                    ShowHideDeleteButton();
+                    
+                   
+                    ShowHideButtons();
+            ShowDeleteButton = true;
+            ShowSaveButton = false; //y this needed?
+                    await InvokeAsync(StateHasChanged);
+        }
 
-            //         // TranslatedTitle = NextTitle.TranslateString();
-            //         // TranslatedSession = NextSession.TranslateString();
-            //         //  TranslatedTitle = EditTitle.Replace("[Date]", DateTime.Now.ToString());
-           }
 
             protected async Task HandleValidSubmit()
             {
@@ -122,7 +123,7 @@ namespace SmartaCam.App.Pages
                         CandidateTitle = ActiveMp3TagSet.Title;
                         CandidateArtist = ActiveMp3TagSet.Artist;
                         CandidateAlbum = ActiveMp3TagSet.Album;
-                        ShowHideDeleteButton();
+                        ShowHideButtons();
                     }
                     else
                     {
@@ -159,21 +160,30 @@ namespace SmartaCam.App.Pages
                 Mp3TagSets = await Mp3TagSetService.GetAllMp3TagSets();
                 ActiveMp3TagSet = await Mp3TagSetService.SetActiveMp3TagSet(1);
             }
-            protected void ShowHideDeleteButton()
-            {
-                if (
-                    ActiveMp3TagSet.Id > 1 &&
-                    CandidateTitle == ActiveMp3TagSet.Title &&
-                    CandidateArtist == ActiveMp3TagSet.Artist &&
-                    CandidateArtist == ActiveMp3TagSet.Album)
+        protected void ShowHideButtons()
+        {
+            ShowSaveButton = false;
+            ShowDeleteButton = false;
+            if 
+             (
+                ActiveMp3TagSet.Id > 1 &&
+                CandidateTitle == ActiveMp3TagSet.Title &&
+                CandidateArtist == ActiveMp3TagSet.Artist &&
+                CandidateArtist == ActiveMp3TagSet.Album
+             )
+             {
+                ShowDeleteButton = true;
+             }
+            if (
+                CandidateTitle != ActiveMp3TagSet.Title ||
+                CandidateArtist != ActiveMp3TagSet.Artist ||
+                CandidateArtist != ActiveMp3TagSet.Album
+                )
                 {
-                    ShowDeleteButton = true;
+                ShowSaveButton = true;
                 }
-                else
-                {
-                    ShowDeleteButton = false;
-                }
-            }
+
+        }
 
             protected async Task UpdateActiveMp3TagFromDropdown(ChangeEventArgs e)
             {

@@ -1,18 +1,59 @@
 ﻿@page "/settings"
 
+@inherits TakesPage
 
+@inject NavigationManager _navigationManager
+
+@if (MyStateDisplay < 1)
+@*     @if  (@AllTakes == null) *@
+{
+	<p><em>Loading...</em></p>
+} else{
 <div class="mb-3">
-	<label>Normalize</label>
-    <InputCheckbox @bind-Value="@Normalize" @bind-Value:after="@OnSettingsChange">Normalize</InputCheckbox>
+	<ul>
+	<li><b>Network Status :</b> @NetworkStatus</li>
 	<br>
-	<label>Copy To USB</label>
-	<InputCheckbox @bind-Value="@CopyToUsb"  @bind-Value:after="@OnSettingsChange">Copy</InputCheckbox>
+	<li><b>DropBox Auth Status:</b>@DropBoxAuthStatus</li>
 	<br>
-	<label>Upload To Dropbox</label>
-	<InputCheckbox @bind-Value="@PushToCloud" @bind-Value:after="@OnSettingsChange">Upload</InputCheckbox>
-<br>
-Network Status : @NetworkStatus
-<br />
+	<li><label><b>Normalize</b></label>
+	<InputCheckbox @bind-Value=@Normalize @bind-Value:after="@OnSettingsChange"><b>Normalize</b></InputCheckbox>
+		</li>
+	<br>
+	<li><label><b>Copy To USB</b></label>
+	<InputCheckbox @bind-Value=@CopyToUsb @bind-Value:after="@OnSettingsChange"><b>Copy</b></InputCheckbox>
+		</li>
+	<br>
+		<li><label><b>Upload To Dropbox</b></label>
+	<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange"><b>Upload</b></InputCheckbox>
+		</li>
+	</ul>
+
+	<br>
+	<br>
+	@if ( DropBoxAuthStatus)
+	{
+		<button class="btn btn-dark" @onclick="@UnAuthorizeDropBoxAsync"><i class="fa fa-floppy-o" aria-hidden="false"></i>Revoke DropBox Authorization</button>
+	}
+	else
+		{
+			@* <a href=@DropBoxAuthUrl target="_blank">Authorize DropBox</a> *@
+			<label for="dropboxcode" class="col-sm-3">@DropBoxCode </label>
+			<InputText id="DropBoxCode" class="form-control col-sm-8" @bind-Value="@DropBoxCode">"</InputText>
+			<button class="btn btn-dark" @onclick="@AuthorizeDropBoxAsync"><i class="fa fa-floppy-o" aria-hidden="false"></i>Submit DropBox Code</button>
+		<br>
+		<br>
+		<br>
+		<div>
+		@* 	<label for="dropboxurl" class="col-sm-3"> *@
+		<b>Copy/paste this url into a new browser window and follow prompts to obtain a DropBox code to paste into field above:</b>
+		<br>
+		@DropBoxAuthUrl
+		@* 	</label> *@
+		</div>
+			
+
+		}
+
 	@*
 	DropBoxAuthentication Status : 
 <br />
@@ -24,3 +65,4 @@ Network Status : @NetworkStatus
 [ System Reset ]
 	*@
 </div> 
+}

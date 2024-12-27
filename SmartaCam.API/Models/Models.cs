@@ -15,31 +15,8 @@ using SmartaCam.API;
 namespace SmartaCam
 {
 
-    public interface IMp3TagSetRepository
-    {
-        public Task<bool> SaveChangesAsync();
-        public Task<int> AddMp3TagSetAsync(Mp3TagSet mp3TagSet);
-        public Task<Mp3TagSet> SetActiveMp3TagSetAsync(int id);
-        public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
-        public Task<Mp3TagSet> GetActiveMp3TagSetAsync();
-        public Task DeleteMp3TagSetByIdAsync(int id);
-        public Task<IEnumerable<Mp3TagSet>> GetAllMp3TagSetsAsync();
-        public Task<bool> CheckIfMp3TagSetExistsAsync(Mp3TagSet mp3TagSet);
-    }
-    public interface ISettingsRepository
-    {
-        public Task<bool> GetNormalizeAsync();
-        public Task SetNormalizeAsync(bool willNormalize);
-        public Task<bool> GetUploadAsync();
-        public Task SetUploadAsync(bool willUpload);
-        public Task<bool> GetCopyToUsbAsync();
-        public Task SetCopyToUsbAsync(bool willCopy);
-        public Task<bool> GetNetworkStatus();
-        //public Task CheckAuthentication();
-        //public Task SetLocalRecordingsFolder();
-        //public Task<bool> CheckNetworkStatus();
 
-    }
+
     public interface ITakeRepository
     {
         public Task<bool> SaveChangesAsync();
@@ -136,7 +113,19 @@ namespace SmartaCam
             }
         }
     }
-    public class Mp3TagSetRepository : IMp3TagSetRepository
+
+	public interface IMp3TagSetRepository
+	{
+		public Task<bool> SaveChangesAsync();
+		public Task<int> AddMp3TagSetAsync(Mp3TagSet mp3TagSet);
+		public Task<Mp3TagSet> SetActiveMp3TagSetAsync(int id);
+		public Task<Mp3TagSet> GetMp3TagSetByIdAsync(int id);
+		public Task<Mp3TagSet> GetActiveMp3TagSetAsync();
+		public Task DeleteMp3TagSetByIdAsync(int id);
+		public Task<IEnumerable<Mp3TagSet>> GetAllMp3TagSetsAsync();
+		public Task<bool> CheckIfMp3TagSetExistsAsync(Mp3TagSet mp3TagSet);
+	}
+	public class Mp3TagSetRepository : IMp3TagSetRepository
     {
         private readonly SmartaCamContext _context = new SmartaCamContext();
         public async Task<bool> SaveChangesAsync()
@@ -224,7 +213,26 @@ namespace SmartaCam
 
     }
 
-    public class SettingsRepository : ISettingsRepository
+	public interface ISettingsRepository
+	{
+		public Task<bool> GetNormalizeAsync();
+		public Task SetNormalizeAsync(bool willNormalize);
+		public Task<bool> GetUploadAsync();
+		public Task SetUploadAsync(bool willUpload);
+		public Task<bool> GetCopyToUsbAsync();
+		public Task SetCopyToUsbAsync(bool willCopy);
+		public Task<bool> GetNetworkStatus();
+		public Task<string> GetDropBoxCode();
+		public Task SetDropBoxCode(string dropboxCode);
+		public Task<bool> GetDropBoxAuthStatusAsync();
+        public Task UnAuthDropBoxAsync();
+
+		//public Task CheckAuthentication();
+		//public Task SetLocalRecordingsFolder();
+		//public Task<bool> CheckNetworkStatus();
+
+	}
+	public class SettingsRepository : ISettingsRepository
     {
         public async Task<bool> GetNormalizeAsync()
         {
@@ -261,7 +269,30 @@ namespace SmartaCam
             NetworkRepository networkRepo = new();
             return networkRepo.GetNetworkStatus();
         }
-    }
+		public async Task<string> GetDropBoxCode()
+		{
+			//NetworkRepository networkRepo = new();
+			return Config.DropBoxCodeTxt;
+		}
+		public async Task<bool> GetDropBoxAuthStatusAsync()
+		{
+            return NetworkRepository.OAuthStatus;
+		}
+		public async Task SetDropBoxCode(string dropboxCode)
+		{
+			//NetworkRepository networkRepo = new();
+			Config.DropBoxCodeTxt = dropboxCode;
+            //await networkRepo.CheckAndConnectCloudAsync();
+		}
+		public async Task UnAuthDropBoxAsync()
+        {
+            //NetworkRepository networkRepository = new();
+            NetworkRepository.DropBox db = new();
+			await db.DropBoxAuthResetAsync();
+			NetworkRepository.OAuthStatus=false;
+            await db.DropBoxAuth();
+		}
+	}
     public class SmartaCamContext : DbContext
     {
         public DbSet<Take> Takes { get; set; }
