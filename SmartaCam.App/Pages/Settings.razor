@@ -20,11 +20,11 @@
 		</li>
 	<br>
 	<li><label><b>Copy To USB</b></label>
-	<InputCheckbox @bind-Value=@CopyToUsb @bind-Value:after="@OnSettingsChange" disabled="@IsUsbDisabled"><b>Copy</b></InputCheckbox>
+	<InputCheckbox @bind-Value=@CopyToUsb @bind-Value:after="@OnSettingsChange" disabled=@UsbIsDisabled><b>Copy</b></InputCheckbox>
 		</li>
 	<br>
 		<li><label><b>Upload To Dropbox</b></label>
-	<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange" disabled="@IsDropBoxDisabled"><b>Upload</b></InputCheckbox>
+	<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange" disabled=@DropBoxIsDisabled><b>Upload</b></InputCheckbox>
 		</li>
 	</ul>
 

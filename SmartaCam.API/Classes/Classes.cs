@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Mvc;
 using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 using System.Security.Cryptography.X509Certificates;
 using static Dropbox.Api.TeamLog.ClassificationType;
+using Dropbox.Api.Users;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -1157,10 +1158,7 @@ namespace SmartaCam
             }
             public async Task MainMenuAsync()
             {
-            var gpioTask = Task.Run(() =>
-            {
-                GpioWatch();
-            });
+
                 AudioRepository audioRepository = new();
                 Console.WriteLine("1 . Record/Pause\r\n2 . Play/Pause\r\n3 . Skip Back\r\n4 . Skip Forward\r\n0 . Reboot");
                 var selection = GetValidUserSelection(new List<int> { 0, 1, 2, 3, 4 }); // 0=reboot,1=record,2=play,3=skipforward,4skipback
@@ -1309,8 +1307,6 @@ namespace SmartaCam
             }
             public async Task SessionInitAsync()
             {
-                {
-
                     //UIRepository uiRepository = new();
                     AudioRepository audioRepository = new();
                     NetworkRepository networkRepository = new();
@@ -1333,43 +1329,21 @@ namespace SmartaCam
                     audioRepository.AudioDeviceInitAndEnumerate(false);
                     Config.SelectedAudioDevice = _os.Contains("Raspberry") ? 2 : 0;
                     audioRepository.SetMyState(1);
+                    var gpioTask = Task.Run( async () =>
+                    {
+                        if (_os == "Raspberry Pi") { await GpioWatch(); };
+                    });
                     do
                     {
                         await MainMenuAsync();
+                    //    ButtonsTest();
                     }
                     while (true);
-                }
-
             }
-
-        //public async void ButtonsTest()
-        //{
-        //    const string Alert = "ALERT 🚨";
-        //    const string Ready = "READY ✅";
-        //    using var controller = new GpioController();
-        //    var pins = new List<int>
-        //    {
-        //        Config.RecordButton,
-        //        Config.PlayButton,
-        //        Config.StopButton,
-        //        Config.ForwardButton,
-        //        Config.BackButton,
-        //        Config.FootPedal
-        //    };
-        //    foreach (int pin in pins)
-        //    {
-        //        controller.OpenPin(pin, PinMode.InputPullUp);
-        //        Console.WriteLine($"Initial status ({DateTime.Now}): {(controller.Read(pin) == PinValue.High ? Alert : Ready)}");
-
-        //    }
-
-        //    static void OnPinEvent(object sender, PinValueChangedEventArgs args)
-        //    {
-        //        Console.WriteLine($"({DateTime.Now}) {(args.ChangeType is PinEventTypes.Rising ? Alert : Ready)}");
-        //    }
-        //}
-        public async Task GpioWatch()
+        public void ButtonsTest()
         {
+            const string Alert = "ALERT 🚨";
+            const string Ready = "READY ✅";
             using var controller = new GpioController();
             var pins = new List<int>
             {
@@ -1380,7 +1354,32 @@ namespace SmartaCam
                 Config.BackButton,
                 Config.FootPedal
             };
-
+            foreach (int pin in pins)
+            {
+                controller.OpenPin(pin, PinMode.InputPullUp);
+                Console.WriteLine($"Init pin:{pin} {(controller.Read(pin) == PinValue.High ? Alert : Ready)}");
+            }
+            Task.Delay(Timeout.Infinite);
+            static void OnPinEvent(object sender, PinValueChangedEventArgs args)
+            {
+                Console.WriteLine($"({DateTime.Now}) {(args.ChangeType is PinEventTypes.Rising ? Alert : Ready)}");
+            }
+        }
+        public async Task GpioWatch()
+        {
+            var _lastInterrupt = DateTime.Now;
+            using var controller = new GpioController();
+            var pins = new List<int>
+            {
+                Config.RecordButton,
+                Config.PlayButton,
+                Config.StopButton,
+                Config.ForwardButton,
+                Config.BackButton,
+                Config.FootPedal
+            };
+            var debounceStart = DateTime.MinValue;
+            var lastEvent = PinValue.High;
             foreach (int pin in pins)
             {
                 controller.OpenPin(pin, PinMode.InputPullUp);
@@ -1393,9 +1392,23 @@ namespace SmartaCam
             await Task.Delay(Timeout.Infinite);
             void OnPinEvent(object sender, PinValueChangedEventArgs args)
             {
-                if ((bool)controller.Read(Config.RecordButton))
+                var now = DateTime.Now;
+                if (now.Subtract(_lastInterrupt).TotalMilliseconds > 1000) // Button Debounce
                 {
-                    _audioRepository.RecordButtonPressedAsync();
+                    Console.WriteLine($"{args.PinNumber} was pressed");
+                    _lastInterrupt = now;
+                    if (!(bool)controller.Read(Config.RecordButton))
+                    {
+                        _audioRepository.RecordButtonPressedAsync();
+                    }
+                    if (!(bool)controller.Read(Config.FootPedal))
+                    {
+                        _audioRepository.RecordButtonPressedAsync();
+                    }
+                    if (!(bool)controller.Read(Config.StopButton))
+                    {
+                        _audioRepository.StopButtonPressedAsync();
+                    }
                 }
             }
         }
@@ -1410,11 +1423,7 @@ namespace SmartaCam
             List<string> songfilepaths = new List<string> { newWavPath, newMp3Path };
             foreach (string path in songfilepaths)
             {
-                if (Directory.Exists(path))
-                {
-                    //Console.WriteLine($"Path {path} exists");
-                }
-                else
+                if (!Directory.Exists(path))
                 {
                     DirectoryInfo di = Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                     Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");

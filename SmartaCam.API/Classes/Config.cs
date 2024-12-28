@@ -37,12 +37,12 @@ namespace SmartaCam
 		public static int RedLED { get; set; } = 4; // purple - pin 7
         public static int GreenLED { get; set; } = 2; //orange - pin 3
         public static int YellowLED { get; set; } = 3; // green - pin 5 
-        public static int PlayButton { get; set; } = 14; // grey - pin 8
+        public static int PlayButton { get; set; } = 17; // grey - pin 8
         public static int RecordButton { get; set; } = 15; // black - pin 10      
         public static int BackButton { get; set; } = 18; // red - pin 12
         public static int ForwardButton { get; set; } = 27; // orange - pin 13
-        public static int StopButton { get; set; } = 17;// = brown - pin 11
-        public static int FootPedal { get; set; } = 22; // Green, Pin 15
+        public static int StopButton { get; set; } = 22;// = brown - pin 11
+        public static int FootPedal { get; set; } = 14; // Green, Pin 15
         public static List<string> PingIPList { get; set; } = ["1.1.1.1", "8.8.8.8", "208.67.222.222"];
 
         public static StreamParameters SetAudioParameters()
