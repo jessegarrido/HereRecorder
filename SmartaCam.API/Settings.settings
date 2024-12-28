@@ -24,13 +24,13 @@
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="Normalize" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="PushToCloud" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="CopyToUSB" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="SSID" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
@@ -42,6 +42,9 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="DbApiSecret" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RemovableDrivePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

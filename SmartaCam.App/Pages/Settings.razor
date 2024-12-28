@@ -16,15 +16,15 @@
 	<li><b>DropBox Auth Status:</b>@DropBoxAuthStatus</li>
 	<br>
 	<li><label><b>Normalize</b></label>
-	<InputCheckbox @bind-Value=@Normalize @bind-Value:after="@OnSettingsChange"><b>Normalize</b></InputCheckbox>
+	<InputCheckbox @bind-Value=@Normalize @bind-Value:after="@OnSettingsChange" ><b>Normalize</b></InputCheckbox>
 		</li>
 	<br>
 	<li><label><b>Copy To USB</b></label>
-	<InputCheckbox @bind-Value=@CopyToUsb @bind-Value:after="@OnSettingsChange"><b>Copy</b></InputCheckbox>
+	<InputCheckbox @bind-Value=@CopyToUsb @bind-Value:after="@OnSettingsChange" disabled="@IsUsbDisabled"><b>Copy</b></InputCheckbox>
 		</li>
 	<br>
 		<li><label><b>Upload To Dropbox</b></label>
-	<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange"><b>Upload</b></InputCheckbox>
+	<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange" disabled="@IsDropBoxDisabled"><b>Upload</b></InputCheckbox>
 		</li>
 	</ul>
 

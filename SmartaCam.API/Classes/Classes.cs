@@ -25,6 +25,9 @@ using Path = System.IO.Path;
 using System.Text.Json;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
+using System.Security.Cryptography.X509Certificates;
+using static Dropbox.Api.TeamLog.ClassificationType;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -99,7 +102,6 @@ namespace SmartaCam
             IORepository ioRepository = new();
             string os = await uiRepository.IdentifyOS();
             if (os == "Raspberry Pi") { await ioRepository.TurnOnLEDAsync(Config.RedLED); };
-            // MyState = 2; // TODO generic update curent state function
             var wavPathAndName = await uiRepository.SetupLocalRecordingFileAsync();
             DeviceInfo info = PortAudio.GetDeviceInfo(Config.SelectedAudioDevice);
             Console.WriteLine();
@@ -145,27 +147,17 @@ namespace SmartaCam
                         Thread.Sleep(500);
                     } while (MyState == 2);
                     stream.Stop();
-                    if (_os == "Raspberry Pi") { await ioRepository.TurnOffLEDAsync(Config.RedLED); };
+                    if (os == "Raspberry Pi") { await ioRepository.TurnOffLEDAsync(Config.RedLED); };
+                    if (os != "Windows")
+                    {
+                        File.SetUnixFileMode(wavPathAndName, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+                    }
                     Console.WriteLine("Recording Stopped.");
-
-                    //  newTake.WavFileNameAndPath = Path.Combine(Global.LocalRecordingsFolder, Path.GetDirectoryName(newTake.WavFileNameAndPath);
-                    // newTake.Mp3FileNameAndPath = Path.Combine(Path.GetDirectoryN ame(newTake.WavFileNameAndPath),"mp3",$"{Path.GetFileNameWithoutExtension(newTake.WavFileNameAndPath)}.mp3");
-
-                    // var mp3FileNameAndPath = Path.Combine(newTake.Mp3FilePath, $"{newTake.Title}.mp3");
-
-
-
-                    // Settings.Default.Takes++;
-                    //  Settings.Default.LastTakeDate = DateTime.Today;
-
-                    //Global.FilesInDirectory = new DirectoryInfo(Global.LocalRecordingsFolder).GetFiles()
-                    //                                                  .OrderBy(f => f.LastWriteTime)
-                    //                                                 .ToList();
                 };
 
             }
 			var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
-			Console.WriteLine("Added To db, starting postprocess");
+			Console.WriteLine("Starting postprocess");
 			await PostProcessAudioAsync(takeId);
 
 
@@ -205,6 +197,8 @@ namespace SmartaCam
         }
         public async Task ConvertWavToMp3Async(int id)
         {
+            UIRepository uiRepository = new();
+            string os = await uiRepository.IdentifyOS();
             var take = await _takeRepository.GetTakeByIdAsync(id);
             Mp3TagSet tagSet = await _mp3TagSetRepository.GetActiveMp3TagSetAsync();
             Console.WriteLine($"Converting {take.WavFilePath} to mp3 file");
@@ -219,10 +213,18 @@ namespace SmartaCam
             //var wavfile = Path.Combine(take.WavFilePath, $"{take.Title}.wav");
             //var mp3file = Path.Combine(take.Mp3FilePath, $"{take.Title}.mp3");
             var wavFile = take.WavFilePath;
+            if (os != "Windows")
+            {
+                File.SetUnixFileMode(wavFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
             var mp3File = take.Mp3FilePath;
             using (var reader = new AudioFileReader(wavFile))
             using (var writer = new LameMP3FileWriter(mp3File, reader.WaveFormat, Config.Mp3BitRate, tag))
                 reader.CopyTo(writer);
+            if (os != "Windows")
+            {
+                File.SetUnixFileMode(mp3File, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
             Console.WriteLine($"{mp3File} was created.");
             take.WasConvertedToMp3 = true;
             await _takeRepository.SaveChangesAsync();
@@ -1041,7 +1043,7 @@ namespace SmartaCam
 		public Task<string> IdentifyOS();
 		public Task MainMenuAsync();
 		public Task<string> SetupLocalRecordingFileAsync();
-		public int FindRemovableDrives(bool displayDetails);
+		public Task<int> FindRemovableDrivesAsync(bool displayDetails);
 		public int GetValidUserSelection(List<int> validOptions);
 		public void LoadConfig();
 		public Task<string> RunBashCatAsync(string command);
@@ -1055,8 +1057,8 @@ namespace SmartaCam
             private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
             private static string _session = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
             private static string _os = string.Empty;
-            private static string _removableDrivePath;
-            private static string _nowPlaying;
+            private static string? _removableDrivePath = null;
+            private static string? _nowPlaying = null;
         public async Task ClearDailyTakesCount()
             {
                 DateTime today = DateTime.Today;
@@ -1155,7 +1157,10 @@ namespace SmartaCam
             }
             public async Task MainMenuAsync()
             {
-
+            var gpioTask = Task.Run(() =>
+            {
+                GpioWatch();
+            });
                 AudioRepository audioRepository = new();
                 Console.WriteLine("1 . Record/Pause\r\n2 . Play/Pause\r\n3 . Skip Back\r\n4 . Skip Forward\r\n0 . Reboot");
                 var selection = GetValidUserSelection(new List<int> { 0, 1, 2, 3, 4 }); // 0=reboot,1=record,2=play,3=skipforward,4skipback
@@ -1189,16 +1194,12 @@ namespace SmartaCam
             {
                 string newWavPath = Path.Combine(Config.LocalRecordingsFolder, _session);
                 string newMp3Path = Path.Combine(newWavPath, "mp3");
-                List<string> songfilepaths = new List<string> { newWavPath, newMp3Path };
+                List<string> songfilepaths = new List<string> { Config.LocalRecordingsFolder, newWavPath, newMp3Path };
                 foreach (string path in songfilepaths)
                 {
-                    if (Directory.Exists(path))
+                    if (!Directory.Exists(path))
                     {
-                        //Console.WriteLine($"Path {path} exists");
-                    }
-                    else
-                    {
-                        DirectoryInfo di = Directory.CreateDirectory(path);
+                        DirectoryInfo di = Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                         Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
                     }
                 }
@@ -1214,7 +1215,7 @@ namespace SmartaCam
 
                 return wavPathAndName;
             }
-            public int FindRemovableDrives(bool displayDetails)
+            public async Task<int> FindRemovableDrivesAsync(bool displayDetails)
             {
                 //   DriveInfo[] allDrives = DriveInfo.GetDrives();
                 Console.WriteLine("Inspect Removable Drives");
@@ -1245,8 +1246,14 @@ namespace SmartaCam
                                 "  Total size of drive:            {0, 15} bytes ",
                                 d.TotalSize);
                         }
-                        _removableDrivePath = d.RootDirectory.ToString();
-                        Console.WriteLine(_removableDrivePath);
+                        _removableDrivePath = d.RootDirectory.ToString(); // Picks the last drive found 
+                    Config.RemovableDrivePath = _removableDrivePath;
+                    Console.WriteLine($"Removable Drive Path: {_removableDrivePath}");
+                    Config.CopyToUsb = Config.RemovableDrivePath == null ? false : Config.CopyToUsb;
+                    
+                    Settings.Default.RemovableDrivePath = _removableDrivePath;
+                    Settings.Default.CopyToUSB = Config.CopyToUsb;
+                    Settings.Default.Save();
                     }
 
                 }
@@ -1280,6 +1287,7 @@ namespace SmartaCam
                 Config.SampleRate = Settings.Default.SampleRate;
 			    Config.CopyToUsb = Settings.Default.CopyToUSB;
 		 	    Config.PushToCloud = Settings.Default.PushToCloud;
+                Config.Normalize = Settings.Default.Normalize;
 
 		}
             public async Task<string> RunBashCatAsync(string command)
@@ -1316,8 +1324,8 @@ namespace SmartaCam
                     Console.WriteLine($"Platform: {_os}");
                     Console.WriteLine($"Session Name: {_session}");
                     Console.WriteLine($"Local Recordings Folder: {Config.LocalRecordingsFolder}");
-                    if (_os == "Raspberry Pi") { await AskKeepOrEraseFilesAsync(); }
-                    FindRemovableDrives(true);
+                 //   if (_os == "Raspberry Pi") { await AskKeepOrEraseFilesAsync(); }
+                    _ = Task.Run(async () => { await FindRemovableDrivesAsync(true); });
                     //    Global.RemovableDrivePath = d.RootDirectory.ToString();
                     //Global.RemovableDrivePath = Path.Combine("F:");
                     _ = Task.Run(async () => { await networkRepository.CheckNetworkAsync(); });
@@ -1334,12 +1342,36 @@ namespace SmartaCam
 
             }
 
-            public async void ButtonsTest()
-            {
-                const string Alert = "ALERT 🚨";
-                const string Ready = "READY ✅";
-                using var controller = new GpioController();
-                var pins = new List<int>
+        //public async void ButtonsTest()
+        //{
+        //    const string Alert = "ALERT 🚨";
+        //    const string Ready = "READY ✅";
+        //    using var controller = new GpioController();
+        //    var pins = new List<int>
+        //    {
+        //        Config.RecordButton,
+        //        Config.PlayButton,
+        //        Config.StopButton,
+        //        Config.ForwardButton,
+        //        Config.BackButton,
+        //        Config.FootPedal
+        //    };
+        //    foreach (int pin in pins)
+        //    {
+        //        controller.OpenPin(pin, PinMode.InputPullUp);
+        //        Console.WriteLine($"Initial status ({DateTime.Now}): {(controller.Read(pin) == PinValue.High ? Alert : Ready)}");
+
+        //    }
+
+        //    static void OnPinEvent(object sender, PinValueChangedEventArgs args)
+        //    {
+        //        Console.WriteLine($"({DateTime.Now}) {(args.ChangeType is PinEventTypes.Rising ? Alert : Ready)}");
+        //    }
+        //}
+        public async Task GpioWatch()
+        {
+            using var controller = new GpioController();
+            var pins = new List<int>
             {
                 Config.RecordButton,
                 Config.PlayButton,
@@ -1348,23 +1380,26 @@ namespace SmartaCam
                 Config.BackButton,
                 Config.FootPedal
             };
-                foreach (int pin in pins)
-                {
-                    controller.OpenPin(pin, PinMode.InputPullUp);
-                    Console.WriteLine($"Initial status ({DateTime.Now}): {(controller.Read(pin) == PinValue.High ? Alert : Ready)}");
-                    controller.RegisterCallbackForPinValueChangedEvent(
-                        pin,
-                        PinEventTypes.Falling | PinEventTypes.Rising,
-                        OnPinEvent);
-                }
-                await Task.Delay(Timeout.Infinite);
 
-                static void OnPinEvent(object sender, PinValueChangedEventArgs args)
-                {
-                    Console.WriteLine($"({DateTime.Now}) {(args.ChangeType is PinEventTypes.Rising ? Alert : Ready)}");
-                }
-
+            foreach (int pin in pins)
+            {
+                controller.OpenPin(pin, PinMode.InputPullUp);
+                Console.WriteLine($"Initial pin status ({DateTime.Now}): {pin} value: {controller.Read(pin)}");
+                controller.RegisterCallbackForPinValueChangedEvent(
+                    pin,
+                    PinEventTypes.Falling | PinEventTypes.Rising,
+                    OnPinEvent);
             }
+            await Task.Delay(Timeout.Infinite);
+            void OnPinEvent(object sender, PinValueChangedEventArgs args)
+            {
+                if ((bool)controller.Read(Config.RecordButton))
+                {
+                    _audioRepository.RecordButtonPressedAsync();
+                }
+            }
+        }
+
         public async Task CopyToUsb(int takeId)
         {
             var take = await _takeRepository.GetTakeByIdAsync(takeId); 
@@ -1381,7 +1416,7 @@ namespace SmartaCam
                 }
                 else
                 {
-                    DirectoryInfo di = Directory.CreateDirectory(path);
+                    DirectoryInfo di = Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                     Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
                 }
             }
