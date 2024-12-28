@@ -305,7 +305,8 @@ namespace SmartaCam
             var folder = Environment.SpecialFolder.Personal;
             var path = Environment.GetFolderPath(folder);
            // DbPath = System.IO.Path.Join(path, "db.db");
-            DbPath = System.IO.Path.Combine(path,"Smartacam","db.db");
+            DbPath = System.IO.Path.Combine(path,"SmartaCam","db.db");
+            
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -22,10 +22,14 @@ namespace SmartaCam.App.Pages
         public string? DropBoxCode { get; set; } = string.Empty;
 		[Parameter]
 		public string DropBoxAuthUrl { get; set; } = string.Empty;
+        [Parameter]
+        public bool IsDropBoxDisabled { get; set; } = false;
+        [Parameter]
+        public bool IsUsbDisabled { get; set; } = false;
 
-		bool cloudauth = true;
+        bool cloudauth = true;
         bool network = true;
-        private bool disabled = true;
+
         protected async override Task OnInitializedAsync()
 
         {
@@ -39,15 +43,15 @@ namespace SmartaCam.App.Pages
             CopyToUsb = await SettingsService.GetCopyToUsb();
             NetworkStatus = await SettingsService.GetNetworkStatus();
             DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
-			await InvokeAsync(StateHasChanged);
+            if (CopyToUsb == null) { IsUsbDisabled = true; }
+            if (DropBoxAuthStatus == null) { IsDropBoxDisabled = true; }
+            await InvokeAsync(StateHasChanged);
 			DropBoxCode = await SettingsService.GetDropBoxCode();
             if (DropBoxCode.StartsWith("http"))
                 {
                 DropBoxAuthUrl = DropBoxCode;
                 DropBoxCode = null;
 				}
-			
-
 		}
         public void OnSettingsChange()
         {

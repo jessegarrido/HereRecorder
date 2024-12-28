@@ -14,18 +14,24 @@ namespace SmartaCam
     public class Config
     {
         //load from App.config
-        public static string SSID { get; set; }
-        public static string SSIDpw { get; set; }
-        public static string DbCode { get; set; }
-        public static string DbApiKey { get; set; }
-        public static string DbApiSecret { get; set; }
+        public static string SSID { get; set; } = string.Empty;
+
+        public static string SSIDpw { get; set; } = string.Empty;
+
+        public static string DbCode { get; set; } = string.Empty;
+
+        public static string DbApiKey { get; set; } = string.Empty;
+
+        public static string DbApiSecret { get; set; } = string.Empty;
+
         public static int SampleRate { get; set; }
         public static int SelectedAudioDevice { get; set; } = 0;
-        public static bool Normalize { get; set; } = true;
+        public static bool Normalize { get; set; } = false;
         public static bool PushToCloud { get; set; } = false;
 		public static bool CopyToUsb { get; set; } = false;
         public static int Mp3BitRate { get; set; } = 192;
         public static string LocalRecordingsFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"SmartaCam","Recordings");
+        public static string? RemovableDrivePath { get; set; } = null;
         public static string DropBoxCodeTxt { get; set; } = string.Empty;
 
 		public static int RedLED { get; set; } = 4; // purple - pin 7

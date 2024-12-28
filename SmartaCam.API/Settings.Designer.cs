@@ -109,7 +109,7 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool Normalize {
             get {
                 return ((bool)(this["Normalize"]));
@@ -121,7 +121,7 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool PushToCloud {
             get {
                 return ((bool)(this["PushToCloud"]));
@@ -133,7 +133,7 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool CopyToUSB {
             get {
                 return ((bool)(this["CopyToUSB"]));
@@ -188,6 +188,18 @@ namespace SmartaCam.API {
             }
             set {
                 this["DbApiSecret"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RemovableDrivePath {
+            get {
+                return ((string)(this["RemovableDrivePath"]));
+            }
+            set {
+                this["RemovableDrivePath"] = value;
             }
         }
     }
