@@ -4,7 +4,7 @@
 
 @inject NavigationManager _navigationManager
 
-@if (MyStateDisplay < 1)
+@if (MyStateDisplay < 1 )
 @*     @if  (@AllTakes == null) *@
 {
 	<p><em>Loading...</em></p>
@@ -19,12 +19,28 @@
 	<InputCheckbox @bind-Value=@Normalize @bind-Value:after="@OnSettingsChange" ><b>Normalize</b></InputCheckbox>
 		</li>
 	<br>
+
 	<li><label><b>Copy To USB</b></label>
 	<InputCheckbox @bind-Value=@CopyToUsb @bind-Value:after="@OnSettingsChange" disabled=@UsbIsDisabled><b>Copy</b></InputCheckbox>
-		</li>
-	<br>
+		<br />
+			</li>
+				@if (RemovableDrivePath != string.Empty)
+				{
+					<tab><i><b>Removable Drive Path:</b></i>
+					<select class="select-element" value="@SelectedRemovableDrive" @onchange="UpdateRemovableDrivePathFromDropdown">
+						<option selected></option>
+					@foreach (string removableDrivePath in @RemovableDrivePaths) 
+					{
+							<option @key=@removableDrivePath selected=@SelectedRemovableDrive value=@removableDrivePath>@removableDrivePath</option>
+					}
+					<br>
+						<br>
+					</select>
+					</tab>
+				}
+			<br>
 		<li><label><b>Upload To Dropbox</b></label>
-	<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange" disabled=@DropBoxIsDisabled><b>Upload</b></InputCheckbox>
+				<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange" disabled=@DropBoxIsDisabled><b>Upload</b></InputCheckbox>
 		</li>
 	</ul>
 

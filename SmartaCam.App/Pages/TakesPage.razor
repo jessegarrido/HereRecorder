@@ -29,7 +29,7 @@ else
  <div>
 <Button  style="background-color:@recordButtonColor" @onclick="(() => RecordStop_Click())">,<b>@recordButtonText</b></Button>
 @* <Button @onclick="StopAudio" Color="black"> Stop </Button>  *@
-
+<br />
 </div>
     <table class="table">
         <thead>
@@ -65,4 +65,11 @@ else
             }
         </tbody>
     </table>
+     <div>
+        @if (@AllTakes.Count > 0)
+        { 
+            <Button style="background-color:black;color:white" @onclick="EraseAll_Click"><b>Erase All Recordings</b></Button>
+            <br />
+        }
+</div>
 }

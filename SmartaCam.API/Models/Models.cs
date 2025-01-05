@@ -30,8 +30,10 @@ namespace SmartaCam
         public Task<DateTime> GetLastTakeDateAsync();
         public Task<string> GetTakeFilePathByIdAsync(int id);
         public Task<TimeSpan> GetTakeDurationByIdAsync(int id);
-        public Task DeleteTakeById(int id);
-    }
+        public Task DeleteTakeByIdAsync(int id);
+		public Task ResetTakesTableAsync();
+        public Task DeleteAllTakesAsync();
+	}
     public class TakeRepository : ITakeRepository
     {
 
@@ -102,7 +104,7 @@ namespace SmartaCam
                 take.WasUpLoaded = true;
                 _context.SaveChanges();
         }
-        public async Task DeleteTakeById(int id)
+        public async Task DeleteTakeByIdAsync(int id)
         {
             {
                 Console.WriteLine($"delete id {id}");
@@ -112,7 +114,26 @@ namespace SmartaCam
                 _context.SaveChanges();
             }
         }
-    }
+		public async Task DeleteAllTakesAsync()
+		{
+			string[] allfiles = Directory.GetFiles(Config.LocalRecordingsFolder, "*.*", SearchOption.AllDirectories);
+            if (allfiles.Length > 0)
+            {
+                UIRepository uiRepository = new();
+                uiRepository.DeleteAllRecordings(allfiles);
+                await ResetTakesTableAsync();
+            }
+		}
+		public async Task ResetTakesTableAsync()
+		{
+
+			Console.WriteLine($"Resetting Takes Database");
+             await _context.Takes.ExecuteDeleteAsync();
+			//_context.SaveChanges();
+			//_context.Database.Migrate();
+
+		}
+	}
 
 	public interface IMp3TagSetRepository
 	{
@@ -219,14 +240,16 @@ namespace SmartaCam
 		public Task SetNormalizeAsync(bool willNormalize);
 		public Task<bool> GetUploadAsync();
 		public Task SetUploadAsync(bool willUpload);
-		public Task<bool> GetCopyToUsbAsync();
+		public Task<bool?> GetCopyToUsbAsync();
 		public Task SetCopyToUsbAsync(bool willCopy);
 		public Task<bool> GetNetworkStatus();
 		public Task<string> GetDropBoxCode();
 		public Task SetDropBoxCode(string dropboxCode);
 		public Task<bool> GetDropBoxAuthStatusAsync();
         public Task UnAuthDropBoxAsync();
-
+        public Task<string?> GetRemovableDrivePathAsync();
+		public Task SetRemovableDrivePathAsync(string removableDrivePath);
+		public Task<List<string>>? GetRemovableDrivePathsAsync();
 		//public Task CheckAuthentication();
 		//public Task SetLocalRecordingsFolder();
 		//public Task<bool> CheckNetworkStatus();
@@ -254,7 +277,7 @@ namespace SmartaCam
             Settings.Default.PushToCloud = willUpload;
             Settings.Default.Save();
         }
-        public async Task<bool> GetCopyToUsbAsync()
+        public async Task<bool?> GetCopyToUsbAsync()
         {
             return Config.CopyToUsb;
         }
@@ -274,10 +297,25 @@ namespace SmartaCam
 			//NetworkRepository networkRepo = new();
 			return Config.DropBoxCodeTxt;
 		}
+        public async Task<string?> GetRemovableDrivePathAsync()
+        {
+            return Config.RemovableDrivePath;
+        }
+		public async Task SetRemovableDrivePathAsync(string removableDrivePath)
+		{
+			Config.RemovableDrivePath = removableDrivePath;
+            Settings.Default.RemovableDrivePath = removableDrivePath;
+            Settings.Default.Save();
+		}
+		public async Task<List<string>>? GetRemovableDrivePathsAsync()
+		{
+			return Config.RemovableDrivePaths;
+		}
 		public async Task<bool> GetDropBoxAuthStatusAsync()
 		{
             return NetworkRepository.OAuthStatus;
 		}
+
 		public async Task SetDropBoxCode(string dropboxCode)
 		{
 			//NetworkRepository networkRepo = new();

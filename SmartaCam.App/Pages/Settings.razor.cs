@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Newtonsoft.Json.Linq;
 using static Dropbox.Api.Paper.UserOnPaperDocFilter;
 
 namespace SmartaCam.App.Pages
@@ -19,15 +20,22 @@ namespace SmartaCam.App.Pages
 		[Parameter]
 		public bool DropBoxAuthStatus { get; set; } = true;
 		[Parameter]
-        public string? DropBoxCode { get; set; } = string.Empty;
+        public string DropBoxCode { get; set; } = string.Empty;
+		[Parameter]
+
+		public string SelectedRemovableDrive { get; set; } = string.Empty ;
+		[Parameter]
+        public string RemovableDrivePath { get; set; } = string.Empty;
+        [Parameter]
+        public List<string>? RemovableDrivePaths { get; set; }
 		[Parameter]
 		public string DropBoxAuthUrl { get; set; } = string.Empty;
         [Parameter]
         public bool DropBoxIsDisabled { get; set; } = true;
         [Parameter]
-        public bool UsbIsDisabled { get; set; } = true;
+        public bool UsbIsDisabled { get; set; } = false;
 
-        bool cloudauth = true;
+		bool cloudauth = true;
         bool network = true;
 
         protected async override Task OnInitializedAsync()
@@ -43,8 +51,10 @@ namespace SmartaCam.App.Pages
             CopyToUsb = await SettingsService.GetCopyToUsb();
             NetworkStatus = await SettingsService.GetNetworkStatus();
             DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
-            if (CopyToUsb == null) { UsbIsDisabled = false; }
-            if (DropBoxAuthStatus == null) { DropBoxIsDisabled = false; }
+            RemovableDrivePath = await SettingsService.GetRemovableDrivePath();
+			RemovableDrivePaths = await SettingsService.GetRemovableDrivePaths();
+			if (RemovableDrivePath == string.Empty) { UsbIsDisabled = true; }
+            //if (DropBoxAuthStatus == null) { DropBoxIsDisabled = false; }
             await InvokeAsync(StateHasChanged);
 			DropBoxCode = await SettingsService.GetDropBoxCode();
             if (DropBoxCode.StartsWith("http"))
@@ -58,7 +68,6 @@ namespace SmartaCam.App.Pages
             SettingsService.SetNormalize(Normalize);
             SettingsService.SetUpload(PushToCloud);
             SettingsService.SetCopyToUsb(CopyToUsb);
-            
             InvokeAsync(StateHasChanged);
         }
         public async Task AuthorizeDropBoxAsync()
@@ -69,6 +78,17 @@ namespace SmartaCam.App.Pages
 			NavigateToSettings();
 
 		}
+		public void SetRemovableDrivePath()
+		{
+			SettingsService.SetRemovableDrivePath(RemovableDrivePath);
+			InvokeAsync(StateHasChanged);
+			NavigateToSettings();
+
+		}
+		protected async Task UpdateRemovableDrivePathFromDropdown(ChangeEventArgs e)
+		{
+			SelectedRemovableDrive = e.Value.ToString();
+		}
 		public async Task UnAuthorizeDropBoxAsync()
 		{
 			await SettingsService.UnAuthorizeDropBox();
@@ -77,7 +97,7 @@ namespace SmartaCam.App.Pages
 			PushToCloud = false;
 
 		}
-        void NavigateToSettings()
+		void NavigateToSettings()
         {
             _navigationManager.NavigateTo("/settings", true);
         }

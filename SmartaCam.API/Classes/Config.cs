@@ -31,8 +31,9 @@ namespace SmartaCam
 		public static bool CopyToUsb { get; set; } = false;
         public static int Mp3BitRate { get; set; } = 192;
         public static string LocalRecordingsFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"SmartaCam","Recordings");
-        public static string? RemovableDrivePath { get; set; } = null;
-        public static string DropBoxCodeTxt { get; set; } = string.Empty;
+        public static string RemovableDrivePath { get; set; } = string.Empty;
+        public static List<string>? RemovableDrivePaths { get; set; } = new();
+		public static string DropBoxCodeTxt { get; set; } = string.Empty;
 
 		public static int RedLED { get; set; } = 4; // purple - pin 7
         public static int GreenLED { get; set; } = 2; //orange - pin 3

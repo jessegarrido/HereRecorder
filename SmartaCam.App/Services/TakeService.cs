@@ -10,8 +10,9 @@ namespace SmartaCam.App.Services
         public Task<List<Take>> GetAllTakesAsync();
         public Task<TimeSpan> GetDurationById(int id);
         public Task<IActionResult> DeleteTakeById(int id);
+		public Task<IActionResult> DeleteAllTakes();
 
-    }
+	}
     public class TakeService : ITakeService
     {
         private readonly HttpClient _httpClient;
@@ -35,7 +36,13 @@ namespace SmartaCam.App.Services
 
             return await _httpClient.GetAsync($"api/deletetake/{id}") as IActionResult;
         }
-        public async Task<List<Mp3TagSet>> GetAllMp3TagSets()
+		public async Task<IActionResult> DeleteAllTakes()
+		{
+
+
+			return await _httpClient.GetAsync($"api/deleteall") as IActionResult;
+		}
+		public async Task<List<Mp3TagSet>> GetAllMp3TagSets()
         {
 
             return await JsonSerializer.DeserializeAsync<List<Mp3TagSet>>

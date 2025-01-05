@@ -74,17 +74,14 @@ namespace SmartaCam.API
                 
                 if (!Directory.Exists(dbPath))
                 {
-                    // UIRepository uIRepository = new();
-                    // string os = await uIRepository.IdentifyOS();
-                    //if (os == "Windows")
-                    //{
-                    //    DirectoryInfo di = Directory.CreateDirectory(dbPath);
-                    //}
-                    //else
-                    //{
+                     UIRepository uIRepository = new();
+                     string os = await uIRepository.IdentifyOS();
                     Console.WriteLine($"Creating dbPath: {dbPath}");
-                    DirectoryInfo di = Directory.CreateDirectory(dbPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-                  //  }
+					DirectoryInfo di = Directory.CreateDirectory(dbPath);
+					if (os != "Windows")
+					{
+						File.SetUnixFileMode(dbPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+					}
                 }
                 using (var context = new SmartaCamContext())
                 {

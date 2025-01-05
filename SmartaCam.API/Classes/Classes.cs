@@ -211,21 +211,15 @@ namespace SmartaCam
                 Artist = take.Artist,
                 Album = take.Album
             };
-            //var wavfile = Path.Combine(take.WavFilePath, $"{take.Title}.wav");
-            //var mp3file = Path.Combine(take.Mp3FilePath, $"{take.Title}.mp3");
             var wavFile = take.WavFilePath;
-            if (os != "Windows")
-            {
-                File.SetUnixFileMode(wavFile, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            }
             var mp3File = take.Mp3FilePath;
-            using (var reader = new AudioFileReader(wavFile))
+			if (os != "Windows")
+			{
+				File.SetUnixFileMode(mp3File, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			}
+			using (var reader = new AudioFileReader(wavFile))
             using (var writer = new LameMP3FileWriter(mp3File, reader.WaveFormat, Config.Mp3BitRate, tag))
                 reader.CopyTo(writer);
-            if (os != "Windows")
-            {
-                File.SetUnixFileMode(mp3File, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-            }
             Console.WriteLine($"{mp3File} was created.");
             take.WasConvertedToMp3 = true;
             await _takeRepository.SaveChangesAsync();
@@ -233,7 +227,8 @@ namespace SmartaCam
         public void LoadLameDLL()
         {
             LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
-        }
+			//LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin"));
+		}
         public async Task AnalyzeAndNormalizeTakeAsync(int id)
         // from https://markheath.net/post/normalize-audio-naudio
         {
@@ -1053,13 +1048,14 @@ namespace SmartaCam
 	}
 	public class UIRepository : IUIRepository
         {
-            private TakeRepository _takeRepository = new TakeRepository();
-            private AudioRepository _audioRepository = new AudioRepository();
-            private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
-            private static string _session = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
-            private static string _os = string.Empty;
-            private static string? _removableDrivePath = null;
-            private static string? _nowPlaying = null;
+        private TakeRepository _takeRepository = new TakeRepository();
+        private AudioRepository _audioRepository = new AudioRepository();
+        private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
+        private static string _session = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
+        private static string _os = string.Empty;
+        private static List<string>? _removableDrivePaths = new();
+		private static string? _removableDrivePath = null;
+		private static string? _nowPlaying = null;
         public async Task ClearDailyTakesCount()
             {
                 DateTime today = DateTime.Today;
@@ -1084,61 +1080,35 @@ namespace SmartaCam
                 //Console.Write("Press 'record' to delete all saved recordings on SD & USB, and clear upload and play queues, or press 'play' to keep files ");
                 //int erased = GetValidUserSelection(new List<int> { 0, 1, 2 });
                 string[] allfiles = Directory.GetFiles(Config.LocalRecordingsFolder, "*.*", SearchOption.AllDirectories);
-
                 if (allfiles.Length > 0)
                 {
                     IORepository ioRepository = new();
-                    using var tokenSource = new CancellationTokenSource();
+				    UIRepository uiRepository = new();
+				    using var tokenSource = new CancellationTokenSource();
                     var LEDcanceltoken = tokenSource.Token;
-                    int? erased = null;
-                    Stopwatch stopWatch = new();
-                    long? duration = null;
-                    void OnPinStartEvent(object sender, PinValueChangedEventArgs args)
-                    {
-                        stopWatch.Start();
-                        erased = -1;
-                    }
                     _ = Task.Run(async () => { await ioRepository.BlinkAllLEDs(LEDcanceltoken); });
-                    using var controller = new GpioController();
-                    controller.OpenPin(Config.RecordButton, PinMode.InputPullUp);
-                    controller.OpenPin(Config.FootPedal, PinMode.InputPullUp);
-                    controller.RegisterCallbackForPinValueChangedEvent(
-                        Config.RecordButton, PinEventTypes.Falling | PinEventTypes.Rising, OnPinStartEvent);
-                    controller.RegisterCallbackForPinValueChangedEvent(
-                        Config.FootPedal, PinEventTypes.Falling | PinEventTypes.Rising, OnPinStartEvent);
-                    while (erased == null)
-                    { await Task.Delay(50); };
-                    controller.RegisterCallbackForPinValueChangedEvent(
-                         Config.RecordButton, PinEventTypes.Falling | PinEventTypes.Rising, OnPinStopEvent);
-                    controller.RegisterCallbackForPinValueChangedEvent(
-                        Config.FootPedal, PinEventTypes.Falling | PinEventTypes.Rising, OnPinStopEvent);
-                    while (erased == -1)
-                    { await Task.Delay(50); };
-                    void OnPinStopEvent(object sender, PinValueChangedEventArgs args)
+			    	bool? clearFiles = await uiRepository.ClearFilesGpioWatchAsync();
+                    if (clearFiles == true)
                     {
-                        stopWatch.Stop();
-                        duration = stopWatch.ElapsedMilliseconds;
-                        erased = 1;
-                    }
-                    if (duration > 2000)
-                    {
-                        Console.WriteLine($"Erasing {allfiles.Length} files in Recordings Folder.");
-                        DirectoryInfo di = new DirectoryInfo(Config.LocalRecordingsFolder);
-
-                        foreach (FileInfo file in di.GetFiles("*.*", SearchOption.AllDirectories))
-                        {
-                            file.Delete();
-                        }
-                        foreach (DirectoryInfo dir in di.GetDirectories())
-                        {
-                            dir.Delete(true);
-                        }
-                        // Clear database!!
-                    }
+                        DeleteAllRecordings(allfiles);
+					}
                     tokenSource.Cancel();
                     return;
                 }
             }
+        public void DeleteAllRecordings(string[] allfiles)
+        {
+            Console.WriteLine($"Erasing {allfiles.Length} files in Recordings Folder.");
+            DirectoryInfo di = new DirectoryInfo(Config.LocalRecordingsFolder);
+            foreach (FileInfo file in di.GetFiles("*.*", SearchOption.AllDirectories))
+            {
+                file.Delete();
+            }
+            foreach (DirectoryInfo dir in di.GetDirectories())
+            {
+                dir.Delete(true);
+            }
+        }
             public async Task<string> IdentifyOS()
             {
                 string os;
@@ -1193,14 +1163,18 @@ namespace SmartaCam
                 string newWavPath = Path.Combine(Config.LocalRecordingsFolder, _session);
                 string newMp3Path = Path.Combine(newWavPath, "mp3");
                 List<string> songfilepaths = new List<string> { Config.LocalRecordingsFolder, newWavPath, newMp3Path };
-                foreach (string path in songfilepaths)
+            foreach (string path in songfilepaths)
+            {
+                if (!Directory.Exists(path))
                 {
-                    if (!Directory.Exists(path))
+					DirectoryInfo di = Directory.CreateDirectory(path);
+					if (_os != "Windows")
                     {
-                        DirectoryInfo di = Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-                        Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
-                    }
+						File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+					}
+                    Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
                 }
+            }
                 int take = Settings.Default.Takes++;
                 Mp3TagSet activeMp3TagSet = await _mp3TagSetRepository.GetActiveMp3TagSetAsync();
                 //   Global.lastWavPathAndName = Global.wavPathAndName;
@@ -1244,7 +1218,9 @@ namespace SmartaCam
                                 "  Total size of drive:            {0, 15} bytes ",
                                 d.TotalSize);
                         }
-                        _removableDrivePath = d.RootDirectory.ToString(); // Picks the last drive found 
+                    _removableDrivePaths.Add(d.RootDirectory.ToString());
+					Config.RemovableDrivePaths = _removableDrivePaths;
+					_removableDrivePath = d.RootDirectory.ToString(); // Pick the last found 
                     Config.RemovableDrivePath = _removableDrivePath;
                     Console.WriteLine($"Removable Drive Path: {_removableDrivePath}");
                     Config.CopyToUsb = Config.RemovableDrivePath == null ? false : Config.CopyToUsb;
@@ -1326,12 +1302,12 @@ namespace SmartaCam
                     //Global.RemovableDrivePath = Path.Combine("F:");
                     _ = Task.Run(async () => { await networkRepository.CheckNetworkAsync(); });
                    
-                    audioRepository.AudioDeviceInitAndEnumerate(false);
+                    audioRepository.AudioDeviceInitAndEnumerate(true);
                     Config.SelectedAudioDevice = _os.Contains("Raspberry") ? 2 : 0;
                     audioRepository.SetMyState(1);
                     var gpioTask = Task.Run( async () =>
                     {
-                        if (_os == "Raspberry Pi") { await GpioWatch(); };
+                        if (_os == "Raspberry Pi") { await GpioWatchAsync(); };
                     });
                     do
                     {
@@ -1365,7 +1341,7 @@ namespace SmartaCam
                 Console.WriteLine($"({DateTime.Now}) {(args.ChangeType is PinEventTypes.Rising ? Alert : Ready)}");
             }
         }
-        public async Task GpioWatch()
+        public async Task GpioWatchAsync()
         {
             var _lastInterrupt = DateTime.Now;
             using var controller = new GpioController();
@@ -1412,8 +1388,65 @@ namespace SmartaCam
                 }
             }
         }
+		public async Task<bool?> ClearFilesGpioWatchAsync()
+		{
+			var _lastInterrupt = DateTime.Now;
+			using var controller = new GpioController();
+            bool? erase = null;
+			var pins = new List<int>
+			{
+				Config.RecordButton,
+				Config.PlayButton,
+				Config.StopButton,
+				Config.ForwardButton,
+				Config.BackButton,
+				Config.FootPedal
+			};
+			var debounceStart = DateTime.MinValue;
+			var lastEvent = PinValue.High;
+			foreach (int pin in pins)
+			{
+				controller.OpenPin(pin, PinMode.InputPullUp);
+				Console.WriteLine($"Initial pin status ({DateTime.Now}): {pin} value: {controller.Read(pin)}");
+				controller.RegisterCallbackForPinValueChangedEvent(
+					pin,
+					PinEventTypes.Falling | PinEventTypes.Rising,
+					OnPinEvent);
+			}
+            while (erase == null)
+            {
+                await Task.Delay(30000);
+                erase = false;
+            }
+            return erase;
 
-        public async Task CopyToUsb(int takeId)
+			void OnPinEvent(object sender, PinValueChangedEventArgs args)
+			{
+				var now = DateTime.Now;
+				if (now.Subtract(_lastInterrupt).TotalMilliseconds > 500) // Button Debounce
+				{
+					Console.WriteLine($"{args.PinNumber} was depressed");
+					_lastInterrupt = now;
+                    var pressedPin = args.PinNumber;
+                    if (pressedPin == Config.RecordButton || pressedPin == Config.FootPedal)
+                    {
+                        while (controller.Read(pressedPin) == PinValue.High)
+                        {
+                            Task.Delay(25);
+                        }
+                        var unPressed = DateTime.Now;
+                        erase = unPressed.Subtract(_lastInterrupt).TotalMilliseconds > 3000 ? true : false;
+                    }
+                    else
+                    {
+                        erase = false;
+                    }
+				}
+			}
+           
+		}
+
+		public async Task CopyToUsb(int takeId)
         {
             var take = await _takeRepository.GetTakeByIdAsync(takeId); 
             var inPath = take.WavFilePath;
@@ -1425,8 +1458,12 @@ namespace SmartaCam
             {
                 if (!Directory.Exists(path))
                 {
-                    DirectoryInfo di = Directory.CreateDirectory(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-                    Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
+					DirectoryInfo di = Directory.CreateDirectory(path);
+					if (_os != "Windows")
+					{
+						File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+					}
+                Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
                 }
             }
             string newWavFile = Path.Combine(newWavPath, $"{take.Title}.wav");

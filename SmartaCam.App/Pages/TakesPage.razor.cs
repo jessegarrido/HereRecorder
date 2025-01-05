@@ -129,6 +129,11 @@ namespace SmartaCam.App.Pages
 
             }
         }
+        public void EraseAll_Click()
+        {
+            TakeService.DeleteAllTakes();
+			NavigateToHome();
+		}
         protected async Task DeleteTake(int id)
         {
             await TakeService.DeleteTakeById(id);

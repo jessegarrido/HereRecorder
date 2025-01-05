@@ -66,6 +66,22 @@ namespace SmartaCam.API.Controllers
 		{
 			return Ok(await _settingsRepository.GetDropBoxCode());
 		}
+        [HttpGet("removablepath")]
+        public async Task<IActionResult> GetRemovableDrivePath()
+        {
+            return Ok(await _settingsRepository.GetRemovableDrivePathAsync());
+        }
+		[HttpGet("setremovablepath/{removableDrivePath}")]
+		public async Task<IActionResult> SetRemovableDrivePath(string removableDrivePath)
+		{
+			await _settingsRepository.SetRemovableDrivePathAsync(removableDrivePath);
+            return Ok();
+		}
+		[HttpGet("removablepaths")]
+		public async Task<IActionResult> GetRemovableDrivePaths()
+		{
+			return Ok(await _settingsRepository.GetRemovableDrivePathsAsync());
+		}
 		[HttpGet("setdropboxcode/{dropBoxCode}")]
 		public async Task<IActionResult> SetDropBoxCode(string dropBoxCode)
 		{

@@ -36,7 +36,7 @@ namespace SmartaCam
         {
             try
             {
-                await _takeRepository.DeleteTakeById(id);
+                await _takeRepository.DeleteTakeByIdAsync(id);
                 return Ok();
             }
             catch (Exception)
@@ -44,14 +44,26 @@ namespace SmartaCam
                 return this.StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+		[HttpGet("deleteall")]
+		public async Task<IActionResult> DeleteAllTakes()
+		{
+			try
+			{
+                await _takeRepository.DeleteAllTakesAsync();
+				return Ok();
+			}
+			catch (Exception)
+			{
+				return this.StatusCode(StatusCodes.Status500InternalServerError);
+			}
+		}
+		//[HttpGet]
+		//public async Task<ActionResult<DateTime>> GetLatestTakeDate()
+		//{
+		//	return Ok(await _takeRepository.GetLastTakeDateAsync());
+		//}
 
-        //[HttpGet]
-        //public async Task<ActionResult<DateTime>> GetLatestTakeDate()
-        //{
-        //	return Ok(await _takeRepository.GetLastTakeDateAsync());
-        //}
-
-        [HttpPost]
+		[HttpPost]
         public async Task<ActionResult<Take>> AddTake(Take newTake)
         {
             // return Ok(await _takeRepository.AddTakeAsync(newTake));

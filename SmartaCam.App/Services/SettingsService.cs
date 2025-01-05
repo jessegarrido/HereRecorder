@@ -18,7 +18,11 @@ namespace SmartaCam
         Task<bool> GetNetworkStatus();
         Task<bool> GetDropBoxAuthStatus();
 		Task<string> GetDropBoxCode();
-        Task<IActionResult> SetDropBoxCode(string dropboxcode);
+        Task<string> GetRemovableDrivePath();
+		Task<IActionResult> SetRemovableDrivePath(string removableDrivePath);
+		Task<List<string>>? GetRemovableDrivePaths();
+
+		Task<IActionResult> SetDropBoxCode(string dropboxcode);
         Task<IActionResult> UnAuthorizeDropBox();
 
 	}
@@ -50,8 +54,25 @@ namespace SmartaCam
         {
             return await _httpClient.GetAsync($"api/setpush/{willUpload}") as IActionResult;
         }
-        public async Task<bool> GetCopyToUsb()
+        public async Task<string> GetRemovableDrivePath()
          {
+            return await _httpClient.GetStringAsync($"api/removablepath");
+            //return await System.Text.Json.JsonSerializer.DeserializeAsync<bool>
+            // return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
+           // (await _httpClient.GetStreamAsync($"api/getcopy"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        }
+		public async Task<IActionResult> SetRemovableDrivePath(string removableDrivePath)
+		{
+			return await _httpClient.GetAsync($"api/setremovablepath/{removableDrivePath}") as IActionResult;
+		}
+		public async Task<List<string>?> GetRemovableDrivePaths()
+		{
+			return await System.Text.Json.JsonSerializer.DeserializeAsync<List<string>>
+			// return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
+			(await _httpClient.GetStreamAsync($"api/removablepaths"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+		}
+		public async Task<bool> GetCopyToUsb()
+        {
             return await System.Text.Json.JsonSerializer.DeserializeAsync<bool>
             // return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
             (await _httpClient.GetStreamAsync($"api/getcopy"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
