@@ -75,29 +75,25 @@ namespace SmartaCam.App.Pages
         protected async override Task OnInitializedAsync()
 
         {
-           // Saved = false;
+          //  Saved = alse;
             Mp3TagSets = await Mp3TagSetService.GetAllMp3TagSets();
             //// = (List<Mp3TagSet>)Mp3TagSetEnum;
             ActiveMp3TagSet = await Mp3TagSetService.GetActiveMp3TagSet();
 
             SelectedMp3TagSetId = ActiveMp3TagSet.Id;   
-
-                    CandidateTitle = ActiveMp3TagSet.Title;
-                    CandidateArtist = ActiveMp3TagSet.Artist;
-                    CandidateAlbum = ActiveMp3TagSet.Album;
-                    
-                   
-                    ShowHideButtons();
-            ShowDeleteButton = true;
-            ShowSaveButton = false; //y this needed?
-                    await InvokeAsync(StateHasChanged);
+            CandidateTitle = ActiveMp3TagSet.Title;
+            CandidateArtist = ActiveMp3TagSet.Artist;
+            CandidateAlbum = ActiveMp3TagSet.Album;
+            UpdateButtonsStatus();
+            if (ActiveMp3TagSet.Id > 1)
+                ShowDeleteButton = true; // why needd
+            ShowSaveButton = false; //also why needed
+            await InvokeAsync(StateHasChanged);
         }
 
 
             protected async Task HandleValidSubmit()
             {
-                //   await Mp3TagSetService.AddMp3TagSet(ActiveMp3TagSet);
-                //  CandidateMp3TagSet.Id = int.Parse(Mp3TagSetId);
                 if (
                         (CandidateTitle != ActiveMp3TagSet.Title) ||
 
@@ -118,12 +114,13 @@ namespace SmartaCam.App.Pages
                     {
                         StatusClass = "alert-success";
                         //  Message = "New Mp3 Tag Template saved.";
-                        Saved = true;
+                        //Saved = true;
                         var ActiveMp3TagSet = await Mp3TagSetService.SetActiveMp3TagSet(addedMp3TagSetId);
-                        CandidateTitle = ActiveMp3TagSet.Title;
-                        CandidateArtist = ActiveMp3TagSet.Artist;
-                        CandidateAlbum = ActiveMp3TagSet.Album;
-                        ShowHideButtons();
+                        //CandidateTitle = ActiveMp3TagSet.Title;
+                        //CandidateArtist = ActiveMp3TagSet.Artist;
+                        //CandidateAlbum = ActiveMp3TagSet.Album;
+                    //UpdateButtonsStatus();
+                    NavigateToTagEditor();
                     }
                     else
                     {
@@ -133,14 +130,6 @@ namespace SmartaCam.App.Pages
                     }
                     Mp3TagSets = await Mp3TagSetService.GetAllMp3TagSets();
                 }
-
-                //else
-                //{
-                //    await EmployeeDataService.UpdateEmployee(Employee);
-                //    StatusClass = "alert-success";
-                //    Message = "Employee updated successfully.";
-                //    Saved = true;
-                //}
             }
             protected void HandleInvalidSubmit()
             {
@@ -153,14 +142,10 @@ namespace SmartaCam.App.Pages
                 await Mp3TagSetService.DeleteMp3TagSet(SelectedMp3TagSetId);
                 StatusClass = "alert-success";
                 Message = "Deleted successfully";
-
-                Saved = true;
-                ShowDeleteButton = false;
-
-                Mp3TagSets = await Mp3TagSetService.GetAllMp3TagSets();
                 ActiveMp3TagSet = await Mp3TagSetService.SetActiveMp3TagSet(1);
+                NavigateToTagEditor();
             }
-        protected void ShowHideButtons()
+        protected void UpdateButtonsStatus()
         {
             ShowSaveButton = false;
             ShowDeleteButton = false;
@@ -204,12 +189,16 @@ namespace SmartaCam.App.Pages
                     ShowDeleteButton = true;
                 }
             }
-
-
-            //public Task OnValueChanged(int value)
-            //{
-            //    Mp3TagSetId = value;
-            //    return Task.CompletedTask;
-            //}
+        void NavigateToTagEditor()
+        {
+            _navigationManager.NavigateTo("/tageditor", true);
         }
+
+
+        //public Task OnValueChanged(int value)
+        //{
+        //    Mp3TagSetId = value;
+        //    return Task.CompletedTask;
+        //}
+    }
     }

@@ -66,7 +66,7 @@ else
         </tbody>
     </table>
      <div>
-        @if (@AllTakes.Count > 0)
+        @if (@AllTakes.Count > 0 && MyStateDisplay < 2 )
         { 
             <Button style="background-color:black;color:white" @onclick="EraseAll_Click"><b>Erase All Recordings</b></Button>
             <br />

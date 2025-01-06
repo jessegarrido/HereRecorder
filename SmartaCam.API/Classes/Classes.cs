@@ -213,14 +213,14 @@ namespace SmartaCam
             };
             var wavFile = take.WavFilePath;
             var mp3File = take.Mp3FilePath;
+			using (var reader = new AudioFileReader(wavFile))
+            using (var writer = new LameMP3FileWriter(mp3File, reader.WaveFormat, Config.Mp3BitRate, tag))
+                reader.CopyTo(writer);
 			if (os != "Windows")
 			{
 				File.SetUnixFileMode(mp3File, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 			}
-			using (var reader = new AudioFileReader(wavFile))
-            using (var writer = new LameMP3FileWriter(mp3File, reader.WaveFormat, Config.Mp3BitRate, tag))
-                reader.CopyTo(writer);
-            Console.WriteLine($"{mp3File} was created.");
+			Console.WriteLine($"{mp3File} was created.");
             take.WasConvertedToMp3 = true;
             await _takeRepository.SaveChangesAsync();
         }
@@ -260,7 +260,7 @@ namespace SmartaCam
                 Console.WriteLine($"Max sample value: {max}");
 
                 if (max == 0 || max > 1.0f)
-                    throw new InvalidOperationException("File cannot be normalized");
+					Console.WriteLine($"Max sample value: {max}, cannot be normalized");
 
                 // rewind and amplify
                 reader.Position = 0;
@@ -1077,7 +1077,7 @@ namespace SmartaCam
             }
             public async Task AskKeepOrEraseFilesAsync()
             {
-                //Console.Write("Press 'record' to delete all saved recordings on SD & USB, and clear upload and play queues, or press 'play' to keep files ");
+            Console.Write("Press 'record' (or long-press foot pedal) to delete saved recordings, press any other button to keep.");// on SD & USB, and clear upload and play queues, or press 'play' to keep files ");
                 //int erased = GetValidUserSelection(new List<int> { 0, 1, 2 });
                 string[] allfiles = Directory.GetFiles(Config.LocalRecordingsFolder, "*.*", SearchOption.AllDirectories);
                 if (allfiles.Length > 0)
@@ -1090,6 +1090,7 @@ namespace SmartaCam
 			    	bool? clearFiles = await uiRepository.ClearFilesGpioWatchAsync();
                     if (clearFiles == true)
                     {
+                        Console.WriteLine("Deleting existing recordings.");
                         DeleteAllRecordings(allfiles);
 					}
                     tokenSource.Cancel();
@@ -1296,7 +1297,7 @@ namespace SmartaCam
                     Console.WriteLine($"Platform: {_os}");
                     Console.WriteLine($"Session Name: {_session}");
                     Console.WriteLine($"Local Recordings Folder: {Config.LocalRecordingsFolder}");
-                 //   if (_os == "Raspberry Pi") { await AskKeepOrEraseFilesAsync(); }
+                    if (_os == "Raspberry Pi") { await AskKeepOrEraseFilesAsync(); }
                     _ = Task.Run(async () => { await FindRemovableDrivesAsync(true); });
                     //    Global.RemovableDrivePath = d.RootDirectory.ToString();
                     //Global.RemovableDrivePath = Path.Combine("F:");
@@ -1369,7 +1370,7 @@ namespace SmartaCam
             void OnPinEvent(object sender, PinValueChangedEventArgs args)
             {
                 var now = DateTime.Now;
-                if (now.Subtract(_lastInterrupt).TotalMilliseconds > 1000) // Button Debounce
+                if (now.Subtract(_lastInterrupt).TotalMilliseconds > 500) // Button Debounce
                 {
                     Console.WriteLine($"{args.PinNumber} was pressed");
                     _lastInterrupt = now;
@@ -1390,7 +1391,7 @@ namespace SmartaCam
         }
 		public async Task<bool?> ClearFilesGpioWatchAsync()
 		{
-			var _lastInterrupt = DateTime.Now;
+			
 			using var controller = new GpioController();
             bool? erase = null;
 			var pins = new List<int>
@@ -1402,8 +1403,6 @@ namespace SmartaCam
 				Config.BackButton,
 				Config.FootPedal
 			};
-			var debounceStart = DateTime.MinValue;
-			var lastEvent = PinValue.High;
 			foreach (int pin in pins)
 			{
 				controller.OpenPin(pin, PinMode.InputPullUp);
@@ -1415,29 +1414,33 @@ namespace SmartaCam
 			}
             while (erase == null)
             {
-                await Task.Delay(30000);
-                erase = false;
+                await Task.Delay(500);
+               // erase = false;
             }
             return erase;
 
-			void OnPinEvent(object sender, PinValueChangedEventArgs args)
+			async void OnPinEvent(object sender, PinValueChangedEventArgs args)
 			{
-				var now = DateTime.Now;
-				if (now.Subtract(_lastInterrupt).TotalMilliseconds > 500) // Button Debounce
-				{
-					Console.WriteLine($"{args.PinNumber} was depressed");
-					_lastInterrupt = now;
-                    var pressedPin = args.PinNumber;
-                    if (pressedPin == Config.RecordButton || pressedPin == Config.FootPedal)
+                var pressedPin = args.PinNumber;
+                var detection = DateTime.Now;
+                await Task.Delay(250);
+                if (controller.Read(pressedPin) == PinValue.Low)
+                {
+                    Console.WriteLine($"{args.PinNumber} was depressed");
+                    if (pressedPin == Config.RecordButton)
+                    { 
+                        erase = true; 
+                    } else if (pressedPin == Config.FootPedal)
                     {
-                        while (controller.Read(pressedPin) == PinValue.High)
+                        await Task.Delay(250);
+                        while (controller.Read(pressedPin) == PinValue.Low)
                         {
-                            Task.Delay(25);
+                            await Task.Delay(250);
                         }
+                        Console.WriteLine($"{args.PinNumber} was released");
                         var unPressed = DateTime.Now;
-                        erase = unPressed.Subtract(_lastInterrupt).TotalMilliseconds > 3000 ? true : false;
-                    }
-                    else
+                        erase = unPressed.Subtract(detection).TotalMilliseconds > 3000 ? true : false;
+                    } else
                     {
                         erase = false;
                     }
