@@ -107,6 +107,7 @@ namespace SmartaCam.App.Pages
         }
         public async Task RecordStop_Click()
         {
+            //await Task.Delay(500);
             MyStateDisplay = await TransportService.GetState();
             if (MyStateDisplay < 2)
             {

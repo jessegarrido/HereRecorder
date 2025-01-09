@@ -29,6 +29,10 @@ using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 using System.Security.Cryptography.X509Certificates;
 using static Dropbox.Api.TeamLog.ClassificationType;
 using Dropbox.Api.Users;
+using static PortAudioSharp.Stream;
+using static Dropbox.Api.Sharing.RequestedLinkAccessLevel;
+using NAudio.Utils;
+using System.Device.Pwm;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -52,13 +56,16 @@ namespace SmartaCam
 		public Task<string> GetNowPlayingAsync();
 		public int GetMyState();
 		public void SetMyState(int newState);
+        public Task RecordingMeterAsync();
 	}
 	public class AudioRepository : IAudioRepository
     {
-        private static int MyState = 0;
+        private static int MyState { get; set; } = 0;
         private TakeRepository _takeRepository = new TakeRepository();
         private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
+      //  private UIRepository _uiRepository = new UIRepository();
         private string _os = string.Empty;
+        public static float max { get; set; }
 
         public void AudioDeviceInitAndEnumerate(bool enumerate)
         {
@@ -157,12 +164,10 @@ namespace SmartaCam
                 };
 
             }
-			var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
-			Console.WriteLine("Starting postprocess");
-			await PostProcessAudioAsync(takeId);
-
-
-
+            var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
+            Console.WriteLine("Starting postprocess");
+            var postProcessTask = Task.Run( async () => { await PostProcessAudioAsync(takeId); } );
+            await postProcessTask;
         }
         public async Task PostProcessAudioAsync(int takeId)
 
@@ -285,7 +290,6 @@ namespace SmartaCam
             take.OriginalPeakVolume = max;
             await _takeRepository.SaveChangesAsync();
         }
-
             public List<string> CreatePlayQueue()
         {
             List<string> playlist = new();
@@ -307,6 +311,103 @@ namespace SmartaCam
         {
 
             return CreatePlayQueue(); 
+        }
+        public decimal GetInputPeakVolume()
+        {
+            return Math.Round((decimal)max,2);
+        }
+        public async Task RecordingMeterAsync()
+        {
+            UIRepository uiRepository = new();
+            var os = await uiRepository.IdentifyOS();
+            using var tokenSource = new CancellationTokenSource();
+            var LEDcanceltoken = tokenSource.Token;
+        //    if (_os == "Raspberry Pi")
+        //    {
+                IORepository iORepository = new();
+                var ledTask = Task.Run(async () => { await iORepository.MeterLEDsAsync(os, LEDcanceltoken); });
+
+         //   }
+            StreamParameters param = Config.SetAudioParameters();
+            int numChannels = param.channelCount;
+            WaveFormat wavformat = new WaveFormat(Config.SampleRate, 2);
+            MemoryStream ms = new MemoryStream();
+            IgnoreDisposeStream ids = new IgnoreDisposeStream(ms);
+            using (WaveFileWriter wr = new WaveFileWriter(ids, wavformat))
+            {
+                PortAudioSharp.Stream.Callback callback = (nint input, nint output,
+                           uint frameCount,
+                           ref StreamCallbackTimeInfo timeInfo,
+                           StreamCallbackFlags statusFlags,
+                           nint userData
+                           ) =>
+
+                   {
+                       frameCount = frameCount * (uint)numChannels;
+                       float[] samples = new float[frameCount];
+                       Marshal.Copy(input, samples, 0, (int)frameCount);
+                       wr.WriteSamples(samples, 0, (int)frameCount);
+                       max = samples.Max();
+                       //if (max > 0.99) { Console.WriteLine($"Clip detected!!"); }
+                       //Console.WriteLine($"Peak volume: {max}");
+                       return StreamCallbackResult.Continue;
+                   };
+                PortAudioSharp.Stream stream = new PortAudioSharp.Stream(inParams: param, outParams: null, sampleRate: Config.SampleRate,
+                framesPerBuffer: 0,
+                streamFlags: StreamFlags.ClipOff,
+                callback: callback,
+                userData: nint.Zero
+                );
+
+                stream.Start();
+                do
+                {
+                    Thread.Sleep(500);
+                } while (MyState == 1);
+                stream.Stop();
+                tokenSource.Cancel();
+                await ledTask;
+                //var waveIn = new WaveInEvent();
+                //waveIn.DataAvailable += OnDataAvailable;
+                //waveIn.StartRecording();
+                //async void OnDataAvailable(object sender, WaveInEventArgs args)
+                //{
+                //    if (MyState == 1)
+                //    {
+                //        float max = 0;
+                //        // interpret as 16 bit audio
+                //        for (int index = 0; index < args.BytesRecorded; index += 2)
+                //        {
+                //            short sample = (short)((args.Buffer[index + 1] << 8) |
+                //                                    args.Buffer[index + 0]);
+                //            // to floating point
+                //            var sample32 = sample / 32768f;
+                //            // absolute value 
+                //            if (sample32 < 0) sample32 = -sample32;
+                //            // is this the max value?
+                //            if (sample32 > max) max = sample32;
+                //            if (max == 1) { Console.WriteLine($"Clip detected!!"); }
+                //            Console.WriteLine($"Peak volume: {max}");
+                //            if (_os == "Raspberry Pi")
+                //            {
+                //                using var controller = new GpioController();
+                //                controller.OpenPin(Config.GreenLED, PinMode.Output);
+                //                controller.OpenPin(Config.YellowLED, PinMode.Output);
+                //                controller.OpenPin(Config.RedLED, PinMode.Output);
+                //                controller.Write(Config.GreenLED, max > .5 ? PinValue.High : PinValue.Low);
+                //                controller.Write(Config.YellowLED, max > .8 ? PinValue.High : PinValue.Low);
+                //                controller.Write(Config.RedLED, max == 1 ? PinValue.High : PinValue.Low);
+                //                controller.ClosePin(Config.GreenLED);
+                //                controller.ClosePin(Config.YellowLED);
+                //                controller.ClosePin(Config.RedLED);
+                //            }
+                //            Task.Delay(500);
+                //        }
+
+                //    }
+                //}
+                //  }
+            }
         }
         public class PlaybackQueue
         {
@@ -420,26 +521,29 @@ namespace SmartaCam
         }
         public async Task StopButtonPressedAsync()
         {
+            UIRepository uiRepository = new UIRepository();
             MyState = 1;
+          //  await uiRepository.MainMenuAsync();
         }
 
 
         public async Task RecordButtonPressedAsync()
         {
+            UIRepository uiRepository = new();
             if (MyState == 2)
             {
                 MyState = 1;
             }
             else
             {
-                //_ = Task.Run(async () => { await RecordAudioAsync(); });
                 MyState = 2;
-                AudioRepository audioRepository = new();
                 await RecordAudioAsync();
             }
+            //await uiRepository.MainMenuAsync();
         }
         public async Task PlayButtonPressedAsync()
         {
+            UIRepository uiRepository = new();
             if (MyState == 2)
             {
                 return;
@@ -450,6 +554,7 @@ namespace SmartaCam
             {
                 await PlaybackAudioAsync(playlist);
             });
+            await uiRepository.MainMenuAsync();
         }
         public void SetMyState(int newState)
         {
@@ -503,17 +608,17 @@ namespace SmartaCam
                     {
                         // ConnectionStatus = "Disconnected-Exception";
                     }
-                    if (os == "Raspberry Pi")
-                    {
-                        if (NetworkStatus)
-                        {
-                            await ioRepository.TurnOnLEDAsync(Config.YellowLED);
-                        }
-                        else
-                        {
-                            await ioRepository.TurnOffLEDAsync(Config.YellowLED);
-                        }
-                    }
+                    //if (os == "Raspberry Pi")
+                    //{
+                    //    if (NetworkStatus)
+                    //    {
+                    //        await ioRepository.TurnOnLEDAsync(Config.YellowLED);
+                    //    }
+                    //    else
+                    //    {
+                    //        await ioRepository.TurnOffLEDAsync(Config.YellowLED);
+                    //    }
+                    //}
 
                     if (!NetworkStatus) { await EstablishWifiAsync(); }
                 });
@@ -535,12 +640,12 @@ namespace SmartaCam
                     DropBox db = new DropBox();
                     OAuthStatus = await db.TestDropBoxAuthAsync();
                     Console.WriteLine($"DBAUth Status: {OAuthStatus}");
-                    if (!OAuthStatus)// && outerAuthTask.Status.Equals(null))
-                    {
-                        if (os == "Raspberry Pi") { await ioRepository.LongBlinkLEDAsync(Config.YellowLED, 10000, LEDcanceltoken); };
-                        var dbAuth = await db.DropBoxAuth();
-                        if (dbAuth) { if (os == "Raspberry Pi") { tokenSource.Cancel(); }; };
-                    }
+                    //if (!OAuthStatus)// && outerAuthTask.Status.Equals(null))
+                    //{
+                    //    if (os == "Raspberry Pi") { await ioRepository.LongBlinkLEDAsync(Config.YellowLED, 10000, LEDcanceltoken); };
+                    //    var dbAuth = await db.DropBoxAuth();
+                    //    if (dbAuth) { if (os == "Raspberry Pi") { tokenSource.Cancel(); }; };
+                    //}
                 }
             }
             public async Task EstablishWifiAsync()
@@ -615,7 +720,7 @@ namespace SmartaCam
                     var take = await _takeRepository.GetTakeByIdAsync(id);
                     using var tokenSource = new CancellationTokenSource();
                     var LEDcanceltoken = tokenSource.Token;
-                    if (os == "Raspberry Pi") { await ioRepository.BlinkOneLED(Config.YellowLED, 1000, LEDcanceltoken); };
+                   // if (os == "Raspberry Pi") { await ioRepository.BlinkOneLED(Config.YellowLED, 1000, LEDcanceltoken); };
                     var client = new DropboxClient(Settings.Default.RefreshToken, Config.DbApiKey);
                     // string folder = $"/{Path.GetDirectoryName(take.WavFilePath)}";
                     string folder = $"/{take.Session}";
@@ -1049,7 +1154,7 @@ namespace SmartaCam
 	public class UIRepository : IUIRepository
         {
         private TakeRepository _takeRepository = new TakeRepository();
-        private AudioRepository _audioRepository = new AudioRepository();
+      //  private AudioRepository _audioRepository = new AudioRepository();
         private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
         private static string _session = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
         private static string _os = string.Empty;
@@ -1127,37 +1232,41 @@ namespace SmartaCam
                 else { os = "unknown"; }
                 return os;
             }
-            public async Task MainMenuAsync()
-            {
+        public async Task MainMenuAsync()
+        {
 
-                AudioRepository audioRepository = new();
-                Console.WriteLine("1 . Record/Pause\r\n2 . Play/Pause\r\n3 . Skip Back\r\n4 . Skip Forward\r\n0 . Reboot");
-                var selection = GetValidUserSelection(new List<int> { 0, 1, 2, 3, 4 }); // 0=reboot,1=record,2=play,3=skipforward,4skipback
-                var _myState = audioRepository.GetMyState();
-                switch (selection)
-                {
-                    case 1:
-                        if (_myState == 2)
-                        {
-                            audioRepository.SetMyState(1);
-                            //  await audioRepository.AnalyzeAndNormalizeTakeAsync();
-                            //  audioRepository.ConvertWavToMP3(Global.wavPathAndName, Global.mp3PathAndName);
-                            //  NetworkRepository.DropBox db = new();
-                            //  db.PushToDropBoxAsync();
-                        }
-                        else
-                        {
-                            audioRepository.SetMyState(2);
-                            _ = Task.Run(async () => { await audioRepository.RecordAudioAsync(); });
-                            // await audioRepository.RecordAudioAsync();
-                        }
-                        break;
-                    case 2:
-                        var playlist = audioRepository.CreatePlayQueue();
-                        await audioRepository.PlaybackAudioAsync(playlist);
-                        break;
-                }
-                return;
+            AudioRepository audioRepository = new();
+            Console.WriteLine("1 . Record/Pause\r\n2 . Play/Pause\r\n3 . Skip Back\r\n4 . Skip Forward\r\n0 . Reboot");
+
+            var recordingMeterTask = Task.Run( async () => { await audioRepository.RecordingMeterAsync(); } );
+            var selection = GetValidUserSelection(new List<int> { 0, 1, 2, 3, 4 }); // 0=reboot,1=record,2=play,3=skipforward,4skipback
+            var myState = audioRepository.GetMyState();
+            await recordingMeterTask;
+            switch (selection)
+            {
+                case 1:
+                    if (myState == 2)
+                    {
+                        audioRepository.SetMyState(1);
+                        //  await audioRepository.AnalyzeAndNormalizeTakeAsync();
+                        //  audioRepository.ConvertWavToMP3(Global.wavPathAndName, Global.mp3PathAndName);
+                        //  NetworkRepository.DropBox db = new();
+                        //  db.PushToDropBoxAsync();
+                    }
+                    else
+                    {
+                        audioRepository.SetMyState(2);
+                        _ = Task.Run(async () => { await audioRepository.RecordAudioAsync(); });
+                        // await audioRepository.RecordAudioAsync();
+                    }
+                    break;
+                case 2:
+                    var playlist = audioRepository.CreatePlayQueue();
+                    await audioRepository.PlaybackAudioAsync(playlist);
+                    break;
+            }
+
+            return;
             }
             public async Task<string> SetupLocalRecordingFileAsync()
             {
@@ -1285,7 +1394,7 @@ namespace SmartaCam
             public async Task SessionInitAsync()
             {
                     //UIRepository uiRepository = new();
-                    AudioRepository audioRepository = new();
+                   AudioRepository audioRepository = new();
                     NetworkRepository networkRepository = new();
                     // IORepository ioRepository = new();
                     NetworkRepository.DropBox db = new();
@@ -1306,10 +1415,12 @@ namespace SmartaCam
                     audioRepository.AudioDeviceInitAndEnumerate(true);
                     Config.SelectedAudioDevice = _os.Contains("Raspberry") ? 2 : 0;
                     audioRepository.SetMyState(1);
-                    var gpioTask = Task.Run( async () =>
+                    if (_os == "Raspberry Pi")
                     {
-                        if (_os == "Raspberry Pi") { await GpioWatchAsync(); };
-                    });
+                         _ = Task.Run(async () => { await GpioWatchAsync(); } );
+                         // var gpioTask = Task.Run(async () => { await GpioWatchAsync(); });
+                         //await gpioTask;
+                    }
                     do
                     {
                         await MainMenuAsync();
@@ -1344,6 +1455,7 @@ namespace SmartaCam
         }
         public async Task GpioWatchAsync()
         {
+            AudioRepository audioRepository = new();
             var _lastInterrupt = DateTime.Now;
             using var controller = new GpioController();
             var pins = new List<int>
@@ -1376,15 +1488,15 @@ namespace SmartaCam
                     _lastInterrupt = now;
                     if (!(bool)controller.Read(Config.RecordButton))
                     {
-                        _audioRepository.RecordButtonPressedAsync();
+                        audioRepository.RecordButtonPressedAsync();
                     }
                     if (!(bool)controller.Read(Config.FootPedal))
                     {
-                        _audioRepository.RecordButtonPressedAsync();
+                        audioRepository.RecordButtonPressedAsync();
                     }
                     if (!(bool)controller.Read(Config.StopButton))
                     {
-                        _audioRepository.StopButtonPressedAsync();
+                        audioRepository.StopButtonPressedAsync();
                     }
                 }
             }
@@ -1495,133 +1607,227 @@ namespace SmartaCam
 		public Task TurnOnLEDAsync(int pin);
 		public Task BlinkAllLEDs(CancellationToken ct);
 		public Task BlinkOneLED(int pin, int duration, CancellationToken ct);
+        public Task MeterLEDsAsync(string os, CancellationToken ct);
 	}
-	public class IORepository : IIORepository
+    public class IORepository : IIORepository
+    {
+        public static float max;
+        public string GetUSBDeviceName(nint name)
         {
-            public string GetUSBDeviceName(nint name)
+            string s = "";
+            if (name != nint.Zero)
             {
-                string s = "";
-                if (name != nint.Zero)
+                int length = 0;
+                unsafe
                 {
-                    int length = 0;
-                    unsafe
+                    byte* b = (byte*)name;
+                    if (b != null)
                     {
-                        byte* b = (byte*)name;
-                        if (b != null)
+                        while (*b != 0)
                         {
-                            while (*b != 0)
-                            {
-                                ++b;
-                                length += 1;
-                            }
+                            ++b;
+                            length += 1;
                         }
                     }
-
-                    if (length > 0)
-                    {
-                        byte[] stringBuffer = new byte[length];
-                        Marshal.Copy(name, stringBuffer, 0, length);
-                        s = Encoding.UTF8.GetString(stringBuffer);
-                    }
                 }
-                return s;
-            }
-            public async Task LEDBlinkAsync(int pin, int duration)
-            {
-                int sleepS = duration;
-                using var controller = new GpioController();
-                Task LEDtask = Task.Run(() =>
+
+                if (length > 0)
                 {
-                    controller.OpenPin(pin, PinMode.Output);
-                    controller.Write(pin, true ? PinValue.High : PinValue.Low);
-                    Thread.Sleep(sleepS);
-                    controller.Write(pin, false ? PinValue.High : PinValue.Low);
-                    Thread.Sleep(sleepS);
-                });
-                await LEDtask;
-                controller.ClosePin(pin);
+                    byte[] stringBuffer = new byte[length];
+                    Marshal.Copy(name, stringBuffer, 0, length);
+                    s = Encoding.UTF8.GetString(stringBuffer);
+                }
             }
-            public async Task LongBlinkLEDAsync(int pin, int duration, CancellationToken ct)
+            return s;
+        }
+        public async Task LEDBlinkAsync(int pin, int duration)
+        {
+            int sleepS = duration;
+            using var controller = new GpioController();
+            Task LEDtask = Task.Run(() =>
             {
-                int sleepS = duration;
-                using var controller = new GpioController();
-                Task LEDtask = Task.Run(() =>
-                {
-                    controller.OpenPin(pin, PinMode.Output);
-                    while (!ct.IsCancellationRequested)
-                    {
-                        controller.Write(pin, false); //? PinValue.High : PinValue.Low);
-                        Thread.Sleep(1000);
-                        controller.Write(pin, true); //? PinValue.High : PinValue.Low);
-                        Thread.Sleep(sleepS);
-                    }
-                });
-                await LEDtask;
-                controller.Write(pin, true);
-                controller.ClosePin(pin);
-            }
-            public void BlinkLED(int pin, int duration)
-            {
-                int sleepS = duration;
-                using var controller = new GpioController();
                 controller.OpenPin(pin, PinMode.Output);
                 controller.Write(pin, true ? PinValue.High : PinValue.Low);
                 Thread.Sleep(sleepS);
                 controller.Write(pin, false ? PinValue.High : PinValue.Low);
-                controller.ClosePin(pin);
                 Thread.Sleep(sleepS);
-            }
-            public async Task TurnOffLEDAsync(int pin)
+            });
+            await LEDtask;
+            controller.ClosePin(pin);
+        }
+        public async Task LongBlinkLEDAsync(int pin, int duration, CancellationToken ct)
+        {
+            int sleepS = duration;
+            using var controller = new GpioController();
+            Task LEDtask = Task.Run(() =>
             {
-                using var controller = new GpioController();
-                var LEDtask = Task.Run(() =>
+                controller.OpenPin(pin, PinMode.Output);
+                while (!ct.IsCancellationRequested)
                 {
-                    controller.OpenPin(pin, PinMode.Output);
-                    controller.Write(pin, false);
-                });
-                await LEDtask;
-                controller.ClosePin(pin);
-            }
-            public async Task TurnOnLEDAsync(int pin)
+                    controller.Write(pin, false); //? PinValue.High : PinValue.Low);
+                    Thread.Sleep(1000);
+                    controller.Write(pin, true); //? PinValue.High : PinValue.Low);
+                    Thread.Sleep(sleepS);
+                }
+            });
+            await LEDtask;
+            controller.Write(pin, true);
+            controller.ClosePin(pin);
+        }
+        public void BlinkLED(int pin, int duration)
+        {
+            int sleepS = duration;
+            using var controller = new GpioController();
+            controller.OpenPin(pin, PinMode.Output);
+            controller.Write(pin, true ? PinValue.High : PinValue.Low);
+            Thread.Sleep(sleepS);
+            controller.Write(pin, false ? PinValue.High : PinValue.Low);
+            controller.ClosePin(pin);
+            Thread.Sleep(sleepS);
+        }
+        public async Task TurnOffLEDAsync(int pin)
+        {
+            using var controller = new GpioController();
+            var LEDtask = Task.Run(() =>
             {
-                using var controller = new GpioController();
-                var LEDtask = Task.Run(() =>
-                {
-                    controller.OpenPin(pin, PinMode.Output);
-                    controller.Write(pin, true);
-                });
-                await LEDtask;
-                controller.ClosePin(pin);
-            }
-            public async Task BlinkAllLEDs(CancellationToken ct)
+                controller.OpenPin(pin, PinMode.Output);
+                controller.Write(pin, PinValue.Low);
+            });
+            await LEDtask;
+            controller.ClosePin(pin);
+        }
+        public async Task TurnOnLEDAsync(int pin)
+        {
+            using var controller = new GpioController();
+            var LEDtask = Task.Run(() =>
             {
-                var blinkTask = Task.Run(() =>
+                controller.OpenPin(pin, PinMode.Output);
+                controller.Write(pin, PinValue.High);
+            });
+            await LEDtask;
+            controller.ClosePin(pin);
+        }
+        public async Task BlinkAllLEDs(CancellationToken ct)
+        {
+            var blinkTask = Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
                 {
+                    BlinkLED(Config.YellowLED, 55);
+                    BlinkLED(Config.RedLED, 55);
+                    BlinkLED(Config.YellowLED, 55);
+                    BlinkLED(Config.GreenLED, 55);
+                }
+                TurnOffLEDAsync(Config.YellowLED);
+                TurnOffLEDAsync(Config.RedLED);
+                TurnOffLEDAsync(Config.GreenLED);
+            });
+            await blinkTask;
+        }
+        public async Task BlinkOneLED(int pin, int duration, CancellationToken ct)
+        {
+            var blinkTask = Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    BlinkLED(pin, duration);
+                }
+                TurnOnLEDAsync(pin);
+            });
+            await blinkTask;
+        }
+        public async Task MeterLEDsAsync(string os, CancellationToken ct)
+        {
+            AudioRepository audioRepository = new();
+            var max = audioRepository.GetInputPeakVolume();
+            var newMax = max;
+            if (os == "Raspberry Pi")
+            {
+                var ledTask = Task.Run( async () =>
+                {
+                    //using var controller = new GpioController();
+                    //controller.OpenPin(Config.GreenLED, PinMode.Output);
+                    //controller.OpenPin(Config.YellowLED, PinMode.Output);
+                    //controller.OpenPin(Config.RedLED, PinMode.Output);
                     while (!ct.IsCancellationRequested)
                     {
-                        BlinkLED(Config.YellowLED, 55);
-                        BlinkLED(Config.RedLED, 55);
-                        BlinkLED(Config.YellowLED, 55);
-                        BlinkLED(Config.GreenLED, 55);
-                    }
-                    TurnOffLEDAsync(Config.YellowLED);
-                    TurnOffLEDAsync(Config.RedLED);
-                    TurnOffLEDAsync(Config.GreenLED);
-                });
-                await blinkTask;
-            }
-            public async Task BlinkOneLED(int pin, int duration, CancellationToken ct)
-            {
-                var blinkTask = Task.Run(() =>
-                {
-                    while (!ct.IsCancellationRequested)
-                    {
-                        BlinkLED(pin, duration);
-                    }
-					TurnOnLEDAsync(pin);
-                });
-                await blinkTask;
-            }
+                        if (newMax != max)
+                        {
+                            max = newMax;
+                            Console.WriteLine($"Peak volume: {max}");
+                            if (max == (decimal)1) 
+                            {
+                                Console.WriteLine($"Clip detected!!");
+                               // controller.Write(Config.RedLED, PinValue.High);
+                                await TurnOnLEDAsync(Config.RedLED);
+                            }
+                            else
+                            {
+                               // controller.Write(Config.RedLED, PinValue.Low);
+                                await TurnOffLEDAsync(Config.RedLED);
+                            }
+                            if (max > (decimal).35 ) 
+                            {
+                                Console.WriteLine("Green");
+                               // controller.Write(Config.GreenLED, PinValue.High);
+                                await TurnOnLEDAsync(Config.GreenLED);
+                            } else
+                            {
+                                await TurnOffLEDAsync(Config.GreenLED);
+                                //controller.Write(Config.GreenLED, PinValue.Low);
+                            }
+                            if (max > (decimal).8)
+                            {
+                                Console.WriteLine("Yellow");
+                                await TurnOnLEDAsync(Config.YellowLED);
+                               // controller.Write(Config.YellowLED, PinValue.High);
+                            } else
+                            {
+                                await TurnOffLEDAsync(Config.YellowLED);
+                              //  controller.Write(Config.YellowLED, PinValue.Low);
+                            }
 
+                            //controller.Write(Config.GreenLED, max > .4m ? PinValue.High : PinValue.Low);
+                            //controller.Write(Config.YellowLED, max > .75m ? PinValue.High : PinValue.Low);
+                            //controller.Write(Config.RedLED, max == 1m ? PinValue.High : PinValue.Low);
+                        }
+                       // Task.Delay(1000);
+                        newMax = audioRepository.GetInputPeakVolume();
+                    }
+                    //controller.ClosePin(Config.GreenLED);
+                    //controller.ClosePin(Config.YellowLED);
+                    //controller.ClosePin(Config.RedLED);
+                }, ct);
+                await ledTask;
+            }
+            else
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    if (newMax != max)
+                    {
+                        max = newMax;
+                        if (max > 0.99m) { Console.WriteLine($"Clip detected!!"); }
+                        Console.WriteLine($"Peak volume: {max}");
+                        if (max == (decimal)1) { Console.WriteLine($"Clip detected!!"); }
+                        Console.WriteLine($"Peak volume: {max}");
+                        if (max > (decimal).4)
+                        {
+                            Console.WriteLine("Green");
+                        }
+                        if (max > (decimal).75)
+                        {
+                            Console.WriteLine("Yellow");
+                       }
+                        if (max == (decimal)1)
+                        {
+                            Console.WriteLine("Red");
+                        }
+                    }
+                    newMax = audioRepository.GetInputPeakVolume();
+                }
+                newMax = audioRepository.GetInputPeakVolume();
+            }
         }
     }
+}
