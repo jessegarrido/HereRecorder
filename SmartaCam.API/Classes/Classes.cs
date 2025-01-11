@@ -33,6 +33,7 @@ using static PortAudioSharp.Stream;
 using static Dropbox.Api.Sharing.RequestedLinkAccessLevel;
 using NAudio.Utils;
 using System.Device.Pwm;
+using NAudio.Wave.SampleProviders;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -57,6 +58,7 @@ namespace SmartaCam
 		public int GetMyState();
 		public void SetMyState(int newState);
         public Task RecordingMeterAsync();
+        public Task RemixAudio(int takeId);
 	}
 	public class AudioRepository : IAudioRepository
     {
@@ -130,10 +132,38 @@ namespace SmartaCam
                     nint userData
                     ) =>
                 {
-                    frameCount = frameCount * (uint)numChannels;
-                    float[] samples = new float[frameCount];
-                    Marshal.Copy(input, samples, 0, (int)frameCount);
-                    wr.WriteSamples(samples, 0, (int)frameCount);
+                    float[] consecChannelsInFloat = new float[frameCount*2];
+                    float[] lIn = new float[frameCount];
+                    float[] rIn = new float[frameCount];
+                    float[] doubleMono = new float[frameCount*2];
+
+                    Marshal.Copy(input, consecChannelsInFloat, 0, (int)frameCount*2);
+                    //byte[] consecChannelsInByte = new byte[consecChannelsInFloat.Length * frameCount];
+                    //for (int i = 0; i < consecChannelsInFloat.Length; i++)
+                    //{
+                    //    BitConverter.GetBytes(consecChannelsInFloat[i]).CopyTo(consecChannelsInByte, i * sizeof(float));
+                    //}
+                    //Marshal.(input, consecChannelsInFloat, (int)frameCount, (int)frameCount);
+                    // Marshal.Copy((byte[])consecChannelsInFloat, rIn, (int)frameCount, (int)frameCount*2);
+                  //   Array.ConstrainedCopy(consecChannelsInFloat, 0, doubleMonoBuffer, 0, (int)frameCount);
+                  //   Array.ConstrainedCopy(consecChannelsInFloat, 0, doubleMonoBuffer, (int)frameCount, (int)frameCount);
+                    //Array.ConstrainedCopy(consecChannelsInFloat, (int)frameCount, doubleMonoBuffer, (int)frameCount, (int)frameCount);
+                    // Array.Copy(consecChannelsInFloat, 0, doubleMonoBuffer, 0, (int)frameCount);
+                    //  Array.Copy(consecChannelsInFloat, 0, doubleMonoBuffer, (int)frameCount, (int)frameCount);
+                    //Array.ConstrainedCopy(consecChannelsInFloat, (int)frameCount, rIn, 0, (int)frameCount);
+
+                    //for (int i = 0; i < consecChannelsInFloat.Length/2; i++)
+                    //{
+                    //    float sum = (consecChannelsInFloat[i]);// + consecChannelsInFloat[i + frameCount]); * .4f;
+                    //    doubleMonoBuffer[i] = sum;
+                    //    doubleMonoBuffer[i + (uint)frameCount] = sum;
+                    //    //doubleMonoBuffer[i] = (consecChannelsInFloat[i] + consecChannelsInFloat[i+frameCount] )*.4f;
+                    //    //doubleMonoBuffer[i + frameCount] = sum;
+                    //}
+                    //lIn.Zip(rIn, (x, y) => (x + y) / 2);
+                    wr.WriteSamples(consecChannelsInFloat, 0,(int)frameCount*2);
+                   // wr.WriteSamples(rIn, (int)frameCount, (int)frameCount * 2);
+                    //wr.WriteSamples(doubleMonoBuffer, (int)frameCount, (int)frameCount);              
                     return StreamCallbackResult.Continue;
                 };
 
@@ -164,19 +194,22 @@ namespace SmartaCam
                 };
 
             }
+            Settings.Default.Save(); //save updated number of takes
             var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
             Console.WriteLine("Starting postprocess");
             var postProcessTask = Task.Run( async () => { await PostProcessAudioAsync(takeId); } );
             await postProcessTask;
         }
         public async Task PostProcessAudioAsync(int takeId)
-
-
         {
-            UIRepository uIRepository = new();
-            await AnalyzeAndNormalizeTakeAsync(takeId); 
+            await RemixAudio(takeId);
+            await AnalyzeAndNormalizeTakeAsync(takeId);
             await ConvertWavToMp3Async(takeId);
-            if (Config.CopyToUsb == true) { await uIRepository.CopyToUsb(takeId); };
+            if (Config.CopyToUsb == true) 
+                {
+                    UIRepository uIRepository = new();
+                    await uIRepository.CopyToUsb(takeId); 
+                };
             if (Config.PushToCloud == true)
             {
                 NetworkRepository.DropBox db = new();
@@ -200,6 +233,43 @@ namespace SmartaCam
             };
             await _takeRepository.AddTakeAsync(newTake);
             return newTake.Id;
+        }
+        public async Task RemixAudio(int takeId)
+        {
+            Console.WriteLine("Remixing Channels");
+            var take = await _takeRepository.GetTakeByIdAsync(takeId);
+            string inPath = take.WavFilePath;
+            string outPath = $"{take.WavFilePath}.tmp";
+            UIRepository uIRepository = new();
+            _os = await uIRepository.IdentifyOS();
+            WaveFormat wavformat = new WaveFormat(Config.SampleRate, 2);
+            using (var reader = new WaveFileReader(inPath))
+            using (WaveFileWriter wr = new WaveFileWriter(outPath, wavformat))
+            {
+                float[] inBuffer;
+                float sum;
+                while ((inBuffer = reader.ReadNextSampleFrame())?.Length > 0)
+                { 
+                    for (int i = 0; i < inBuffer.Length; i+=2)
+                    {
+                        sum = inBuffer[i] + inBuffer[i + 1] * .5f;
+                        wr.WriteSample(sum);
+                        wr.WriteSample(sum);
+                    }
+                }
+                if (_os != "Windows")
+                {
+                    File.SetUnixFileMode(outPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+                }
+                
+            }
+            if (File.Exists(inPath))
+            {
+                System.IO.File.Delete(inPath);
+            }
+
+            System.IO.File.Move(outPath, inPath);
+
         }
         public async Task ConvertWavToMp3Async(int id)
         {
@@ -766,7 +836,7 @@ namespace SmartaCam
                         }
                         catch (ApiException<CreateFolderError> e)
                         {
-                            if (e.Message.StartsWith("path/conflict/folder"))
+                            if (e.Message.StartsWith("inPath/conflict/folder"))
                             {
                                 Console.WriteLine("Folder already exists... Skipping create");
                                 return null;
@@ -1151,16 +1221,16 @@ namespace SmartaCam
 		public Task SessionInitAsync();
 
 	}
-	public class UIRepository : IUIRepository
-        {
+    public class UIRepository : IUIRepository
+    {
         private TakeRepository _takeRepository = new TakeRepository();
-      //  private AudioRepository _audioRepository = new AudioRepository();
+        //  private AudioRepository _audioRepository = new AudioRepository();
         private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
         private static string _session = DateTime.Today == null ? "UNKNOWN" : DateTime.Today.ToString("yyyy-MM-dd");
         private static string _os = string.Empty;
         private static List<string>? _removableDrivePaths = new();
-		private static string? _removableDrivePath = null;
-		private static string? _nowPlaying = null;
+        private static string? _removableDrivePath = null;
+        private static string? _nowPlaying = null;
         public async Task ClearDailyTakesCount()
             {
                 DateTime today = DateTime.Today;
@@ -1182,17 +1252,23 @@ namespace SmartaCam
             }
             public async Task AskKeepOrEraseFilesAsync()
             {
-            Console.Write("Press 'record' (or long-press foot pedal) to delete saved recordings, press any other button to keep.");// on SD & USB, and clear upload and play queues, or press 'play' to keep files ");
-                //int erased = GetValidUserSelection(new List<int> { 0, 1, 2 });
+            //int erased = GetValidUserSelection(new List<int> { 0, 1, 2 });
+                if (!Directory.Exists(Config.LocalRecordingsFolder))
+                {
+                   // Console.WriteLine($"Creating Recordings Folder: {Config.LocalRecordingsFolder}");
+                    DirectoryInfo di = Directory.CreateDirectory(Config.LocalRecordingsFolder);
+                    File.SetUnixFileMode(Config.LocalRecordingsFolder, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+                }
                 string[] allfiles = Directory.GetFiles(Config.LocalRecordingsFolder, "*.*", SearchOption.AllDirectories);
                 if (allfiles.Length > 0)
                 {
+                    Console.Write("Press 'record' (or long-press foot pedal) to delete saved recordings, press any other button to keep.");// on SD & USB, and clear upload and play queues, or press 'play' to keep files ");
                     IORepository ioRepository = new();
-				    UIRepository uiRepository = new();
+				   // UIRepository uiRepository = new();
 				    using var tokenSource = new CancellationTokenSource();
                     var LEDcanceltoken = tokenSource.Token;
                     _ = Task.Run(async () => { await ioRepository.BlinkAllLEDs(LEDcanceltoken); });
-			    	bool? clearFiles = await uiRepository.ClearFilesGpioWatchAsync();
+			    	bool? clearFiles = await ClearFilesGpioWatchAsync();
                     if (clearFiles == true)
                     {
                         Console.WriteLine("Deleting existing recordings.");
