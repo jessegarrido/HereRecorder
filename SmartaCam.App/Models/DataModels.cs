@@ -14,8 +14,11 @@ namespace SmartaCam
         public int Id { get; set; }
         public int RunLengthInSeconds { get; set; }
         public decimal OriginalPeakVolume { get; set; }
+        public float ChannelOneInputPeak { get; set; }
+        public float ChannelTwoInputPeak { get; set; }
         public string FileName { get; set; } = string.Empty;
         public bool Normalized { get; set; }
+        public bool IsMono { get; set; }
         public bool WasConvertedToMp3 { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Artist { get; set; } = string.Empty;

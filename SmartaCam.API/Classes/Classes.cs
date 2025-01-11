@@ -47,7 +47,7 @@ namespace SmartaCam
 		public Task RecordAudioAsync();
 		public Task ConvertWavToMp3Async(int id);
 		public void LoadLameDLL();
-		public Task AnalyzeAndNormalizeTakeAsync(int id);
+		public Task AnalyzeTakeAsync(int id);
 		public Task RecordButtonPressedAsync();
 		public Task PlayButtonPressedAsync();
 		public Task PlayOneTakeAsync(string wavPath);
@@ -58,14 +58,14 @@ namespace SmartaCam
 		public int GetMyState();
 		public void SetMyState(int newState);
         public Task RecordingMeterAsync();
-        public Task RemixAudio(int takeId);
+        public Task RemixAudioAsync(int takeId);
 	}
-	public class AudioRepository : IAudioRepository
+    public class AudioRepository : IAudioRepository
     {
         private static int MyState { get; set; } = 0;
         private TakeRepository _takeRepository = new TakeRepository();
         private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
-      //  private UIRepository _uiRepository = new UIRepository();
+        //  private UIRepository _uiRepository = new UIRepository();
         private string _os = string.Empty;
         public static float max { get; set; }
 
@@ -132,12 +132,12 @@ namespace SmartaCam
                     nint userData
                     ) =>
                 {
-                    float[] consecChannelsInFloat = new float[frameCount*2];
+                    float[] consecChannelsInFloat = new float[frameCount * 2];
                     float[] lIn = new float[frameCount];
                     float[] rIn = new float[frameCount];
-                    float[] doubleMono = new float[frameCount*2];
+                    float[] doubleMono = new float[frameCount * 2];
 
-                    Marshal.Copy(input, consecChannelsInFloat, 0, (int)frameCount*2);
+                    Marshal.Copy(input, consecChannelsInFloat, 0, (int)frameCount * 2);
                     //byte[] consecChannelsInByte = new byte[consecChannelsInFloat.Length * frameCount];
                     //for (int i = 0; i < consecChannelsInFloat.Length; i++)
                     //{
@@ -145,8 +145,8 @@ namespace SmartaCam
                     //}
                     //Marshal.(input, consecChannelsInFloat, (int)frameCount, (int)frameCount);
                     // Marshal.Copy((byte[])consecChannelsInFloat, rIn, (int)frameCount, (int)frameCount*2);
-                  //   Array.ConstrainedCopy(consecChannelsInFloat, 0, doubleMonoBuffer, 0, (int)frameCount);
-                  //   Array.ConstrainedCopy(consecChannelsInFloat, 0, doubleMonoBuffer, (int)frameCount, (int)frameCount);
+                    //   Array.ConstrainedCopy(consecChannelsInFloat, 0, doubleMonoBuffer, 0, (int)frameCount);
+                    //   Array.ConstrainedCopy(consecChannelsInFloat, 0, doubleMonoBuffer, (int)frameCount, (int)frameCount);
                     //Array.ConstrainedCopy(consecChannelsInFloat, (int)frameCount, doubleMonoBuffer, (int)frameCount, (int)frameCount);
                     // Array.Copy(consecChannelsInFloat, 0, doubleMonoBuffer, 0, (int)frameCount);
                     //  Array.Copy(consecChannelsInFloat, 0, doubleMonoBuffer, (int)frameCount, (int)frameCount);
@@ -161,8 +161,8 @@ namespace SmartaCam
                     //    //doubleMonoBuffer[i + frameCount] = sum;
                     //}
                     //lIn.Zip(rIn, (x, y) => (x + y) / 2);
-                    wr.WriteSamples(consecChannelsInFloat, 0,(int)frameCount*2);
-                   // wr.WriteSamples(rIn, (int)frameCount, (int)frameCount * 2);
+                    wr.WriteSamples(consecChannelsInFloat, 0, (int)frameCount * 2);
+                    // wr.WriteSamples(rIn, (int)frameCount, (int)frameCount * 2);
                     //wr.WriteSamples(doubleMonoBuffer, (int)frameCount, (int)frameCount);              
                     return StreamCallbackResult.Continue;
                 };
@@ -197,19 +197,22 @@ namespace SmartaCam
             Settings.Default.Save(); //save updated number of takes
             var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
             Console.WriteLine("Starting postprocess");
-            var postProcessTask = Task.Run( async () => { await PostProcessAudioAsync(takeId); } );
+            var postProcessTask = Task.Run(async () => { await PostProcessAudioAsync(takeId); });
             await postProcessTask;
         }
         public async Task PostProcessAudioAsync(int takeId)
         {
-            await RemixAudio(takeId);
-            await AnalyzeAndNormalizeTakeAsync(takeId);
-            await ConvertWavToMp3Async(takeId);
-            if (Config.CopyToUsb == true) 
-                {
-                    UIRepository uIRepository = new();
-                    await uIRepository.CopyToUsb(takeId); 
-                };
+            await AnalyzeTakeAsync(takeId);
+            await RemixAudioAsync(takeId);
+            if (Config.Normalize == true)
+            {
+                await NormalizeTakeAsync(takeId);
+            }
+            if (Config.CopyToUsb == true)
+            {
+                UIRepository uIRepository = new();
+                await uIRepository.CopyToUsb(takeId);
+            };
             if (Config.PushToCloud == true)
             {
                 NetworkRepository.DropBox db = new();
@@ -234,25 +237,60 @@ namespace SmartaCam
             await _takeRepository.AddTakeAsync(newTake);
             return newTake.Id;
         }
-        public async Task RemixAudio(int takeId)
+        public async Task RemixAudioAsync(int takeId)
         {
             Console.WriteLine("Remixing Channels");
             var take = await _takeRepository.GetTakeByIdAsync(takeId);
+            var lMax = take.ChannelOneInputPeak;
+            var rMax = take.ChannelTwoInputPeak;
             string inPath = take.WavFilePath;
             string outPath = $"{take.WavFilePath}.tmp";
             UIRepository uIRepository = new();
             _os = await uIRepository.IdentifyOS();
             WaveFormat wavformat = new WaveFormat(Config.SampleRate, 2);
+            if (lMax < .05f && rMax < .05f)
+            {
+                Console.WriteLine("     Wave has no content");
+                return;
+            }
+            if (lMax > .05f && rMax > .05f && Config.MixMode == "pan")
+            {
+                Console.WriteLine("     Panned two input audio not remixed");
+                return;
+            }
             using (var reader = new WaveFileReader(inPath))
             using (WaveFileWriter wr = new WaveFileWriter(outPath, wavformat))
             {
                 float[] inBuffer;
                 float sum;
+                if (rMax < .05f)
+                {
+                    Console.WriteLine("     Dupe Channel 1 to R");
+                }
+                else if (lMax < .05f)
+                {
+                    Console.WriteLine("     Dupe Channel 2 to L");
+                }
+                else
+                {
+                    Console.WriteLine("     Blending Channel 1 + Channel 2");
+                }
                 while ((inBuffer = reader.ReadNextSampleFrame())?.Length > 0)
-                { 
-                    for (int i = 0; i < inBuffer.Length; i+=2)
+                {
+                    for (int i = 0; i < inBuffer.Length; i += 2)
                     {
-                        sum = inBuffer[i] + inBuffer[i + 1] * .5f;
+                        if (rMax < .05f )
+                        {
+                            sum = inBuffer[i];
+                        }
+                        else if (lMax < .05f)
+                        {
+                            sum = inBuffer[i + 1];
+                        }
+                        else
+                        {
+                            sum = ( inBuffer[i] + inBuffer[i + 1] ) * .5f;
+                        }
                         wr.WriteSample(sum);
                         wr.WriteSample(sum);
                     }
@@ -261,15 +299,14 @@ namespace SmartaCam
                 {
                     File.SetUnixFileMode(outPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                 }
-                
             }
             if (File.Exists(inPath))
             {
                 System.IO.File.Delete(inPath);
             }
-
             System.IO.File.Move(outPath, inPath);
-
+            take.IsMono = true;
+            await _takeRepository.SaveChangesAsync();
         }
         public async Task ConvertWavToMp3Async(int id)
         {
@@ -288,31 +325,108 @@ namespace SmartaCam
             };
             var wavFile = take.WavFilePath;
             var mp3File = take.Mp3FilePath;
-			using (var reader = new AudioFileReader(wavFile))
+            using (var reader = new AudioFileReader(wavFile))
             using (var writer = new LameMP3FileWriter(mp3File, reader.WaveFormat, Config.Mp3BitRate, tag))
                 reader.CopyTo(writer);
-			if (os != "Windows")
-			{
-				File.SetUnixFileMode(mp3File, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-			}
-			Console.WriteLine($"{mp3File} was created.");
+            if (os != "Windows")
+            {
+                File.SetUnixFileMode(mp3File, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
+            Console.WriteLine($"{mp3File} was created.");
             take.WasConvertedToMp3 = true;
             await _takeRepository.SaveChangesAsync();
         }
         public void LoadLameDLL()
         {
             LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory));
-			//LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin"));
-		}
-        public async Task AnalyzeAndNormalizeTakeAsync(int id)
+            //LameDLL.LoadNativeDLL(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin"));
+        }
+        public async Task NormalizeTakeAsync(int id)
+        {
+            Console.WriteLine("Normalizing Recording");
+            //var take = await _takeRepository.GetTakeByIdAsync(takeId);
+
+            //string inPath = take.WavFilePath;
+            //string outPath = $"{take.WavFilePath}.tmp";
+            UIRepository uIRepository = new();
+            _os = await uIRepository.IdentifyOS();
+            WaveFormat wavformat = new WaveFormat(Config.SampleRate, 2);
+
+            //if (lMax > 0 && rMax > 0 && Config.MixMode == "pan")
+            //{
+            //    Console.WriteLine("Panned two input audio does not require mixing");
+            //    return;
+            //}
+            //using (var reader = new WaveFileReader(inPath))
+
+            var take = await _takeRepository.GetTakeByIdAsync(id);
+            var lMax = take.ChannelOneInputPeak;
+            var rMax = take.ChannelTwoInputPeak;
+            var max = take.OriginalPeakVolume;
+            if (max == 0f)
+            {
+                Console.WriteLine("Wave has no content");
+                return;
+            }
+            if (lMax == 0f) { lMax = rMax; }
+            if (rMax == 0f) { rMax = lMax; }
+            var inPath = take.WavFilePath;
+            var outPath = $"{inPath}_normalized";
+            while (!inPath.IsFileReady())
+            {
+                await Task.Delay(1000);
+            }
+            using (var reader = new WaveFileReader(inPath))
+            using (WaveFileWriter wr = new WaveFileWriter(outPath, wavformat))
+            {
+                float[] inBuffer;
+                float lNorm;
+                float rNorm;
+                while ((inBuffer = reader.ReadNextSampleFrame())?.Length > 0)
+                {
+                    for (int i = 0; i < inBuffer.Length; i += 2)
+                    {
+                        if (Config.MixMode == "pan")
+                        {
+                            lNorm = inBuffer[i] / lMax;
+                            rNorm = inBuffer[i + 1] / rMax;
+                        } else
+                        {
+                            lNorm = inBuffer[i] / max;
+                            rNorm = inBuffer[i+1] / max;
+                        }
+                    wr.WriteSample(lNorm);
+                    wr.WriteSample(rNorm);
+                    }
+                }
+            }
+            while (!outPath.IsFileReady())
+            {
+                await Task.Delay(1000);
+            }
+            if (_os != "Windows")
+            {
+                File.SetUnixFileMode(outPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
+            if (File.Exists(inPath))
+            {
+                System.IO.File.Delete(inPath);
+            }
+            System.IO.File.Move(outPath, inPath);
+            take.Normalized = true;
+            await _takeRepository.SaveChangesAsync();
+        }
+        public async Task AnalyzeTakeAsync(int id)
         // from https://markheath.net/post/normalize-audio-naudio
         {
             var take = await _takeRepository.GetTakeByIdAsync(id);
             UIRepository uiRepository = new();
             var inPath = take.WavFilePath;
             Console.WriteLine($"Analyzing volume: {inPath}");
-            var outPath = $"{inPath}_normalized";
+
             float max = 0;
+            float lMax = 0;
+            float rMax = 0;
 
             while (!inPath.IsFileReady())
             {
@@ -321,44 +435,55 @@ namespace SmartaCam
             using (var reader = new AudioFileReader(inPath))
             {
                 // find the max peak
-                float[] buffer = new float[reader.WaveFormat.SampleRate];
+                float[] buffer = new float[reader.WaveFormat.SampleRate*reader.WaveFormat.Channels];
                 int read;
                 do
                 {
                     read = reader.Read(buffer, 0, buffer.Length);
-                    for (int n = 0; n < read; n++)
+                    for (int n = 0; n < read; n+=2)
                     {
-                        var abs = Math.Abs(buffer[n]);
-                        if (abs > max) max = abs;
+                        var lAbs = Math.Abs(buffer[n]);
+                        if (lAbs > lMax) lMax = lAbs;
+                        var rAbs = Math.Abs(buffer[n + 1]);
+                        if (rAbs > rMax) rMax = rAbs; 
                     }
                 } while (read > 0);
-                Console.WriteLine($"Max sample value: {max}");
-
-                if (max == 0 || max > 1.0f)
-					Console.WriteLine($"Max sample value: {max}, cannot be normalized");
-
-                // rewind and amplify
-                reader.Position = 0;
-                if (Config.Normalize)
-                {
-                    reader.Volume = 1.0f / max;
-                    take.Normalized = true;
-
-                } //else
-                //{
-                //    reader.Volume = 1.0f;
-                //}               
-                // write out to a new WAV file
-                WaveFileWriter.CreateWaveFile16(outPath, reader);
-
+                Console.WriteLine($"Channel One Peak: {lMax}");
+                Console.WriteLine($"Channel Two Peak: {rMax}");
+                max = Math.Max(lMax, rMax);
+                take.ChannelOneInputPeak = lMax;
+                take.ChannelTwoInputPeak = rMax;
+                take.OriginalPeakVolume = max;
+                await _takeRepository.SaveChangesAsync();
+                //           if (max == 0 || max > 1.0f)
+                //Console.WriteLine($"Max sample value: {max}, cannot be normalized");
             }
-            while (!outPath.IsFileReady())
-            {
-                await Task.Delay(1000);
-            }
-            File.Move(outPath, inPath, true); 
-            take.OriginalPeakVolume = max;
-            await _takeRepository.SaveChangesAsync();
+
+
+
+
+            //    // rewind and amplify
+            //    reader.Position = 0;
+            //    if (Config.Normalize)
+            //    {
+            //        reader.Volume = 1.0f / max;
+            //        take.Normalized = true;
+
+            //    } //else
+            //    //{
+            //    //    reader.Volume = 1.0f;
+            //    //}               
+            //    // write out to a new WAV file
+            //    WaveFileWriter.CreateWaveFile16(outPath, reader);
+
+            //}
+            //while (!outPath.IsFileReady())
+            //{
+            //    await Task.Delay(1000);
+            //}
+            //File.Move(outPath, inPath, true); 
+            //take.OriginalPeakVolume = max;
+            //await _takeRepository.SaveChangesAsync();
         }
             public List<string> CreatePlayQueue()
         {
@@ -427,16 +552,27 @@ namespace SmartaCam
                 streamFlags: StreamFlags.ClipOff,
                 callback: callback,
                 userData: nint.Zero
-                );
-
-                stream.Start();
-                do
+                 );
+                //stream.Start();
+                //while (!LEDcanceltoken.IsCancellationRequested)
+                while (true)
                 {
+                    if (MyState == 1)
+                    {
+                        stream.Start();
+                        while (MyState == 1)
+                        {
+                            Thread.Sleep(500);
+                        }
+                        stream.Stop();
+                    }
                     Thread.Sleep(500);
-                } while (MyState == 1);
-                stream.Stop();
-                tokenSource.Cancel();
-                await ledTask;
+                }
+            }
+
+               // tokenSource.Cancel();
+               // await ledTask;
+
                 //var waveIn = new WaveInEvent();
                 //waveIn.DataAvailable += OnDataAvailable;
                 //waveIn.StartRecording();
@@ -477,7 +613,7 @@ namespace SmartaCam
                 //    }
                 //}
                 //  }
-            }
+           // }
         }
         public class PlaybackQueue
         {
@@ -1306,6 +1442,7 @@ namespace SmartaCam
                     os = piCatQueryReturn.Contains("Raspberry") ? "Raspberry Pi" : "Linux";
                 }
                 else { os = "unknown"; }
+                Console.WriteLine($"OS: {os}");
                 return os;
             }
         public async Task MainMenuAsync()
@@ -1324,7 +1461,7 @@ namespace SmartaCam
                     if (myState == 2)
                     {
                         audioRepository.SetMyState(1);
-                        //  await audioRepository.AnalyzeAndNormalizeTakeAsync();
+                        //  await audioRepository.AnalyzeTakeAsync();
                         //  audioRepository.ConvertWavToMP3(Global.wavPathAndName, Global.mp3PathAndName);
                         //  NetworkRepository.DropBox db = new();
                         //  db.PushToDropBoxAsync();

@@ -374,7 +374,10 @@ namespace SmartaCam
         public int Id { get; set; }
         //public int RunLengthInSeconds { get; set; }
         public float OriginalPeakVolume { get; set; } = 0;
+        public float ChannelOneInputPeak { get; set; } = 0;
+        public float ChannelTwoInputPeak { get; set; } = 0;
         public string WavFilePath { get; set; } = string.Empty;
+        public bool IsMono { get; set; } = false;
         public string Mp3FilePath { get; set; } = string.Empty;
         public bool Normalized { get; set; } = false;
         public bool WasConvertedToMp3 { get; set; } = false;

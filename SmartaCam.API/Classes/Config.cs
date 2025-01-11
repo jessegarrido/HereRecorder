@@ -34,8 +34,9 @@ namespace SmartaCam
         public static string RemovableDrivePath { get; set; } = string.Empty;
         public static List<string>? RemovableDrivePaths { get; set; } = new();
 		public static string DropBoxCodeTxt { get; set; } = string.Empty;
+        public static string MixMode { get; set; } = "pan";
 
-		public static int RedLED { get; set; } = 4; // purple - pin 7
+        public static int RedLED { get; set; } = 4; // purple - pin 7
         public static int GreenLED { get; set; } = 2; //orange - pin 3
         public static int YellowLED { get; set; } = 3; // green - pin 5 
         public static int PlayButton { get; set; } = 17; // grey - pin 8
