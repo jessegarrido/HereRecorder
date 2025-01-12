@@ -67,7 +67,8 @@ namespace SmartaCam
         private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
         //  private UIRepository _uiRepository = new UIRepository();
         private string _os = string.Empty;
-        public static float max { get; set; }
+        public static float lMax { get; set; }
+        public static float rMax { get; set; }
 
         public void AudioDeviceInitAndEnumerate(bool enumerate)
         {
@@ -133,9 +134,9 @@ namespace SmartaCam
                     ) =>
                 {
                     float[] consecChannelsInFloat = new float[frameCount * 2];
-                    float[] lIn = new float[frameCount];
-                    float[] rIn = new float[frameCount];
-                    float[] doubleMono = new float[frameCount * 2];
+                  //  float[] lIn = new float[frameCount];
+                   // float[] rIn = new float[frameCount];
+                    //float[] doubleMono = new float[frameCount * 2];
 
                     Marshal.Copy(input, consecChannelsInFloat, 0, (int)frameCount * 2);
                     //byte[] consecChannelsInByte = new byte[consecChannelsInFloat.Length * frameCount];
@@ -208,6 +209,7 @@ namespace SmartaCam
             {
                 await NormalizeTakeAsync(takeId);
             }
+            await ConvertWavToMp3Async(takeId);
             if (Config.CopyToUsb == true)
             {
                 UIRepository uIRepository = new();
@@ -247,7 +249,7 @@ namespace SmartaCam
             string outPath = $"{take.WavFilePath}.tmp";
             UIRepository uIRepository = new();
             _os = await uIRepository.IdentifyOS();
-            WaveFormat wavformat = new WaveFormat(Config.SampleRate, 2);
+
             if (lMax < .05f && rMax < .05f)
             {
                 Console.WriteLine("     Wave has no content");
@@ -258,6 +260,7 @@ namespace SmartaCam
                 Console.WriteLine("     Panned two input audio not remixed");
                 return;
             }
+            WaveFormat wavformat = new WaveFormat(Config.SampleRate, 1);
             using (var reader = new WaveFileReader(inPath))
             using (WaveFileWriter wr = new WaveFileWriter(outPath, wavformat))
             {
@@ -292,7 +295,7 @@ namespace SmartaCam
                             sum = ( inBuffer[i] + inBuffer[i + 1] ) * .5f;
                         }
                         wr.WriteSample(sum);
-                        wr.WriteSample(sum);
+                       // wr.WriteSample(sum);
                     }
                 }
                 if (_os != "Windows")
@@ -350,7 +353,7 @@ namespace SmartaCam
             //string outPath = $"{take.WavFilePath}.tmp";
             UIRepository uIRepository = new();
             _os = await uIRepository.IdentifyOS();
-            WaveFormat wavformat = new WaveFormat(Config.SampleRate, 2);
+
 
             //if (lMax > 0 && rMax > 0 && Config.MixMode == "pan")
             //{
@@ -363,11 +366,14 @@ namespace SmartaCam
             var lMax = take.ChannelOneInputPeak;
             var rMax = take.ChannelTwoInputPeak;
             var max = take.OriginalPeakVolume;
+
             if (max == 0f)
             {
                 Console.WriteLine("Wave has no content");
                 return;
             }
+            var numChannels = (take.IsMono) ? 1 : 2;
+            WaveFormat wavformat = new WaveFormat(Config.SampleRate, numChannels);
             if (lMax == 0f) { lMax = rMax; }
             if (rMax == 0f) { rMax = lMax; }
             var inPath = take.WavFilePath;
@@ -386,17 +392,19 @@ namespace SmartaCam
                 {
                     for (int i = 0; i < inBuffer.Length; i += 2)
                     {
-                        if (Config.MixMode == "pan")
+                        if (!take.IsMono)
                         {
                             lNorm = inBuffer[i] / lMax;
                             rNorm = inBuffer[i + 1] / rMax;
+                            wr.WriteSample(lNorm);
+                            wr.WriteSample(rNorm);
                         } else
                         {
                             lNorm = inBuffer[i] / max;
-                            rNorm = inBuffer[i+1] / max;
+                            wr.WriteSample(lNorm);
+                            //rNorm = inBuffer[i+1] / max;
                         }
-                    wr.WriteSample(lNorm);
-                    wr.WriteSample(rNorm);
+
                     }
                 }
             }
@@ -507,10 +515,15 @@ namespace SmartaCam
 
             return CreatePlayQueue(); 
         }
-        public decimal GetInputPeakVolume()
+        public List<decimal> GetScaledInputPeakVolumes()
         {
-            return Math.Round((decimal)max,2);
+            List<decimal> peaks = new();
+            decimal scaler = .65m;
+            peaks.Add(Math.Round((decimal)lMax / scaler, 2));
+            peaks.Add(Math.Round((decimal)rMax / scaler, 2));
+            return peaks;
         }
+
         public async Task RecordingMeterAsync()
         {
             UIRepository uiRepository = new();
@@ -525,7 +538,7 @@ namespace SmartaCam
          //   }
             StreamParameters param = Config.SetAudioParameters();
             int numChannels = param.channelCount;
-            WaveFormat wavformat = new WaveFormat(Config.SampleRate, 2);
+            WaveFormat wavformat = new WaveFormat(Config.SampleRate, numChannels);
             MemoryStream ms = new MemoryStream();
             IgnoreDisposeStream ids = new IgnoreDisposeStream(ms);
             using (WaveFileWriter wr = new WaveFileWriter(ids, wavformat))
@@ -542,7 +555,10 @@ namespace SmartaCam
                        float[] samples = new float[frameCount];
                        Marshal.Copy(input, samples, 0, (int)frameCount);
                        wr.WriteSamples(samples, 0, (int)frameCount);
-                       max = samples.Max();
+                       var lSamples = samples.Where((x, i) => i % 2 == 0);
+                       var rSamples = samples.Where((x, i) => i % 2 == 1);
+                       lMax = lSamples.Max();
+                       rMax = rSamples.Max();
                        //if (max > 0.99) { Console.WriteLine($"Clip detected!!"); }
                        //Console.WriteLine($"Peak volume: {max}");
                        return StreamCallbackResult.Continue;
@@ -1952,94 +1968,68 @@ namespace SmartaCam
         public async Task MeterLEDsAsync(string os, CancellationToken ct)
         {
             AudioRepository audioRepository = new();
-            var max = audioRepository.GetInputPeakVolume();
-            var newMax = max;
+            var peaks = audioRepository.GetScaledInputPeakVolumes();
+            var newPeaks = peaks;
             if (os == "Raspberry Pi")
             {
                 var ledTask = Task.Run( async () =>
                 {
-                    //using var controller = new GpioController();
-                    //controller.OpenPin(Config.GreenLED, PinMode.Output);
-                    //controller.OpenPin(Config.YellowLED, PinMode.Output);
-                    //controller.OpenPin(Config.RedLED, PinMode.Output);
                     while (!ct.IsCancellationRequested)
                     {
-                        if (newMax != max)
+                        for (int p = 0;p < 2; p++)
                         {
-                            max = newMax;
-                            Console.WriteLine($"Peak volume: {max}");
-                            if (max == (decimal)1) 
+                            if (peaks[p] != newPeaks[p])
                             {
-                                Console.WriteLine($"Clip detected!!");
-                               // controller.Write(Config.RedLED, PinValue.High);
-                                await TurnOnLEDAsync(Config.RedLED);
+                                peaks[p] = newPeaks[p];
+                              //  Console.WriteLine($"Channel {p+1} Peak: {peaks[p]}");
+                                if (peaks[p] >= 1m)
+                                {
+                                    Console.WriteLine($"Clip detected!!");
+                                    // controller.Write(Config.RedLED, PinValue.High);
+                                    await TurnOnLEDAsync(Config.RedLED);
+                                }
+                                else
+                                {
+                                    await TurnOffLEDAsync(Config.RedLED);
+                                }
+                                int LED = (p == 0) ? Config.GreenLED : Config.YellowLED;
+                                if (peaks[p] > .2m)
+                                {
+                                    await TurnOnLEDAsync(LED);
+                                }
+                                else
+                                {
+                                    await TurnOffLEDAsync(LED);
+                                }
                             }
-                            else
-                            {
-                               // controller.Write(Config.RedLED, PinValue.Low);
-                                await TurnOffLEDAsync(Config.RedLED);
-                            }
-                            if (max > (decimal).35 ) 
-                            {
-                                Console.WriteLine("Green");
-                               // controller.Write(Config.GreenLED, PinValue.High);
-                                await TurnOnLEDAsync(Config.GreenLED);
-                            } else
-                            {
-                                await TurnOffLEDAsync(Config.GreenLED);
-                                //controller.Write(Config.GreenLED, PinValue.Low);
-                            }
-                            if (max > (decimal).8)
-                            {
-                                Console.WriteLine("Yellow");
-                                await TurnOnLEDAsync(Config.YellowLED);
-                               // controller.Write(Config.YellowLED, PinValue.High);
-                            } else
-                            {
-                                await TurnOffLEDAsync(Config.YellowLED);
-                              //  controller.Write(Config.YellowLED, PinValue.Low);
-                            }
-
-                            //controller.Write(Config.GreenLED, max > .4m ? PinValue.High : PinValue.Low);
-                            //controller.Write(Config.YellowLED, max > .75m ? PinValue.High : PinValue.Low);
-                            //controller.Write(Config.RedLED, max == 1m ? PinValue.High : PinValue.Low);
                         }
                        // Task.Delay(1000);
-                        newMax = audioRepository.GetInputPeakVolume();
+                        newPeaks = audioRepository.GetScaledInputPeakVolumes();
                     }
                     //controller.ClosePin(Config.GreenLED);
                     //controller.ClosePin(Config.YellowLED);
                     //controller.ClosePin(Config.RedLED);
                 }, ct);
                 await ledTask;
-            }
-            else
+            } else
             {
                 while (!ct.IsCancellationRequested)
                 {
-                    if (newMax != max)
+                    for (int p = 0; p < 2; p++)
                     {
-                        max = newMax;
-                        if (max > 0.99m) { Console.WriteLine($"Clip detected!!"); }
-                        Console.WriteLine($"Peak volume: {max}");
-                        if (max == (decimal)1) { Console.WriteLine($"Clip detected!!"); }
-                        Console.WriteLine($"Peak volume: {max}");
-                        if (max > (decimal).4)
+                        if (peaks[p] != newPeaks[p])
                         {
-                            Console.WriteLine("Green");
-                        }
-                        if (max > (decimal).75)
-                        {
-                            Console.WriteLine("Yellow");
-                       }
-                        if (max == (decimal)1)
-                        {
-                            Console.WriteLine("Red");
+                            peaks[p] = newPeaks[p];
+                          //  Console.WriteLine($"Channel {p + 1} Peak: {peaks[p]}");
+                            if (peaks[p] >= 1m)
+                            {
+                                Console.WriteLine($"Clip detected!!");
+                            }
                         }
                     }
-                    newMax = audioRepository.GetInputPeakVolume();
+                    newPeaks = audioRepository.GetScaledInputPeakVolumes();
                 }
-                newMax = audioRepository.GetInputPeakVolume();
+                
             }
         }
     }
