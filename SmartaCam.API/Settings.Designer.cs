@@ -97,6 +97,7 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public int Takes {
             get {
                 return ((int)(this["Takes"]));
@@ -108,10 +109,10 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Normalize {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Normalize {
             get {
-                return ((bool)(this["Normalize"]));
+                return ((string)(this["Normalize"]));
             }
             set {
                 this["Normalize"] = value;
@@ -120,10 +121,10 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool PushToCloud {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PushToCloud {
             get {
-                return ((bool)(this["PushToCloud"]));
+                return ((string)(this["PushToCloud"]));
             }
             set {
                 this["PushToCloud"] = value;
@@ -132,10 +133,10 @@ namespace SmartaCam.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool CopyToUSB {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CopyToUSB {
             get {
-                return ((bool)(this["CopyToUSB"]));
+                return ((string)(this["CopyToUSB"]));
             }
             set {
                 this["CopyToUSB"] = value;

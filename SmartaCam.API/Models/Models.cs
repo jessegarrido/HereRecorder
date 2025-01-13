@@ -264,8 +264,9 @@ namespace SmartaCam
         public async Task SetNormalizeAsync(bool willNormalize)
         {
             Config.Normalize = willNormalize;
-            Settings.Default.Normalize = willNormalize;
+            Settings.Default.Normalize = willNormalize.ToString();
             Settings.Default.Save();
+            Settings.Default.Reload();
         }
         public async Task<bool> GetUploadAsync()
         {
@@ -274,8 +275,9 @@ namespace SmartaCam
         public async Task SetUploadAsync(bool willUpload)
         {
             Config.PushToCloud = willUpload;
-            Settings.Default.PushToCloud = willUpload;
+            Settings.Default.PushToCloud = willUpload.ToString();
             Settings.Default.Save();
+            Settings.Default.Reload();
         }
         public async Task<bool?> GetCopyToUsbAsync()
         {
@@ -284,8 +286,9 @@ namespace SmartaCam
         public async Task SetCopyToUsbAsync(bool willCopy)
         {
             Config.CopyToUsb = willCopy;
-            Settings.Default.PushToCloud = willCopy;
+            Settings.Default.PushToCloud = willCopy.ToString();
             Settings.Default.Save();
+            Settings.Default.Reload();
         }
         public async Task<bool> GetNetworkStatus()
         {
@@ -373,7 +376,7 @@ namespace SmartaCam
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         //public int RunLengthInSeconds { get; set; }
-        public float OriginalPeakVolume { get; set; } = 0;
+        public string OriginalPeakVolume { get; set; } = string.Empty;
         public float ChannelOneInputPeak { get; set; } = 0;
         public float ChannelTwoInputPeak { get; set; } = 0;
         public string WavFilePath { get; set; } = string.Empty;

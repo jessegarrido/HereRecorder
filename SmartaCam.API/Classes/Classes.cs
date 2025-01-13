@@ -34,6 +34,7 @@ using static Dropbox.Api.Sharing.RequestedLinkAccessLevel;
 using NAudio.Utils;
 using System.Device.Pwm;
 using NAudio.Wave.SampleProviders;
+using static Dropbox.Api.TeamLog.AdminAlertingAlertSensitivity;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -192,30 +193,33 @@ namespace SmartaCam
                         File.SetUnixFileMode(wavPathAndName, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                     }
                     Console.WriteLine("Recording Stopped.");
-                };
 
+                };
             }
-            Settings.Default.Save(); //save updated number of takes
+            UIRepository.Takes++;
+            Settings.Default.Takes = UIRepository.Takes;
+            Settings.Default.Save();
             var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
             Console.WriteLine("Starting postprocess");
             var postProcessTask = Task.Run(async () => { await PostProcessAudioAsync(takeId); });
             await postProcessTask;
+            await RecordingMeterAsync();
         }
         public async Task PostProcessAudioAsync(int takeId)
         {
             await AnalyzeTakeAsync(takeId);
             await RemixAudioAsync(takeId);
-            if (Config.Normalize == true)
+            if (Config.Normalize)
             {
                 await NormalizeTakeAsync(takeId);
             }
             await ConvertWavToMp3Async(takeId);
-            if (Config.CopyToUsb == true)
+            if (Config.CopyToUsb)
             {
                 UIRepository uIRepository = new();
                 await uIRepository.CopyToUsb(takeId);
-            };
-            if (Config.PushToCloud == true)
+            }
+            if (Config.PushToCloud)
             {
                 NetworkRepository.DropBox db = new();
                 await db.PushToDropBoxAsync(takeId);
@@ -268,11 +272,11 @@ namespace SmartaCam
                 float sum;
                 if (rMax < .05f)
                 {
-                    Console.WriteLine("     Dupe Channel 1 to R");
+                    Console.WriteLine("     Keeping Channel 1");
                 }
                 else if (lMax < .05f)
                 {
-                    Console.WriteLine("     Dupe Channel 2 to L");
+                    Console.WriteLine("     Keeping Channel 2");
                 }
                 else
                 {
@@ -295,7 +299,6 @@ namespace SmartaCam
                             sum = ( inBuffer[i] + inBuffer[i + 1] ) * .5f;
                         }
                         wr.WriteSample(sum);
-                       // wr.WriteSample(sum);
                     }
                 }
                 if (_os != "Windows")
@@ -309,6 +312,7 @@ namespace SmartaCam
             }
             System.IO.File.Move(outPath, inPath);
             take.IsMono = true;
+            take.OriginalPeakVolume = Math.Round(Math.Max(lMax, rMax),2).ToString();
             await _takeRepository.SaveChangesAsync();
         }
         public async Task ConvertWavToMp3Async(int id)
@@ -365,23 +369,23 @@ namespace SmartaCam
             var take = await _takeRepository.GetTakeByIdAsync(id);
             var lMax = take.ChannelOneInputPeak;
             var rMax = take.ChannelTwoInputPeak;
-            var max = take.OriginalPeakVolume;
+            var max = Math.Max(lMax, rMax);
 
-            if (max == 0f)
+            if (max < 0.05f)
             {
                 Console.WriteLine("Wave has no content");
                 return;
             }
             var numChannels = (take.IsMono) ? 1 : 2;
             WaveFormat wavformat = new WaveFormat(Config.SampleRate, numChannels);
-            if (lMax == 0f) { lMax = rMax; }
-            if (rMax == 0f) { rMax = lMax; }
+           // if (lMax == 0f) { lMax = rMax; }
+           // if (rMax == 0f) { rMax = lMax; }
             var inPath = take.WavFilePath;
             var outPath = $"{inPath}_normalized";
-            while (!inPath.IsFileReady())
-            {
-                await Task.Delay(1000);
-            }
+            //while (!inPath.IsFileReady())
+            //{
+            //    await Task.Delay(1000);
+            //}
             using (var reader = new WaveFileReader(inPath))
             using (WaveFileWriter wr = new WaveFileWriter(outPath, wavformat))
             {
@@ -458,10 +462,10 @@ namespace SmartaCam
                 } while (read > 0);
                 Console.WriteLine($"Channel One Peak: {lMax}");
                 Console.WriteLine($"Channel Two Peak: {rMax}");
-                max = Math.Max(lMax, rMax);
+               // max = Math.Max(lMax, rMax);
                 take.ChannelOneInputPeak = lMax;
                 take.ChannelTwoInputPeak = rMax;
-                take.OriginalPeakVolume = max;
+                take.OriginalPeakVolume = $"{Math.Round((decimal)lMax,2)} | {Math.Round((decimal)rMax,2)}";
                 await _takeRepository.SaveChangesAsync();
                 //           if (max == 0 || max > 1.0f)
                 //Console.WriteLine($"Max sample value: {max}, cannot be normalized");
@@ -526,16 +530,19 @@ namespace SmartaCam
 
         public async Task RecordingMeterAsync()
         {
-            UIRepository uiRepository = new();
+            while (MyState != 1)
+            {
+                await Task.Delay(2000);
+            } 
+            if (UIRepository.ShowVUMeter)
+            {
+                UIRepository uiRepository = new();
             var os = await uiRepository.IdentifyOS();
             using var tokenSource = new CancellationTokenSource();
             var LEDcanceltoken = tokenSource.Token;
-        //    if (_os == "Raspberry Pi")
-        //    {
-                IORepository iORepository = new();
-                var ledTask = Task.Run(async () => { await iORepository.MeterLEDsAsync(os, LEDcanceltoken); });
-
-         //   }
+            IORepository iORepository = new();
+         //   var ledTask = Task.Run(async () => { await iORepository.MeterLEDsAsync(os, LEDcanceltoken); });
+            
             StreamParameters param = Config.SetAudioParameters();
             int numChannels = param.channelCount;
             WaveFormat wavformat = new WaveFormat(Config.SampleRate, numChannels);
@@ -571,19 +578,24 @@ namespace SmartaCam
                  );
                 //stream.Start();
                 //while (!LEDcanceltoken.IsCancellationRequested)
-                while (true)
-                {
-                    if (MyState == 1)
-                    {
+               // var _vu = UIRepository.ShowVUMeter;
+                //while (true)
+                //{
+                    //if (MyState == 1 && UIRepository.ShowVUMeter)
+                    //{
+                        var ledTask = Task.Run(async () => { await iORepository.MeterLEDsAsync(os, LEDcanceltoken); });
                         stream.Start();
-                        while (MyState == 1)
+                        while (MyState == 1 && UIRepository.ShowVUMeter)
                         {
-                            Thread.Sleep(500);
+                            Thread.Sleep(250);
                         }
                         stream.Stop();
+                        tokenSource.Cancel();
+                        await ledTask;
                     }
-                    Thread.Sleep(500);
-                }
+                //    Thread.Sleep(250);
+               // }
+                //await ledTask;
             }
 
                // tokenSource.Cancel();
@@ -740,12 +752,32 @@ namespace SmartaCam
             {
                 await Task.Delay(500);
             }
+            await RecordingMeterAsync();
         }
         public async Task StopButtonPressedAsync()
         {
-            UIRepository uiRepository = new UIRepository();
-            MyState = 1;
-          //  await uiRepository.MainMenuAsync();
+            if (MyState == 1)
+            {
+                UIRepository.ShowVUMeter = (UIRepository.ShowVUMeter == true) ? false : true;
+            }
+            else
+            {
+                MyState = 1;
+            }
+            if (UIRepository.Os == "Raspberry Pi"! && !UIRepository.ShowVUMeter)
+            {
+                IORepository ioRepository = new();
+                if (NetworkRepository.NetworkStatus)
+                {
+                    await ioRepository.TurnOnLEDAsync(Config.YellowLED);
+                }
+                else
+                {
+                    await ioRepository.TurnOffLEDAsync(Config.YellowLED);
+                }
+                await ioRepository.TurnOffLEDAsync(Config.GreenLED);
+                await ioRepository.TurnOffLEDAsync(Config.RedLED);
+            }
         }
 
 
@@ -830,17 +862,17 @@ namespace SmartaCam
                     {
                         // ConnectionStatus = "Disconnected-Exception";
                     }
-                    //if (os == "Raspberry Pi")
-                    //{
-                    //    if (NetworkStatus)
-                    //    {
-                    //        await ioRepository.TurnOnLEDAsync(Config.YellowLED);
-                    //    }
-                    //    else
-                    //    {
-                    //        await ioRepository.TurnOffLEDAsync(Config.YellowLED);
-                    //    }
-                    //}
+                    if (os == "Raspberry Pi"! && !UIRepository.ShowVUMeter)
+                    {
+                        if (NetworkStatus )
+                        {
+                            await ioRepository.TurnOnLEDAsync(Config.YellowLED);
+                        }
+                        else
+                        {
+                            await ioRepository.TurnOffLEDAsync(Config.YellowLED);
+                        }
+                    }
 
                     if (!NetworkStatus) { await EstablishWifiAsync(); }
                 });
@@ -862,12 +894,12 @@ namespace SmartaCam
                     DropBox db = new DropBox();
                     OAuthStatus = await db.TestDropBoxAuthAsync();
                     Console.WriteLine($"DBAUth Status: {OAuthStatus}");
-                    //if (!OAuthStatus)// && outerAuthTask.Status.Equals(null))
-                    //{
-                    //    if (os == "Raspberry Pi") { await ioRepository.LongBlinkLEDAsync(Config.YellowLED, 10000, LEDcanceltoken); };
-                    //    var dbAuth = await db.DropBoxAuth();
-                    //    if (dbAuth) { if (os == "Raspberry Pi") { tokenSource.Cancel(); }; };
-                    //}
+                    if (!OAuthStatus)// && outerAuthTask.Status.Equals(null))
+                    {
+                        if (os == "Raspberry Pi" && !UIRepository.ShowVUMeter) { await ioRepository.LongBlinkLEDAsync(Config.YellowLED, 10000, LEDcanceltoken); };
+                        var dbAuth = await db.DropBoxAuth();
+                        if (dbAuth) { if (os == "Raspberry Pi" && !UIRepository.ShowVUMeter) { tokenSource.Cancel(); }; };
+                    }
                 }
             }
             public async Task EstablishWifiAsync()
@@ -942,7 +974,7 @@ namespace SmartaCam
                     var take = await _takeRepository.GetTakeByIdAsync(id);
                     using var tokenSource = new CancellationTokenSource();
                     var LEDcanceltoken = tokenSource.Token;
-                   // if (os == "Raspberry Pi") { await ioRepository.BlinkOneLED(Config.YellowLED, 1000, LEDcanceltoken); };
+                   // if (Os == "Raspberry Pi") { await ioRepository.BlinkOneLED(Config.YellowLED, 1000, LEDcanceltoken); };
                     var client = new DropboxClient(Settings.Default.RefreshToken, Config.DbApiKey);
                     // string folder = $"/{Path.GetDirectoryName(take.WavFilePath)}";
                     string folder = $"/{take.Session}";
@@ -1361,7 +1393,7 @@ namespace SmartaCam
         }
 	public interface IUIRepository
 	{
-		public Task ClearDailyTakesCount();
+		public Task SetupTakesCountAsync();
 		public Task AskKeepOrEraseFilesAsync();
 		public Task<string> IdentifyOS();
 		public Task MainMenuAsync();
@@ -1375,6 +1407,9 @@ namespace SmartaCam
 	}
     public class UIRepository : IUIRepository
     {
+        public static int Takes { get; set; } = 0; 
+        public static bool ShowVUMeter { get; set; } = true;
+        public static string Os { get; set; } = string.Empty;
         private TakeRepository _takeRepository = new TakeRepository();
         //  private AudioRepository _audioRepository = new AudioRepository();
         private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
@@ -1383,34 +1418,41 @@ namespace SmartaCam
         private static List<string>? _removableDrivePaths = new();
         private static string? _removableDrivePath = null;
         private static string? _nowPlaying = null;
-        public async Task ClearDailyTakesCount()
-            {
-                DateTime today = DateTime.Today;
-                try
-                {
-                    var latest = await _takeRepository.GetLastTakeDateAsync();
-                    //Console.WriteLine(latest);
-                    if (today.Date != latest.Date)
-                    {
-                        Settings.Default.Takes = 0;
-                        Settings.Default.Save();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Settings.Default.Takes = 0;
-                    Settings.Default.Save();
-                }
+        public async Task SetupTakesCountAsync()
+        {
+           DateTime today = DateTime.Today;
+           try
+           {
+              var latest = await _takeRepository.GetLastTakeDateAsync();
+              Console.WriteLine($"Latest Take Date:{latest}");
+              if (today.Date != latest.Date)
+              {
+                 Console.WriteLine("New Session, resetting Takes count");
+                 UIRepository.Takes = 0;
+              }
+              else
+              {
+                 UIRepository.Takes = Settings.Default.Takes;
+              }
+           }
+           catch (Exception ex)
+           {
+              Console.WriteLine("No database, creating new Takes count");
+              UIRepository.Takes = 0;
+                // Settings.Default.Reload();
             }
+        }
             public async Task AskKeepOrEraseFilesAsync()
             {
             //int erased = GetValidUserSelection(new List<int> { 0, 1, 2 });
-                if (!Directory.Exists(Config.LocalRecordingsFolder))
-                {
-                   // Console.WriteLine($"Creating Recordings Folder: {Config.LocalRecordingsFolder}");
-                    DirectoryInfo di = Directory.CreateDirectory(Config.LocalRecordingsFolder);
-                    File.SetUnixFileMode(Config.LocalRecordingsFolder, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-                }
+                //if (!Directory.Exists(Config.LocalRecordingsFolder))
+                //{
+                //   // Console.WriteLine($"Creating Recordings Folder: {Config.LocalRecordingsFolder}");
+                //    DirectoryInfo di = Directory.CreateDirectory(Config.LocalRecordingsFolder);
+                //    File.SetUnixFileMode(Config.LocalRecordingsFolder, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+               // }
+            if (Directory.Exists(Config.LocalRecordingsFolder))
+            {
                 string[] allfiles = Directory.GetFiles(Config.LocalRecordingsFolder, "*.*", SearchOption.AllDirectories);
                 if (allfiles.Length > 0)
                 {
@@ -1421,15 +1463,27 @@ namespace SmartaCam
                     var LEDcanceltoken = tokenSource.Token;
                     _ = Task.Run(async () => { await ioRepository.BlinkAllLEDs(LEDcanceltoken); });
 			    	bool? clearFiles = await ClearFilesGpioWatchAsync();
-                    if (clearFiles == true)
-                    {
-                        Console.WriteLine("Deleting existing recordings.");
-                        DeleteAllRecordings(allfiles);
-					}
                     tokenSource.Cancel();
-                    return;
+                if (clearFiles == true)
+                {
+                    _ = Task.Run(async () => { await ioRepository.BlinkOneLED(Config.RedLED, 1000, LEDcanceltoken); });
+                    Console.WriteLine("Deleting existing recordings.");
+                    DeleteAllRecordings(allfiles);
+                    await Task.Delay(3000);
+                    tokenSource.Cancel();
                 }
+                else
+                {
+                    _ = Task.Run(async () => { await ioRepository.BlinkOneLED(Config.GreenLED, 1000, LEDcanceltoken); });
+                    Console.WriteLine("Keeping existing recordings.");
+                    // DeleteAllRecordings(allfiles);
+                    await Task.Delay(3000);
+                    tokenSource.Cancel();
+                }
+                return;
             }
+            }
+}
         public void DeleteAllRecordings(string[] allfiles)
         {
             Console.WriteLine($"Erasing {allfiles.Length} files in Recordings Folder.");
@@ -1445,21 +1499,21 @@ namespace SmartaCam
         }
             public async Task<string> IdentifyOS()
             {
-                string os;
+                //string Os;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    os = "Windows";
+                    Os = "Windows";
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    // os = "Linux";
+                    // Os = "Linux";
                     string piCatQuery = "/sys/firmware/devicetree/base/model";
                     var piCatQueryReturn = await RunBashCatAsync(piCatQuery);
-                    os = piCatQueryReturn.Contains("Raspberry") ? "Raspberry Pi" : "Linux";
+                    Os = piCatQueryReturn.Contains("Raspberry") ? "Raspberry Pi" : "Linux";
                 }
-                else { os = "unknown"; }
-                Console.WriteLine($"OS: {os}");
-                return os;
+                else { Os = "unknown"; }
+               // Console.WriteLine($"OS: {Os}");
+                return Os;
             }
         public async Task MainMenuAsync()
         {
@@ -1502,28 +1556,28 @@ namespace SmartaCam
                 string newWavPath = Path.Combine(Config.LocalRecordingsFolder, _session);
                 string newMp3Path = Path.Combine(newWavPath, "mp3");
                 List<string> songfilepaths = new List<string> { Config.LocalRecordingsFolder, newWavPath, newMp3Path };
-            foreach (string path in songfilepaths)
-            {
-                if (!Directory.Exists(path))
+                foreach (string path in songfilepaths)
                 {
-					DirectoryInfo di = Directory.CreateDirectory(path);
-					if (_os != "Windows")
+                    if (!Directory.Exists(path))
                     {
-						File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-					}
-                    Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
+			      		DirectoryInfo di = Directory.CreateDirectory(path);
+			      		if (_os != "Windows")
+                        {
+			      			File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			      		}
+                        Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
+                    }
                 }
-            }
-                int take = Settings.Default.Takes++;
+
                 Mp3TagSet activeMp3TagSet = await _mp3TagSetRepository.GetActiveMp3TagSetAsync();
                 //   Global.lastWavPathAndName = Global.wavPathAndName;
+                Settings.Default.Reload();
                 var wavFilename = activeMp3TagSet.Title.TranslateMp3TagString();
                 //Global.wavPathAndName = Path.Combine(newWavPath, $"{Global.SessionName}_take-{take}.wav");
                 // Global.mp3PathAndName = Path.Combine(newWavPath, "mp3", $"{Global.SessionName}_take-{take}.mp3");
 
                 //var wavPathAndName = Path.Combine(newWavPath, $"{Global.SessionName}_take-{take}.wav");
                 var wavPathAndName = Path.Combine(newWavPath, $"{wavFilename}.wav");
-
                 return wavPathAndName;
             }
             public async Task<int> FindRemovableDrivesAsync(bool displayDetails)
@@ -1565,9 +1619,10 @@ namespace SmartaCam
                     Config.CopyToUsb = Config.RemovableDrivePath == null ? false : Config.CopyToUsb;
                     
                     Settings.Default.RemovableDrivePath = _removableDrivePath;
-                    Settings.Default.CopyToUSB = Config.CopyToUsb;
+                    Config.CopyToUsb = ( Settings.Default.CopyToUSB == "") ? true : false ;
                     Settings.Default.Save();
-                    }
+                    Settings.Default.Reload();
+                }
 
                 }
                 return drives.Count();
@@ -1591,6 +1646,7 @@ namespace SmartaCam
             }
             public void LoadConfig()
             {
+                Console.WriteLine("Loading Config");
                 Config.DbApiKey = Settings.Default.DbApiKey;
                 Config.DbApiSecret = Settings.Default.DbApiSecret;
                 Config.SSID = Settings.Default.SSID;
@@ -1598,11 +1654,40 @@ namespace SmartaCam
                 Config.DbCode = Settings.Default.DbCode;
                 Config.SelectedAudioDevice = Settings.Default.SelectedAudioDevice;
                 Config.SampleRate = Settings.Default.SampleRate;
-			    Config.CopyToUsb = Settings.Default.CopyToUSB;
-		 	    Config.PushToCloud = Settings.Default.PushToCloud;
-                Config.Normalize = Settings.Default.Normalize;
-
-		}
+                Config.CopyToUsb = (Settings.Default.CopyToUSB == string.Empty) ? true : bool.Parse(Settings.Default.CopyToUSB);
+                Config.PushToCloud = (Settings.Default.PushToCloud == string.Empty) ? false : bool.Parse(Settings.Default.PushToCloud);
+                Config.Normalize = (Settings.Default.Normalize == string.Empty) ? true : bool.Parse(Settings.Default.Normalize);
+                UIRepository.Takes = Settings.Default.Takes;
+            //if (Settings.Default.CopyToUSB == string.Empty) 
+            //     { 
+            //         Config.CopyToUsb = true;
+            //        // Settings.Default.CopyToUSB = true.ToString();
+            //        // Settings.Default.Save();
+            //     } else
+            //     {
+            //         Config.CopyToUsb = bool.Parse(Settings.Default.CopyToUSB);
+            //     }
+            //     if (Settings.Default.PushToCloud == string.Empty)
+            //     {
+            //         Config.PushToCloud = false;
+            //     //    Settings.Default.PushToCloud = false.ToString();
+            //     //  //  Settings.Default.Save();
+            //     } 
+            //     else
+            //     {
+            //         Config.PushToCloud = bool.Parse(Settings.Default.PushToCloud);
+            //     }
+            //     if (Settings.Default.Normalize == string.Empty)
+            //     {
+            //         Config.Normalize = true;
+            //         //    Settings.Default.Normalize = true.ToString();
+            //         //   // Settings.Default.Save();
+            //     }
+            //     else
+            //     {
+            //         Config.Normalize = bool.Parse(Settings.Default.Normalize);
+            //     }
+            }
             public async Task<string> RunBashCatAsync(string command)
             {
                 var bashTask = Task.Run(() =>
@@ -1628,7 +1713,7 @@ namespace SmartaCam
                     // IORepository ioRepository = new();
                     NetworkRepository.DropBox db = new();
                     // db.DropBoxAuthResetAsync();
-                    await ClearDailyTakesCount();
+                    await SetupTakesCountAsync();
                     LoadConfig(); 
                     Console.WriteLine("Welcome to SmartaCam");
                     _os = await IdentifyOS();
@@ -1710,22 +1795,28 @@ namespace SmartaCam
             await Task.Delay(Timeout.Infinite);
             void OnPinEvent(object sender, PinValueChangedEventArgs args)
             {
+                var pressedPin = args.PinNumber;
                 var now = DateTime.Now;
-                if (now.Subtract(_lastInterrupt).TotalMilliseconds > 500) // Button Debounce
+                Task.Delay(100);
+                if (controller.Read(pressedPin) == PinValue.Low) // ignore stray detection
                 {
-                    Console.WriteLine($"{args.PinNumber} was pressed");
-                    _lastInterrupt = now;
-                    if (!(bool)controller.Read(Config.RecordButton))
+                    if (now.Subtract(_lastInterrupt).TotalMilliseconds > 1000) // Button Debounce
                     {
-                        audioRepository.RecordButtonPressedAsync();
-                    }
-                    if (!(bool)controller.Read(Config.FootPedal))
-                    {
-                        audioRepository.RecordButtonPressedAsync();
-                    }
-                    if (!(bool)controller.Read(Config.StopButton))
-                    {
-                        audioRepository.StopButtonPressedAsync();
+                        Console.WriteLine($"{pressedPin} was pressed");
+                        _lastInterrupt = now;
+                        if (pressedPin == Config.RecordButton)
+                        {
+                            audioRepository.RecordButtonPressedAsync();
+
+                        }
+                        if (pressedPin == Config.FootPedal)
+                        {
+                            audioRepository.RecordButtonPressedAsync();
+                        }
+                        if (pressedPin == Config.StopButton)
+                        {
+                            audioRepository.StopButtonPressedAsync();
+                        }
                     }
                 }
             }
@@ -1970,66 +2061,73 @@ namespace SmartaCam
             AudioRepository audioRepository = new();
             var peaks = audioRepository.GetScaledInputPeakVolumes();
             var newPeaks = peaks;
-            if (os == "Raspberry Pi")
+            while (UIRepository.ShowVUMeter == true)
             {
-                var ledTask = Task.Run( async () =>
+                if (os == "Raspberry Pi")
+                {
+                    var ledTask = Task.Run(async () =>
+                    {
+                        await TurnOffLEDAsync(Config.GreenLED);
+                        await TurnOffLEDAsync(Config.YellowLED);
+                        await TurnOffLEDAsync(Config.RedLED);
+                        while (!ct.IsCancellationRequested)
+                        {
+                            for (int p = 0; p < 2; p++)
+                            {
+                                if (peaks[p] != newPeaks[p])
+                                {
+                                    peaks[p] = newPeaks[p];
+                                      Console.WriteLine($"Channel {p+1} Peak: {peaks[p]}");
+                                    if (peaks[p] >= 1m)
+                                    {
+                                        Console.WriteLine($"Clip detected!!");
+                                        // controller.Write(Config.RedLED, PinValue.High);
+                                        await TurnOnLEDAsync(Config.RedLED);
+                                    }
+                                    else
+                                    {
+                                        await TurnOffLEDAsync(Config.RedLED);
+                                    }
+                                    int LED = (p == 0) ? Config.GreenLED : Config.YellowLED;
+                                    if (peaks[p] > .2m)
+                                    {
+                                        await TurnOnLEDAsync(LED);
+                                    }
+                                    else
+                                    {
+                                        await TurnOffLEDAsync(LED);
+                                    }
+                                }
+                            }
+                            // Task.Delay(1000);
+                            newPeaks = audioRepository.GetScaledInputPeakVolumes();
+                        }
+                        //controller.ClosePin(Config.GreenLED);
+                        //controller.ClosePin(Config.YellowLED);
+                        //controller.ClosePin(Config.RedLED);
+                    }, ct);
+                    await ledTask;
+                }
+                else
                 {
                     while (!ct.IsCancellationRequested)
                     {
-                        for (int p = 0;p < 2; p++)
+                        for (int p = 0; p < 2; p++)
                         {
                             if (peaks[p] != newPeaks[p])
                             {
                                 peaks[p] = newPeaks[p];
-                              //  Console.WriteLine($"Channel {p+1} Peak: {peaks[p]}");
+                                  Console.WriteLine($"Channel {p + 1} Peak: {peaks[p]}");
                                 if (peaks[p] >= 1m)
                                 {
                                     Console.WriteLine($"Clip detected!!");
-                                    // controller.Write(Config.RedLED, PinValue.High);
-                                    await TurnOnLEDAsync(Config.RedLED);
-                                }
-                                else
-                                {
-                                    await TurnOffLEDAsync(Config.RedLED);
-                                }
-                                int LED = (p == 0) ? Config.GreenLED : Config.YellowLED;
-                                if (peaks[p] > .2m)
-                                {
-                                    await TurnOnLEDAsync(LED);
-                                }
-                                else
-                                {
-                                    await TurnOffLEDAsync(LED);
                                 }
                             }
                         }
-                       // Task.Delay(1000);
                         newPeaks = audioRepository.GetScaledInputPeakVolumes();
                     }
-                    //controller.ClosePin(Config.GreenLED);
-                    //controller.ClosePin(Config.YellowLED);
-                    //controller.ClosePin(Config.RedLED);
-                }, ct);
-                await ledTask;
-            } else
-            {
-                while (!ct.IsCancellationRequested)
-                {
-                    for (int p = 0; p < 2; p++)
-                    {
-                        if (peaks[p] != newPeaks[p])
-                        {
-                            peaks[p] = newPeaks[p];
-                          //  Console.WriteLine($"Channel {p + 1} Peak: {peaks[p]}");
-                            if (peaks[p] >= 1m)
-                            {
-                                Console.WriteLine($"Clip detected!!");
-                            }
-                        }
-                    }
-                    newPeaks = audioRepository.GetScaledInputPeakVolumes();
+
                 }
-                
             }
         }
     }

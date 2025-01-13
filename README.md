@@ -4,6 +4,8 @@ SmartaCam's web interface includes:
 - A home page to create new recordings and playback or delete existing ones.
 - A tag editor page to create or activate file name scheme and ID3 tags. "Title" must include the text "[#]" (programmatically  replaced by a count to ensure unique file names). 
 - A configuration page where users elect to normalize (maximize volume without clipping), copy to usb, and/or upload to DropBox after audio is captured, and link a DropBox account.
+<br/>
+<br/>
 For headless DropBox authentication:
 	1. Launch SmartaCam on headless device with removable drive inserted<br/>
 	2. Visit Dropbox.com on a remote, networked machine, and provide account credentials<br/>

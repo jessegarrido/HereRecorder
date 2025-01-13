@@ -13,7 +13,7 @@ namespace SmartaCam
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int RunLengthInSeconds { get; set; }
-        public decimal OriginalPeakVolume { get; set; }
+        public string OriginalPeakVolume { get; set; } = string.Empty;
         public float ChannelOneInputPeak { get; set; }
         public float ChannelTwoInputPeak { get; set; }
         public string FileName { get; set; } = string.Empty;

@@ -25,6 +25,13 @@ namespace SmartaCam
             return Ok(await _takeRepository.GetTakeDurationByIdAsync(id));
 
         }
+
+        [HttpGet("lasttakedate")]
+        public async Task<ActionResult<DateTime>> GetLastTakeDate()
+        {
+            return Ok(await _takeRepository.GetLastTakeDateAsync());
+        }
+
         [HttpGet("getalltakes")]
         public async Task<ActionResult<List<Take>>> GetAllTakes()
         {
