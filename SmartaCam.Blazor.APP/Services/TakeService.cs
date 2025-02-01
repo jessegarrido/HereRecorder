@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections;
 using System.Text.Json;
 
-namespace SmartaCam.App.Services
+namespace SmartaCam.Blazor.APP.Services
 {
     public interface ITakeService
     {
@@ -19,8 +20,9 @@ namespace SmartaCam.App.Services
         public TakeService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-        }
-        public async Task<List<Take>> GetAllTakesAsync()
+
+		}
+		public async Task<List<Take>> GetAllTakesAsync()
         {
             return await JsonSerializer.DeserializeAsync<List<Take>>
                  (await _httpClient.GetStreamAsync($"api/getalltakes"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

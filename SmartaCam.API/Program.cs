@@ -1,10 +1,8 @@
-using System.Text.Json.Serialization;
-using static SmartaCam.AudioRepository;
-using static SmartaCam.IAudioRepository;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace SmartaCam.API
 {
-    public class Program
+	public class Program
     {
         public static void Main(string[] args)
         {
@@ -20,10 +18,10 @@ namespace SmartaCam.API
             builder.Services.AddTransient<IMp3TagSetRepository, Mp3TagSetRepository>();
             builder.Services.AddTransient<ISettingsRepository, SettingsRepository>();
             builder.Services.AddHostedService<DbInitializerHostedService>();
-           // builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
-            //builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
+			// builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+			//builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
-            builder.Services.AddSwaggerGen(c =>
+			builder.Services.AddSwaggerGen(c =>
             {
                 c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
                 c.IgnoreObsoleteActions();
@@ -32,35 +30,43 @@ namespace SmartaCam.API
             });
 
             var app = builder.Build();
-            app.UseHttpsRedirection();
+          //  app.UseHttpsRedirection();
             if (builder.Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-
-            }
+				app.UseSwagger();
+                app.UseSwaggerUI();
+			}
+            
             app.UseRouting();
-            app.UseCors(x => x
-             .AllowAnyMethod()
-             .AllowAnyHeader()
-             .SetIsOriginAllowed(origin => true) // allow any origin  
-             .AllowCredentials());
-        //    app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
+			app.UseCors(x => x
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+		    .AllowAnyOrigin()
+         	);
+
+
+
+			//    app.UseAuthorization();
+
+			app.UseForwardedHeaders(new ForwardedHeadersOptions
+			{
+				ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+			});
+
+			app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
-           //  Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.MapGet("/", () => "Hello ForwardedHeadersOptions!");
 
             UIRepository uIRepository = new();
             _ = Task.Run(async () => { await uIRepository.SessionInitAsync(); });
-             app.MapControllers();
+
+            
+            app.MapControllers();
 
             app.Run();
         }

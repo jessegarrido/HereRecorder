@@ -202,5 +202,17 @@ namespace SmartaCam.API {
                 this["RemovableDrivePath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string NormalizeSplitChannels {
+            get {
+                return ((string)(this["NormalizeSplitChannels"]));
+            }
+            set {
+                this["NormalizeSplitChannels"] = value;
+            }
+        }
     }
 }

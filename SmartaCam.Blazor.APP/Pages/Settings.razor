@@ -16,16 +16,27 @@
 	<li><b>DropBox Auth Status:</b>@DropBoxAuthStatus</li>
 	<br>
 	<li><label><b>Normalize</b></label>
-	<InputCheckbox @bind-Value=@Normalize @bind-Value:after="@OnSettingsChange" ><b>Normalize</b></InputCheckbox>
-		</li>
+	<InputCheckbox @bind-Value=@Normalize @bind-Value:after="@OnSettingsChange"></InputCheckbox>
+
+
+				@if (Normalize)
+				{
+					<br />
+				<tab><label><b>Split Channels</b></label></tab>
+				<InputCheckbox @bind-Value=@NormalizeSplitChannels @bind-Value:after="@OnSettingsChange"></InputCheckbox>
+				
+				}
+	</li>
 	<br>
 
 	<li><label><b>Copy To USB</b></label>
 	<InputCheckbox @bind-Value=@CopyToUsb @bind-Value:after="@OnSettingsChange" disabled=@UsbIsDisabled><b>Copy</b></InputCheckbox>
 		<br />
-			</li>
-				@if (RemovableDrivePath != string.Empty)
+
+				@* @if (RemovableDrivePath != string.Empty) *@
+				@if (CopyToUsb)
 				{
+
 					<tab><i><b>Removable Drive Path:</b></i>
 					<select class="select-element" value="@SelectedRemovableDrive" @onchange="UpdateRemovableDrivePathFromDropdown">
 						<option selected></option>
@@ -38,6 +49,7 @@
 					</select>
 					</tab>
 				}
+			</li>
 			<br>
 		<li><label><b>Upload To Dropbox</b></label>
 				<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange" disabled=@DropBoxIsDisabled><b>Upload</b></InputCheckbox>

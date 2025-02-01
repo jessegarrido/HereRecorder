@@ -20,6 +20,12 @@ namespace SmartaCam.API.Controllers
             return Ok(await _settingsRepository.GetNormalizeAsync());
 
         }
+        [HttpGet("getnormalizesplitchannels")]
+        public async Task<IActionResult> GetNormalizeSplitChannels()
+        {
+            return Ok(await _settingsRepository.GetNormalizeSplitChannelsAsync());
+
+        }
         [HttpGet("setnormalize/{willNormalize::bool}")]
         public async Task<IActionResult> SetNormalize(bool willNormalize)
         {

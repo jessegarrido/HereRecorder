@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace SmartaCam.App.Pages
+namespace SmartaCam.Blazor.APP.Pages
 {
 	public partial class TagEditor
     {

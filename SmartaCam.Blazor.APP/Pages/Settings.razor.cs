@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Newtonsoft.Json.Linq;
-using static Dropbox.Api.Paper.UserOnPaperDocFilter;
 
-namespace SmartaCam.App.Pages
+namespace SmartaCam.Blazor.APP.Pages
 {
-    public partial class Settings : TakesPage
+	public partial class Settings : TakesPage
 
     {
         [Inject]
         public ISettingsService SettingsService { get; set; }
         [Parameter]
         public bool Normalize { get; set; } = true;
+        [Parameter]
+        public bool NormalizeSplitChannels { get; set; } = false;
         [Parameter]
         public bool CopyToUsb { get; set; } = false;
         [Parameter]
@@ -47,7 +47,8 @@ namespace SmartaCam.App.Pages
 				MyStateDisplay = await TransportService.GetState();
 			}
 			Normalize = await SettingsService.GetNormalize();
-            PushToCloud = await SettingsService.GetUpload();
+			NormalizeSplitChannels = await SettingsService.GetNormalizeSplitChannels();
+			PushToCloud = await SettingsService.GetUpload();
             CopyToUsb = await SettingsService.GetCopyToUsb();
             NetworkStatus = await SettingsService.GetNetworkStatus();
             DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
@@ -66,7 +67,8 @@ namespace SmartaCam.App.Pages
         public void OnSettingsChange()
         {
             SettingsService.SetNormalize(Normalize);
-            SettingsService.SetUpload(PushToCloud);
+			SettingsService.SetNormalizeSplitChannels(NormalizeSplitChannels);
+			SettingsService.SetUpload(PushToCloud);
             SettingsService.SetCopyToUsb(CopyToUsb);
             InvokeAsync(StateHasChanged);
         }
@@ -76,7 +78,6 @@ namespace SmartaCam.App.Pages
 			DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
             PushToCloud = true;
 			NavigateToSettings();
-
 		}
 		public void SetRemovableDrivePath()
 		{

@@ -71,6 +71,7 @@ namespace SmartaCam
         public static float lMax { get; set; }
         public static float rMax { get; set; }
 
+
         public void AudioDeviceInitAndEnumerate(bool enumerate)
         {
             PortAudio.LoadNativeLibrary();
@@ -389,24 +390,33 @@ namespace SmartaCam
             using (var reader = new WaveFileReader(inPath))
             using (WaveFileWriter wr = new WaveFileWriter(outPath, wavformat))
             {
-                float[] inBuffer;
+                float[] readBuffer;
                 float lNorm;
                 float rNorm;
-                while ((inBuffer = reader.ReadNextSampleFrame())?.Length > 0)
+               
+                while ((readBuffer = reader.ReadNextSampleFrame())?.Length > 0)
                 {
-                    for (int i = 0; i < inBuffer.Length; i += 2)
+                    for (int i = 0; i < readBuffer.Length; i += 2)
                     {
-                        if (!take.IsMono)
+                        if (!take.IsMono && !Config.SplitChannelNormalize)
                         {
-                            lNorm = inBuffer[i] / lMax;
-                            rNorm = inBuffer[i + 1] / rMax;
+                            lNorm = readBuffer[i] / max;
+                            rNorm = readBuffer[i + 1] / max;
                             wr.WriteSample(lNorm);
                             wr.WriteSample(rNorm);
                         } else
+                        if (!take.IsMono)
                         {
-                            lNorm = inBuffer[i] / max;
+                            lNorm = readBuffer[i] / lMax;
+                            rNorm = readBuffer[i + 1] / rMax;
                             wr.WriteSample(lNorm);
-                            //rNorm = inBuffer[i+1] / max;
+                            wr.WriteSample(rNorm);
+                        }
+                        else
+                        {
+                            lNorm = readBuffer[i] / max;
+                            wr.WriteSample(lNorm);
+                            //rNorm = readBuffer[i+1] / max;
                         }
 
                     }
@@ -1800,7 +1810,7 @@ namespace SmartaCam
                 Task.Delay(100);
                 if (controller.Read(pressedPin) == PinValue.Low) // ignore stray detection
                 {
-                    if (now.Subtract(_lastInterrupt).TotalMilliseconds > 1000) // Button Debounce
+                    if (now.Subtract(_lastInterrupt).TotalMilliseconds > 250) // Button Debounce
                     {
                         Console.WriteLine($"{pressedPin} was pressed");
                         _lastInterrupt = now;
@@ -1846,7 +1856,7 @@ namespace SmartaCam
 			}
             while (erase == null)
             {
-                await Task.Delay(500);
+                await Task.Delay(50);
                // erase = false;
             }
             return erase;
@@ -1871,7 +1881,7 @@ namespace SmartaCam
                         }
                         Console.WriteLine($"{args.PinNumber} was released");
                         var unPressed = DateTime.Now;
-                        erase = unPressed.Subtract(detection).TotalMilliseconds > 3000 ? true : false;
+                        erase = unPressed.Subtract(detection).TotalMilliseconds > 2000 ? true : false;
                     } else
                     {
                         erase = false;

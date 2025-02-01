@@ -2,8 +2,9 @@
 using static Dropbox.Api.Files.ListRevisionsMode;
 using System.Net.Http;
 using System.Text.Json;
-using SmartaCam.App.Services;
+using SmartaCam.Blazor.APP.Services;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Components;
 
 namespace SmartaCam
 {
@@ -31,9 +32,10 @@ namespace SmartaCam
         public TransportService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-        }
 
-        public async Task<IActionResult> RecordButtonPress()
+		}
+
+		public async Task<IActionResult> RecordButtonPress()
         {
             return (IActionResult)await _httpClient.GetAsync("api/transport/record");
         }

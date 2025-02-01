@@ -238,7 +238,9 @@ namespace SmartaCam
 	{
 		public Task<bool> GetNormalizeAsync();
 		public Task SetNormalizeAsync(bool willNormalize);
-		public Task<bool> GetUploadAsync();
+        public Task<bool> GetNormalizeSplitChannelsAsync();
+        public Task SetNormalizeSplitChannelsAsync(bool splitChannels);
+        public Task<bool> GetUploadAsync();
 		public Task SetUploadAsync(bool willUpload);
 		public Task<bool?> GetCopyToUsbAsync();
 		public Task SetCopyToUsbAsync(bool willCopy);
@@ -266,7 +268,16 @@ namespace SmartaCam
             Config.Normalize = willNormalize;
             Settings.Default.Normalize = willNormalize.ToString();
             Settings.Default.Save();
-            Settings.Default.Reload();
+        }
+        public async Task<bool> GetNormalizeSplitChannelsAsync()
+        {
+            return Config.Normalize;
+        }
+        public async Task SetNormalizeSplitChannelsAsync(bool splitChannels)
+        {
+            Config.NormalizeSplitChannels = splitChannels;
+            Settings.Default.NormalizeSplitChannels = splitChannels.ToString();
+            Settings.Default.Save();
         }
         public async Task<bool> GetUploadAsync()
         {
@@ -277,7 +288,6 @@ namespace SmartaCam
             Config.PushToCloud = willUpload;
             Settings.Default.PushToCloud = willUpload.ToString();
             Settings.Default.Save();
-            Settings.Default.Reload();
         }
         public async Task<bool?> GetCopyToUsbAsync()
         {
@@ -288,7 +298,6 @@ namespace SmartaCam
             Config.CopyToUsb = willCopy;
             Settings.Default.PushToCloud = willCopy.ToString();
             Settings.Default.Save();
-            Settings.Default.Reload();
         }
         public async Task<bool> GetNetworkStatus()
         {

@@ -27,6 +27,8 @@ namespace SmartaCam
         public static int SampleRate { get; set; }
         public static int SelectedAudioDevice { get; set; } = 0;
         public static bool Normalize { get; set; } = false;
+        public static bool NormalizeSplitChannels { get; set; } = false;
+        public static bool SplitChannelNormalize { get; set; } = false;
         public static bool PushToCloud { get; set; } = false;
 		public static bool CopyToUsb { get; set; } = false;
         public static int Mp3BitRate { get; set; } = 192;

@@ -1,12 +1,14 @@
 ﻿using Dropbox.Api.Files;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
-using SmartaCam.App.Services;
+using Microsoft.JSInterop;
+using SmartaCam.Blazor.APP.Services;
 using System.Data;
 using System.Net.Http.Json;
 using static Dropbox.Api.Paper.UserOnPaperDocFilter;
+using Microsoft.JSInterop;
 
-namespace SmartaCam.App.Pages
+namespace SmartaCam.Blazor.APP.Pages
 {
     public partial class TakesPage : ComponentBase
     {
@@ -27,7 +29,10 @@ namespace SmartaCam.App.Pages
 
         [Parameter]
         public List<string>? PlayQueue { get; set; }
-        protected string Message = string.Empty;
+		[Parameter]
+        public string CurrentUrl { get; set; }= string.Empty;
+
+		protected string Message = string.Empty;
         protected string StatusClass = string.Empty;
 
         protected int loadingState = 0;
@@ -35,11 +40,13 @@ namespace SmartaCam.App.Pages
         protected string buttonBgColor = string.Empty;
         protected string recordButtonText = "Create New Recording";
         protected string recordButtonColor = "red";
-        protected async override Task OnInitializedAsync()
+		
+		protected async override Task OnInitializedAsync()
 
         {
-            //int loadingState = await TransportService.GetState();
-            while (MyStateDisplay == 0 )
+			CurrentUrl = _navigationManager.Uri;
+			//int loadingState = await TransportService.GetState();
+			while (MyStateDisplay == 0 )
             {
                 await Task.Delay(1000);
                 MyStateDisplay = await TransportService.GetState();
@@ -50,7 +57,7 @@ namespace SmartaCam.App.Pages
 			_navigationManager.LocationChanged += LocationChanged;
 			base.OnInitialized();
 		}
-        public async Task PlayStop_Click(int id)
+		public async Task PlayStop_Click(int id)
         {
             await CheckState();
             if (MyStateDisplay == 3) //playing

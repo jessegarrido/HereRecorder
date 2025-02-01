@@ -2,7 +2,7 @@
 using static Dropbox.Api.Files.ListRevisionsMode;
 using System.Net.Http;
 using System.Text.Json;
-using SmartaCam.App.Services;
+using SmartaCam.Blazor.APP.Services;
 using Newtonsoft.Json;
 
 namespace SmartaCam
@@ -11,6 +11,8 @@ namespace SmartaCam
     {
         Task<IActionResult> SetNormalize(bool willNormalize);
         Task<bool> GetNormalize();
+        Task<IActionResult> SetNormalizeSplitChannels(bool splitChannels);
+        Task<bool> GetNormalizeSplitChannels();
         Task<IActionResult> SetUpload(bool willUpload);
         Task<bool> GetUpload();
         Task<IActionResult> SetCopyToUsb(bool willCopy);
@@ -43,6 +45,16 @@ namespace SmartaCam
         public async Task<IActionResult> SetNormalize(bool willNormalize)
         {
             return await _httpClient.GetAsync($"api/setnormalize/{willNormalize}") as IActionResult;
+        }
+        public async Task<bool> GetNormalizeSplitChannels()
+        {
+            return await System.Text.Json.JsonSerializer.DeserializeAsync<bool>
+            // return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
+            (await _httpClient.GetStreamAsync($"api/getnormalize"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        }
+        public async Task<IActionResult> SetNormalizeSplitChannels(bool splitChannels)
+        {
+            return await _httpClient.GetAsync($"api/setnormalize/{splitChannels}") as IActionResult;
         }
         public async Task<bool> GetUpload()
         {
