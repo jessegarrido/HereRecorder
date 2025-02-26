@@ -233,14 +233,15 @@ namespace SmartaCam
         }
 
     }
-
 	public interface ISettingsRepository
 	{
+		public Task<bool> GetDownmixAsync();
+		public Task SetDownmixAsync(bool toMono);
 		public Task<bool> GetNormalizeAsync();
 		public Task SetNormalizeAsync(bool willNormalize);
-        public Task<bool> GetNormalizeSplitChannelsAsync();
-        public Task SetNormalizeSplitChannelsAsync(bool splitChannels);
-        public Task<bool> GetUploadAsync();
+		public Task<bool> GetNormalizeSplitChannelsAsync();
+		public Task SetNormalizeSplitChannelsAsync(bool splitChannels);
+		public Task<bool> GetUploadAsync();
 		public Task SetUploadAsync(bool willUpload);
 		public Task<bool?> GetCopyToUsbAsync();
 		public Task SetCopyToUsbAsync(bool willCopy);
@@ -248,8 +249,8 @@ namespace SmartaCam
 		public Task<string> GetDropBoxCode();
 		public Task SetDropBoxCode(string dropboxCode);
 		public Task<bool> GetDropBoxAuthStatusAsync();
-        public Task UnAuthDropBoxAsync();
-        public Task<string?> GetRemovableDrivePathAsync();
+		public Task UnAuthDropBoxAsync();
+		public Task<string?> GetRemovableDrivePathAsync();
 		public Task SetRemovableDrivePathAsync(string removableDrivePath);
 		public Task<List<string>>? GetRemovableDrivePathsAsync();
 		//public Task CheckAuthentication();
@@ -258,66 +259,76 @@ namespace SmartaCam
 
 	}
 	public class SettingsRepository : ISettingsRepository
-    {
-        public async Task<bool> GetNormalizeAsync()
-        {
-            return Config.Normalize;
-        }
-        public async Task SetNormalizeAsync(bool willNormalize)
-        {
-            Config.Normalize = willNormalize;
-            Settings.Default.Normalize = willNormalize.ToString();
-            Settings.Default.Save();
-        }
-        public async Task<bool> GetNormalizeSplitChannelsAsync()
-        {
-            return Config.Normalize;
-        }
-        public async Task SetNormalizeSplitChannelsAsync(bool splitChannels)
-        {
-            Config.NormalizeSplitChannels = splitChannels;
-            Settings.Default.NormalizeSplitChannels = splitChannels.ToString();
-            Settings.Default.Save();
-        }
-        public async Task<bool> GetUploadAsync()
-        {
-            return Config.PushToCloud;
-        }
-        public async Task SetUploadAsync(bool willUpload)
-        {
-            Config.PushToCloud = willUpload;
-            Settings.Default.PushToCloud = willUpload.ToString();
-            Settings.Default.Save();
-        }
-        public async Task<bool?> GetCopyToUsbAsync()
-        {
-            return Config.CopyToUsb;
-        }
-        public async Task SetCopyToUsbAsync(bool willCopy)
-        {
-            Config.CopyToUsb = willCopy;
-            Settings.Default.PushToCloud = willCopy.ToString();
-            Settings.Default.Save();
-        }
-        public async Task<bool> GetNetworkStatus()
-        {
-            NetworkRepository networkRepo = new();
-            return networkRepo.GetNetworkStatus();
-        }
+	{
+		public async Task<bool> GetDownmixAsync()
+		{
+			return Config.DownmixToMono;
+		}
+		public async Task SetDownmixAsync(bool toMono)
+		{
+			Config.DownmixToMono = toMono;
+			Settings.Default.DownmixToMono = toMono.ToString();
+			Settings.Default.Save();
+		}
+		public async Task<bool> GetNormalizeAsync()
+		{
+			return Config.Normalize;
+		}
+		public async Task SetNormalizeAsync(bool willNormalize)
+		{
+			Config.Normalize = willNormalize;
+			Settings.Default.Normalize = willNormalize.ToString();
+			Settings.Default.Save();
+		}
+		public async Task<bool> GetNormalizeSplitChannelsAsync()
+		{
+			return Config.NormalizeSplitChannels;
+		}
+		public async Task SetNormalizeSplitChannelsAsync(bool splitChannels)
+		{
+			Config.NormalizeSplitChannels = splitChannels;
+			Settings.Default.NormalizeSplitChannels = splitChannels.ToString();
+			Settings.Default.Save();
+		}
+		public async Task<bool> GetUploadAsync()
+		{
+			return Config.PushToCloud;
+		}
+		public async Task SetUploadAsync(bool willUpload)
+		{
+			Config.PushToCloud = willUpload;
+			Settings.Default.PushToCloud = willUpload.ToString();
+			Settings.Default.Save();
+		}
+		public async Task<bool?> GetCopyToUsbAsync()
+		{
+			return Config.CopyToUsb;
+		}
+		public async Task SetCopyToUsbAsync(bool willCopy)
+		{
+			Config.CopyToUsb = willCopy;
+			Settings.Default.PushToCloud = willCopy.ToString();
+			Settings.Default.Save();
+		}
+		public async Task<bool> GetNetworkStatus()
+		{
+			NetworkRepository networkRepo = new();
+			return networkRepo.GetNetworkStatus();
+		}
 		public async Task<string> GetDropBoxCode()
 		{
 			//NetworkRepository networkRepo = new();
 			return Config.DropBoxCodeTxt;
 		}
-        public async Task<string?> GetRemovableDrivePathAsync()
-        {
-            return Config.RemovableDrivePath;
-        }
+		public async Task<string?> GetRemovableDrivePathAsync()
+		{
+			return Config.RemovableDrivePath;
+		}
 		public async Task SetRemovableDrivePathAsync(string removableDrivePath)
 		{
 			Config.RemovableDrivePath = removableDrivePath;
-            Settings.Default.RemovableDrivePath = removableDrivePath;
-            Settings.Default.Save();
+			Settings.Default.RemovableDrivePath = removableDrivePath;
+			Settings.Default.Save();
 		}
 		public async Task<List<string>>? GetRemovableDrivePathsAsync()
 		{
@@ -325,25 +336,25 @@ namespace SmartaCam
 		}
 		public async Task<bool> GetDropBoxAuthStatusAsync()
 		{
-            return NetworkRepository.OAuthStatus;
+			return NetworkRepository.OAuthStatus;
 		}
 
 		public async Task SetDropBoxCode(string dropboxCode)
 		{
 			//NetworkRepository networkRepo = new();
 			Config.DropBoxCodeTxt = dropboxCode;
-            //await networkRepo.CheckAndConnectCloudAsync();
+			//await networkRepo.CheckAndConnectCloudAsync();
 		}
 		public async Task UnAuthDropBoxAsync()
-        {
-            //NetworkRepository networkRepository = new();
-            NetworkRepository.DropBox db = new();
+		{
+			//NetworkRepository networkRepository = new();
+			NetworkRepository.DropBox db = new();
 			await db.DropBoxAuthResetAsync();
-			NetworkRepository.OAuthStatus=false;
-            await db.DropBoxAuth();
+			NetworkRepository.OAuthStatus = false;
+			await db.DropBoxAuth();
 		}
 	}
-    public class SmartaCamContext : DbContext
+	public class SmartaCamContext : DbContext
     {
         public DbSet<Take> Takes { get; set; }
         //public DbSet<Mp3Take> Mp3Takes { get; set; }
@@ -355,7 +366,7 @@ namespace SmartaCam
             var folder = Environment.SpecialFolder.Personal;
             var path = Environment.GetFolderPath(folder);
            // DbPath = System.IO.Path.Join(path, "db.db");
-            DbPath = System.IO.Path.Combine(path,"SmartaCam","db.db");
+            DbPath = System.IO.Path.Combine(path,"Here","db.db");
             
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -368,7 +379,7 @@ namespace SmartaCam
                     {
                         Id = 1,
                         Title = "[Date]_take-[#]",
-                        Artist = "SmartaCam",
+                        Artist = "H E R E",
                         Album = "[Date]",
                         IsDefault = true
                     }

@@ -260,7 +260,7 @@ namespace SmartaCam
                 Console.WriteLine("     Wave has no content");
                 return;
             }
-            if (lMax > .05f && rMax > .05f && Config.MixMode == "pan")
+            if (lMax > .05f && rMax > .05f && !Config.DownmixToMono)
             {
                 Console.WriteLine("     Panned two input audio not remixed");
                 return;
@@ -1667,7 +1667,9 @@ namespace SmartaCam
                 Config.CopyToUsb = (Settings.Default.CopyToUSB == string.Empty) ? true : bool.Parse(Settings.Default.CopyToUSB);
                 Config.PushToCloud = (Settings.Default.PushToCloud == string.Empty) ? false : bool.Parse(Settings.Default.PushToCloud);
                 Config.Normalize = (Settings.Default.Normalize == string.Empty) ? true : bool.Parse(Settings.Default.Normalize);
-                UIRepository.Takes = Settings.Default.Takes;
+			    Config.DownmixToMono = (Settings.Default.DownmixToMono == string.Empty) ? true : bool.Parse(Settings.Default.DownmixToMono);
+
+			UIRepository.Takes = Settings.Default.Takes;
             //if (Settings.Default.CopyToUSB == string.Empty) 
             //     { 
             //         Config.CopyToUsb = true;
@@ -1725,7 +1727,7 @@ namespace SmartaCam
                     // db.DropBoxAuthResetAsync();
                     await SetupTakesCountAsync();
                     LoadConfig(); 
-                    Console.WriteLine("Welcome to SmartaCam");
+                    Console.WriteLine("Welcome to H E R E");
                     _os = await IdentifyOS();
                     Console.WriteLine($"Platform: {_os}");
                     Console.WriteLine($"Session Name: {_session}");
@@ -1896,7 +1898,7 @@ namespace SmartaCam
             var take = await _takeRepository.GetTakeByIdAsync(takeId); 
             var inPath = take.WavFilePath;
  
-            string newWavPath = Path.Combine(_removableDrivePath,"SmartaCam",_session);
+            string newWavPath = Path.Combine(_removableDrivePath,"Here",_session);
             string newMp3Path = Path.Combine(newWavPath, "mp3");
             List<string> songfilepaths = new List<string> { newWavPath, newMp3Path };
             foreach (string path in songfilepaths)

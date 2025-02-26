@@ -20,7 +20,19 @@ namespace SmartaCam.API.Controllers
             return Ok(await _settingsRepository.GetNormalizeAsync());
 
         }
-        [HttpGet("getnormalizesplitchannels")]
+		[HttpGet("getdownmix")]
+		public async Task<IActionResult> GetDownmix()
+		{
+			return Ok(await _settingsRepository.GetDownmixAsync());
+		}
+		[HttpGet("setdownmix/{toMono::bool}")]
+		public async Task<IActionResult> SetDownmix(bool toMono)
+		{
+			await _settingsRepository.SetDownmixAsync(toMono);
+			return Ok();
+
+		}
+		[HttpGet("getnormalizesplitchannels")]
         public async Task<IActionResult> GetNormalizeSplitChannels()
         {
             return Ok(await _settingsRepository.GetNormalizeSplitChannelsAsync());
