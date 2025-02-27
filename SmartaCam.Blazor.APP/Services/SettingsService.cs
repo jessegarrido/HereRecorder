@@ -4,12 +4,15 @@ using System.Net.Http;
 using System.Text.Json;
 using SmartaCam.Blazor.APP.Services;
 using Newtonsoft.Json;
+using System.Runtime.CompilerServices;
 
 namespace SmartaCam
 {
     public interface ISettingsService
     {
-        Task<IActionResult> SetNormalize(bool willNormalize);
+		Task<IActionResult> SetDownmix(bool toMono);
+		Task<bool> GetDownmix();
+		Task<IActionResult> SetNormalize(bool willNormalize);
         Task<bool> GetNormalize();
         Task<IActionResult> SetNormalizeSplitChannels(bool splitChannels);
         Task<bool> GetNormalizeSplitChannels();
@@ -36,7 +39,18 @@ namespace SmartaCam
         {
             _httpClient = httpClient;
         }
-        public async Task<bool> GetNormalize()
+		public async Task<bool> GetDownmix()
+		{
+			return await System.Text.Json.JsonSerializer.DeserializeAsync<bool>
+						// return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
+						(await _httpClient.GetStreamAsync($"api/getdownmix"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+		}
+		public async Task<IActionResult> SetDownmix(bool toMono)
+		{
+			return await _httpClient.GetAsync($"api/setmono/{toMono}") as IActionResult;
+
+		}
+		public async Task<bool> GetNormalize()
         {
             return await System.Text.Json.JsonSerializer.DeserializeAsync<bool>
             // return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))

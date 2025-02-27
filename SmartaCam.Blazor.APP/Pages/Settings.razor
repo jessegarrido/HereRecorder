@@ -11,10 +11,6 @@
 } else{
 <div class="mb-3">
 	<ul>
-	<li><b>Network Status :</b> @NetworkStatus</li>
-	<br>
-	<li><b>DropBox Auth Status:</b>@DropBoxAuthStatus</li>
-	<br>
 	<li><label><b>Normalize</b></label>
 	<InputCheckbox @bind-Value=@Normalize @bind-Value:after="@OnSettingsChange"></InputCheckbox>
 
@@ -27,6 +23,11 @@
 				
 				}
 	</li>
+	<br />		
+	<li>
+				<label><b>Downmix To Mono</b></label>
+				<InputCheckbox @bind-Value=@Downmix @bind-Value:after="@OnSettingsChange"><b>Downmix</b></InputCheckbox>
+			</li>
 	<br>
 
 	<li><label><b>Copy To USB</b></label>
@@ -54,6 +55,11 @@
 		<li><label><b>Upload To Dropbox</b></label>
 				<InputCheckbox @bind-Value=@PushToCloud @bind-Value:after="@OnSettingsChange" disabled=@DropBoxIsDisabled><b>Upload</b></InputCheckbox>
 		</li>
+		<br />
+			<li><b>Network Status :</b> @NetworkStatus</li>
+			<br>
+			<li><b>DropBox Auth Status:</b>@DropBoxAuthStatus</li>
+			<br>
 	</ul>
 
 	<br>

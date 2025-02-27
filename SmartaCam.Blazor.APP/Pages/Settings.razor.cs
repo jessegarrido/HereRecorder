@@ -9,7 +9,9 @@ namespace SmartaCam.Blazor.APP.Pages
         public ISettingsService SettingsService { get; set; }
         [Parameter]
         public bool Normalize { get; set; } = true;
-        [Parameter]
+		[Parameter]
+		public bool Downmix { get; set; }
+		[Parameter]
         public bool NormalizeSplitChannels { get; set; } = false;
         [Parameter]
         public bool CopyToUsb { get; set; } = false;
@@ -34,6 +36,8 @@ namespace SmartaCam.Blazor.APP.Pages
         public bool DropBoxIsDisabled { get; set; } = true;
         [Parameter]
         public bool UsbIsDisabled { get; set; } = false;
+		[Parameter]
+		public bool DownmxIsDisabled { get; set; } = false;
 
 		bool cloudauth = true;
         bool network = true;
@@ -46,14 +50,19 @@ namespace SmartaCam.Blazor.APP.Pages
 				await Task.Delay(1000);
 				MyStateDisplay = await TransportService.GetState();
 			}
+			
 			Normalize = await SettingsService.GetNormalize();
 			NormalizeSplitChannels = await SettingsService.GetNormalizeSplitChannels();
 			PushToCloud = await SettingsService.GetUpload();
             CopyToUsb = await SettingsService.GetCopyToUsb();
             NetworkStatus = await SettingsService.GetNetworkStatus();
             DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
-            RemovableDrivePath = await SettingsService.GetRemovableDrivePath();
+			DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
+
+			RemovableDrivePath = await SettingsService.GetRemovableDrivePath();
 			RemovableDrivePaths = await SettingsService.GetRemovableDrivePaths();
+			Downmix = await SettingsService.GetDownmix();
+
 			if (RemovableDrivePath == string.Empty) { UsbIsDisabled = true; }
             //if (DropBoxAuthStatus == null) { DropBoxIsDisabled = false; }
             await InvokeAsync(StateHasChanged);
@@ -68,6 +77,7 @@ namespace SmartaCam.Blazor.APP.Pages
         {
             SettingsService.SetNormalize(Normalize);
 			SettingsService.SetNormalizeSplitChannels(NormalizeSplitChannels);
+			SettingsService.SetDownmix(Downmix);
 			SettingsService.SetUpload(PushToCloud);
             SettingsService.SetCopyToUsb(CopyToUsb);
             InvokeAsync(StateHasChanged);
