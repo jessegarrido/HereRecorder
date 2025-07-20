@@ -844,6 +844,7 @@ namespace HERE
 			private TakeRepository _takeRepository = new TakeRepository();
 			private string _dbauthcode { get; set; } = string.Empty;
 			private string _dbcodetextcontents;
+			//private static int i { get; set; } = 1;
 			IORepository ioRepository = new();
 			public async Task PushToDropBoxAsync(int id)
 			{
@@ -858,23 +859,48 @@ namespace HERE
 				Console.WriteLine(client);
 				Console.WriteLine(folder);
 				Console.WriteLine(take.Mp3FilePath);
-
-				try
+				bool retry = true;
+				string file = take.Mp3FilePath;
+				string file2 = file.Replace(".mp3", "(1).mp3");
+				int i = 0;
+				var createFolderTask = CreateFolder(client, folder);
+				Task uploadTask;// = ChunkUpload(client, folder, file);
+				while (retry && i<25)
 				{
-					var createFolderTask = CreateFolder(client, folder);
-					createFolderTask.Wait();
-					string file = take.Mp3FilePath;
-					var uploadTask = ChunkUpload(client, folder, file);//    Task.Run((Func<Task<int>>)instance.Run);
-					await uploadTask;
-					take.WasUpLoaded = true;
-					await _takeRepository.SaveChangesAsync();
+					i=i+1;
+					uploadTask = ChunkUpload(client, folder, file);
+					try
+					{
+						createFolderTask.Wait();
+						await uploadTask;
+						take.WasUpLoaded = true;
+						await _takeRepository.SaveChangesAsync();
+						Console.WriteLine($"{file} was saved to DropBox");
+						retry = false;
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine(e);
+						if (e.Message.Contains("path/conflict/file"))
+						{
+							if (i > 1)
+							{
+								string str1 = "(" + (i - 1) + ")";
+								string str2 = "(" + i + ")";
+								file2 = file.Replace(str1,str2);
+							}
+							Console.WriteLine("Renaming");
+							Console.WriteLine("      " + file);
+							Console.WriteLine("  to");
+							Console.WriteLine("      " + file2);
+							System.IO.File.Move(file, file2);
+							file = file2;
+							take.Mp3FilePath = file;
+							await _takeRepository.SaveChangesAsync();
+						}
+					}				
 				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e);
-				}
-				if (os == "Raspberry Pi") { tokenSource.Cancel(); }
-				;
+				if (os == "Raspberry Pi") { tokenSource.Cancel(); };
 				return;
 
 				async Task<FolderMetadata> CreateFolder(DropboxClient client, string path)
@@ -1090,15 +1116,18 @@ namespace HERE
 						Console.WriteLine($"Visit this webpage and get credentials: {_dbcodetextcontents}");
 						Config.DropBoxCodeTxt = _dbcodetextcontents;
 						UIRepository uIRepository = new();
+						NetworkRepository networkRepository = new();
 						string removableDrivePath = uIRepository.GetUSBDevicePath();
 						Console.WriteLine($"DropBox Code Path: {removableDrivePath}");
-						File.WriteAllText(Path.Combine(removableDrivePath, "DropBoxCode.txt"), _dbcodetextcontents);
-
 						Console.WriteLine("Waiting For DropBox Authorization Code");
-						Task.Run(() =>
+						if (!String.IsNullOrEmpty(removableDrivePath))
 						{
-							WatchDropBoxCodeFile().GetAwaiter().GetResult();
-						});
+							File.WriteAllText(Path.Combine(removableDrivePath, "DropBoxCode.txt"), _dbcodetextcontents);
+							Task.Run(() =>
+							{
+								WatchDropBoxCodeFile().GetAwaiter().GetResult();
+							});
+						}
 						while (Config.DropBoxCodeTxt.StartsWith("http")) // ADD condition for not already authorized
 						{
 							await Task.Delay(1000);
@@ -1301,7 +1330,8 @@ namespace HERE
 					{
 						_ = Task.Run(async () => { await ioRepository.BlinkOneLED(Config.RedLED, 500, LEDcanceltoken); });
 						Console.WriteLine("Deleting existing recordings.");
-						DeleteAllRecordings(allfiles);
+						//DeleteAllRecordings(allfiles);
+						await _takeRepository.DeleteAllTakesAsync();
 						await Task.Delay(3000);
 						tokenSource.Cancel();
 					}
@@ -1879,7 +1909,7 @@ namespace HERE
 									//  Console.WriteLine($"Channel {p+1} Peak: {peaks[p]}");
 									if (peaks[p] >= 1m)
 									{
-										Console.WriteLine($"Clip detected!!");
+										//Console.WriteLine($"Clip detected!!");
 										// controller.Write(Config.RedLED, PinValue.High);
 										await TurnOnLEDAsync(Config.RedLED);
 									}
@@ -1915,7 +1945,7 @@ namespace HERE
 								//  Console.WriteLine($"Channel {p + 1} Peak: {peaks[p]}");
 								if (peaks[p] >= 1m)
 								{
-									Console.WriteLine($"Clip detected!!");
+									//Console.WriteLine($"Clip detected!!");
 								}
 							}
 						}

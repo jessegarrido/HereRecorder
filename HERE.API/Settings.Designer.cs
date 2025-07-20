@@ -169,7 +169,7 @@ namespace HERE.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("8wfjotxacr8ljrc")]
         public string DbApiKey {
             get {
                 return ((string)(this["DbApiKey"]));
@@ -181,7 +181,7 @@ namespace HERE.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("sd84pjxed95zcod")]
         public string DbApiSecret {
             get {
                 return ((string)(this["DbApiSecret"]));

@@ -28,6 +28,7 @@ namespace HERE
 	public class TakeRepository : ITakeRepository
 	{
 
+
 		private readonly HEREContext _context = new HEREContext();
 		public async Task<bool> SaveChangesAsync()
 		{
@@ -62,9 +63,10 @@ namespace HERE
 		public async Task<List<Take>> GetAllTakesAsync()
 		{
 			List<Take> takes = new();
-			foreach (Take take in _context.Takes)
+			foreach (Take take in _context.Takes ) 
 				takes.Add(take);
-			return takes;
+			List<Take> sortedTakes = takes.OrderByDescending(e => e.Created).ToList();
+			return sortedTakes;
 		}
 		public async Task<TimeSpan> GetTakeDurationByIdAsync(int id)
 		{
