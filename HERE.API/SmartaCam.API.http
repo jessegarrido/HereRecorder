@@ -1,6 +1,0 @@
-@HERE.API_HostAddress = http://127.0.0.1:5029
-
-GET {{HERE.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
