@@ -41,7 +41,7 @@
 					<tab><i><b>Removable Drive Path:</b></i>
 					<select class="select-element" value="@SelectedRemovableDrive" @onchange="UpdateRemovableDrivePathFromDropdown">
 						<option selected></option>
-					@foreach (string removableDrivePath in @RemovableDrivePaths) 
+							@foreach (string removableDrivePath in @RemovableDrivePaths ?? Enumerable.Empty<string>())
 					{
 							<option @key=@removableDrivePath selected=@SelectedRemovableDrive value=@removableDrivePath>@removableDrivePath</option>
 					}

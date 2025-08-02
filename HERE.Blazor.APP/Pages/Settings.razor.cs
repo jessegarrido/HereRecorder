@@ -57,12 +57,10 @@ namespace HERE.Blazor.APP.Pages
             CopyToUsb = await SettingsService.GetCopyToUsb();
             NetworkStatus = await SettingsService.GetNetworkStatus();
             DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
-			//DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
-
+			//DropBoxIsDisabled = DropBoxAuthStatus;
 			RemovableDrivePath = await SettingsService.GetRemovableDrivePath();
 			RemovableDrivePaths = await SettingsService.GetRemovableDrivePaths();
 			Downmix = await SettingsService.GetDownmix();
-			//DropBoxIsDisabled = !DropBoxAuthStatus;
 
 			if (RemovableDrivePath == string.Empty) { UsbIsDisabled = true; }
             if (!DropBoxAuthStatus) { DropBoxIsDisabled = true; }
@@ -87,7 +85,7 @@ namespace HERE.Blazor.APP.Pages
         {
             await SettingsService.SetDropBoxCode(DropBoxCode);
 			DropBoxAuthStatus = await SettingsService.GetDropBoxAuthStatus();
-			DropBoxIsDisabled = false;
+			DropBoxIsDisabled = true;
 			PushToCloud = true;
 
 			NavigateToSettings();
@@ -105,11 +103,11 @@ namespace HERE.Blazor.APP.Pages
 		}
 		public async Task UnAuthorizeDropBoxAsync()
 		{
-			await SettingsService.UnAuthorizeDropBox();
 			NavigateToSettings();
 			DropBoxAuthStatus = false;
 			PushToCloud = false;
-			DropBoxIsDisabled = true;
+			DropBoxIsDisabled = false;
+			await SettingsService.UnAuthorizeDropBox();
 
 		}
 		void NavigateToSettings()

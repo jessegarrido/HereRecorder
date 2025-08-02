@@ -92,7 +92,7 @@ namespace HERE
 		}
 		public async Task<List<string>?> GetRemovableDrivePaths()
 		{
-			return await System.Text.Json.JsonSerializer.DeserializeAsync<List<string>>
+			return await System.Text.Json.JsonSerializer.DeserializeAsync<List<string>> 
 			// return OK(await _httpClient.GetStreamAsync($"api/getnormalized"))
 			(await _httpClient.GetStreamAsync($"api/removablepaths"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 		}

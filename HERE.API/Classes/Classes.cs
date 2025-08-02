@@ -284,7 +284,7 @@ namespace HERE
 			string os = await uiRepository.IdentifyOS();
 			var take = await _takeRepository.GetTakeByIdAsync(id);
 			Mp3TagSet tagSet = await _mp3TagSetRepository.GetActiveMp3TagSetAsync();
-			Console.WriteLine($"Converting {take.WavFilePath} to mp3 file");
+			Console.WriteLine($"Converting {take.WavFilePath} to mp3");
 			LoadLameDLL();
 			Thread.Sleep(1000);
 			ID3TagData tag = new()
@@ -469,7 +469,7 @@ namespace HERE
 		{
 			while (MyState != 1)
 			{
-				await Task.Delay(2000);
+				await Task.Delay(1000);
 			}
 			if (UIRepository.ShowVUMeter)
 			{
@@ -1386,7 +1386,7 @@ namespace HERE
 			Console.WriteLine("1 . Record/Pause\r\n2 . Play/Pause\r\n3 . Skip Back\r\n4 . Skip Forward\r\n0 . Reboot");
 
 			var recordingMeterTask = Task.Run(async () => { await audioRepository.RecordingMeterAsync(); });
-			var selection = GetValidUserSelection(new List<int> { 0, 1, 2, 3, 4 }); // 0=reboot,1=record,2=play,3=skipforward,4skipback
+			var selection = GetValidUserSelection(new List<int> { 1, 2 }); // 0=reboot,1=record,2=play,3=skipforward,4skipback
 			var myState = audioRepository.GetMyState();
 			await recordingMeterTask;
 			switch (selection)
@@ -1465,8 +1465,13 @@ namespace HERE
 							d.TotalSize);
 					}
 					_removableDrivePaths.Add(d.RootDirectory.ToString());
+					List<string> blacklistDrives = new List<string> { "/sys", "/boot", "/run" };
+					_removableDrivePaths = _removableDrivePaths.Where(item =>
+						!blacklistDrives.Any(prefix => item.StartsWith(prefix)) &&
+						item != "/")
+						.ToList();
 					Config.RemovableDrivePaths = _removableDrivePaths;
-					_removableDrivePath = d.RootDirectory.ToString(); // Pick the last found 
+					_removableDrivePath = _removableDrivePaths.LastOrDefault(); // Pick the last found 
 					Config.RemovableDrivePath = _removableDrivePath;
 					Console.WriteLine($"Removable Drive Path: {_removableDrivePath}");
 					Config.CopyToUsb = Config.RemovableDrivePath == null ? false : Config.CopyToUsb;
