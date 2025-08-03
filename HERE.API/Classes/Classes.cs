@@ -1,6 +1,7 @@
 ﻿using Dropbox.Api;
 using Dropbox.Api.Files;
 using HERE.API;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 using NAudio.Lame;
@@ -1438,51 +1439,60 @@ namespace HERE
 		public async Task<int> FindRemovableDrivesAsync(bool displayDetails)
 		{
 			Console.WriteLine("Inspect Removable Drives");
-			var drives = DriveInfo.GetDrives()
-			  .Where(drive => drive.IsReady && (drive.DriveType == DriveType.Removable || (drive.DriveType == DriveType.Fixed & _os != "Windows")));
-
-			Console.WriteLine($"Number of Drives found: {drives.Count()}");
-			if (drives.Count() > 0 && displayDetails == true)
+			List<string> drives = DriveInfo.GetDrives()
+			   .Where(drive => drive.IsReady && drive.DriveType == DriveType.Removable)
+			   .Select(drive => drive.Name)
+			   .ToList();
+			if (_os != "Windows")
 			{
-				foreach (DriveInfo d in drives)
+				drives.Clear();
+				//List<string> writableDrives = new List<string>();
+//				List<string> commonMountPoints = new List<string>{ $"/media/{Environment.UserName}/", $"/mnt/{Environment.UserName}/", "/media/", "/mnt/" };
+				List<string> commonMountPoints = new List<string> { $"/media/", "/mnt/" };
+
+				foreach (var directory in commonMountPoints)
 				{
-					Console.WriteLine("Drive {0}", d.Name);
-					Console.WriteLine("  Drive type: {0}", d.DriveType);
-					if (d.IsReady == true)
-					{
-						Console.WriteLine("  Volume label: {0}", d.VolumeLabel);
-						Console.WriteLine("  File system: {0}", d.DriveFormat);
-						Console.WriteLine(
-							"  Available space to current user:{0, 15} bytes",
-							d.AvailableFreeSpace);
-
-						Console.WriteLine(
-							"  Total available space:          {0, 15} bytes",
-							d.TotalFreeSpace);
-
-						Console.WriteLine(
-							"  Total size of drive:            {0, 15} bytes ",
-							d.TotalSize);
-					}
-					_removableDrivePaths.Add(d.RootDirectory.ToString());
-					List<string> blacklistDrives = new List<string> { "/sys", "/boot", "/run" };
-					_removableDrivePaths = _removableDrivePaths.Where(item =>
-						!blacklistDrives.Any(prefix => item.StartsWith(prefix)) &&
-						item != "/")
-						.ToList();
-					Config.RemovableDrivePaths = _removableDrivePaths;
-					_removableDrivePath = _removableDrivePaths.LastOrDefault(); // Pick the last found 
-					Config.RemovableDrivePath = _removableDrivePath;
-					Console.WriteLine($"Removable Drive Path: {_removableDrivePath}");
-					Config.CopyToUsb = Config.RemovableDrivePath == null ? false : Config.CopyToUsb;
-
-					Settings.Default.RemovableDrivePath = _removableDrivePath;
-					Config.CopyToUsb = (Settings.Default.CopyToUSB == "") ? true : false;
-					Settings.Default.Save();
-					Settings.Default.Reload();
+					if (Directory.Exists(directory))
+			//		{
+			//			Console.WriteLine($"Testing {mountPoint}");
+			//			foreach (var directory in Directory.GetDirectories(mountPoint))
+						{
+							Console.WriteLine($"Testing {directory}");
+							try
+							{
+								drives.AddRange(Directory.GetDirectories(directory));
+							}
+							catch (DirectoryNotFoundException)
+							{
+								Console.WriteLine($"Directory not found: {directory}");
+							}
+							catch (UnauthorizedAccessException)
+							{
+								Console.WriteLine($"No access to directory: {directory}");
+							}
+							catch (Exception ex)
+							{
+								Console.WriteLine($"Error accessing {directory}: {ex.Message}");
+							}
+						}
+					//}
 				}
-
 			}
+			Console.WriteLine($"Number of Drives found: {drives.Count()}");
+			_removableDrivePaths = drives;
+			Config.RemovableDrivePaths = _removableDrivePaths;
+			_removableDrivePath = _removableDrivePaths.LastOrDefault(); // Pick the last found 
+			Config.RemovableDrivePath = _removableDrivePath;
+			Console.WriteLine($"Removable Drive Path: {_removableDrivePath}");
+			Config.CopyToUsb = Config.RemovableDrivePath == null ? false : Config.CopyToUsb;
+
+			Settings.Default.RemovableDrivePath = _removableDrivePath;
+			Config.CopyToUsb = (Settings.Default.CopyToUSB == "") ? true : false;
+			Settings.Default.Save();
+			Settings.Default.Reload();
+			//	}
+
+		//	}
 			return drives.Count();
 		}
 		public string GetUSBDevicePath()
@@ -1719,27 +1729,38 @@ namespace HERE
 		{
 			var take = await _takeRepository.GetTakeByIdAsync(takeId);
 			var inPath = take.WavFilePath;
-
-			string newWavPath = Path.Combine(_removableDrivePath, "Here", _session);
-			string newMp3Path = Path.Combine(newWavPath, "mp3");
-			List<string> songfilepaths = new List<string> { newWavPath, newMp3Path };
-			foreach (string path in songfilepaths)
+			if (_removableDrivePath != null)
 			{
-				if (!Directory.Exists(path))
+				string newWavPath = Path.Combine(_removableDrivePath, "Here", _session);
+				string newMp3Path = Path.Combine(newWavPath, "mp3");
+				List<string> songfilepaths = new List<string> { newWavPath, newMp3Path };
+				foreach (string path in songfilepaths)
 				{
-					DirectoryInfo di = Directory.CreateDirectory(path);
-					if (_os != "Windows")
+					Console.WriteLine($"Checking path: {path}");
+					if (!Directory.Exists(path))
 					{
-						File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+						DirectoryInfo di = Directory.CreateDirectory(path);
+						if (_os != "Windows")
+						{
+							File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+						}
+						Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
 					}
-					Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
+				}
+				string newWavFile = Path.Combine(newWavPath, $"{take.Title}.wav");
+				string newMp3File = Path.Combine(newMp3Path, $"{take.Title}.mp3");
+				try
+				{
+					File.Copy(take.WavFilePath, newWavFile, true);
+					Console.WriteLine($"{newWavFile} copied to USB");
+					File.Copy(take.Mp3FilePath, newMp3File, true);
+					Console.WriteLine($"{newMp3File} copied to USB");
+				} 
+				catch
+				{
+					Console.WriteLine($"Copy To USB Fail");
 				}
 			}
-			string newWavFile = Path.Combine(newWavPath, $"{take.Title}.wav");
-			string newMp3File = Path.Combine(newMp3Path, $"{take.Title}.mp3");
-			File.Copy(take.WavFilePath, newWavFile, true);
-			File.Copy(take.Mp3FilePath, newMp3File, true);
-
 		}
 		public string GetNowPlaying()
 		{
