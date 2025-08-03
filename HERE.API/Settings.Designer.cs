@@ -133,7 +133,7 @@ namespace HERE.API {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public string CopyToUSB {
             get {
                 return ((string)(this["CopyToUSB"]));
