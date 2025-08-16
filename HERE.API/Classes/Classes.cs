@@ -1504,8 +1504,9 @@ namespace HERE
 			Config.RemovableDrivePath = _removableDrivePath;
 			Console.WriteLine($"Removable Drive Path: {_removableDrivePath}");
 			Config.CopyToUsb = Config.RemovableDrivePath == null ? false : Config.CopyToUsb;
+
 			Settings.Default.RemovableDrivePath = _removableDrivePath;
-			//Config.CopyToUsb = (Settings.Default.CopyToUSB == "") ? true : Settings.Default.CopyToUSB;
+			Config.CopyToUsb = (Settings.Default.CopyToUSB == "") ? true : false;
 			Settings.Default.Save();
 			Settings.Default.Reload();
 			//	}
