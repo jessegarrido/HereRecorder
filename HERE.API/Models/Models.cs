@@ -13,6 +13,7 @@ namespace HERE
 		public Task<bool> SaveChangesAsync();
 		public Task AddTakeAsync(Take take);
 		public Task<List<Take>> GetAllTakesAsync();
+		public Task<List<Take>> GetQueuedTakesAsync();
 		public void MarkNormalized(int id);
 
 		public void MarkMp3Created(int id);
@@ -67,6 +68,15 @@ namespace HERE
 				takes.Add(take);
 			List<Take> sortedTakes = takes.OrderByDescending(e => e.Created).ToList();
 			return sortedTakes;
+		}
+		public async Task<List<Take>> GetQueuedTakesAsync()
+		{
+			List<Take> takes = new();
+			foreach (Take take in _context.Takes)
+				takes.Add(take);
+			List<Take> queuedTakes = takes.Where(t => t.Queued).ToList();
+			queuedTakes = queuedTakes.OrderBy(t => t.Created).ToList();
+			return queuedTakes;
 		}
 		public async Task<TimeSpan> GetTakeDurationByIdAsync(int id)
 		{
@@ -394,6 +404,7 @@ namespace HERE
 		public float ChannelTwoInputPeak { get; set; } = 0;
 		public string WavFilePath { get; set; } = string.Empty;
 		public bool IsMono { get; set; } = false;
+		public bool Queued { get; set; } = true;
 		public string Mp3FilePath { get; set; } = string.Empty;
 		public bool Normalized { get; set; } = false;
 		public bool WasConvertedToMp3 { get; set; } = false;

@@ -19,7 +19,8 @@ namespace HERE
         public string FileName { get; set; } = string.Empty;
         public bool Normalized { get; set; }
         public bool IsMono { get; set; }
-        public bool WasConvertedToMp3 { get; set; }
+		public bool Queued { get; set; } 
+		public bool WasConvertedToMp3 { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Artist { get; set; } = string.Empty;
         public string Album { get; set; } = string.Empty;

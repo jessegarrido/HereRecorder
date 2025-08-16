@@ -9,6 +9,7 @@ using NAudio.Utils;
 using NAudio.Wave;
 using PortAudioSharp;
 using SimpleWifi;
+using SQLitePCL;
 using System.Data;
 //using Wifi.Linux;
 using System.Device.Gpio;
@@ -16,6 +17,7 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
+using static Dropbox.Api.Files.ListRevisionsMode;
 using Path = System.IO.Path;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
@@ -42,10 +44,12 @@ namespace HERE
 		public void SetMyState(int newState);
 		public Task RecordingMeterAsync();
 		public Task RemixAudioAsync(int takeId);
+		public Task PostProcessAudioAsync();
 	}
 	public class AudioRepository : IAudioRepository
 	{
 		private static int MyState { get; set; } = 0;
+		private static bool Postprocessing { get; set; } = false;
 		private TakeRepository _takeRepository = new TakeRepository();
 		private Mp3TagSetRepository _mp3TagSetRepository = new Mp3TagSetRepository();
 		//  private UIRepository _uiRepository = new UIRepository();
@@ -156,37 +160,53 @@ namespace HERE
 					}
 					Console.WriteLine("Recording Stopped.");
 
-				}
-				;
+				};
 			}
 			UIRepository.Takes++;
 			Settings.Default.Takes = UIRepository.Takes;
 			Settings.Default.Save();
 			var takeId = await AddNewTakeToDatabaseAsync(wavPathAndName, recordingStartTime);
-			Console.WriteLine("Starting postprocess");
-			var postProcessTask = Task.Run(async () => { await PostProcessAudioAsync(takeId); });
-			await postProcessTask;
+			Console.WriteLine("Added to Postprocess Queue");
+			if (!Postprocessing)
+			{
+				//var postProcessTask = Task.Run(async () => { await PostProcessAudioAsync(takeId); });
+				var postProcessTask = Task.Run(async () => { await PostProcessAudioAsync(); });
+				await postProcessTask;
+			}
 			await RecordingMeterAsync();
 		}
-		public async Task PostProcessAudioAsync(int takeId)
+		public async Task PostProcessAudioAsync()
 		{
-			await AnalyzeTakeAsync(takeId);
-			await RemixAudioAsync(takeId);
-			if (Config.Normalize)
-			{
-				await NormalizeTakeAsync(takeId);
-			}
-			await ConvertWavToMp3Async(takeId);
-			if (Config.CopyToUsb)
-			{
-				UIRepository uIRepository = new();
-				await uIRepository.CopyToUsb(takeId);
-			}
-			if (Config.PushToCloud)
-			{
-				NetworkRepository.DropBox db = new();
-				await db.PushToDropBoxAsync(takeId);
-			}
+			do {
+				var queuedTakesTask = _takeRepository.GetQueuedTakesAsync();
+				var queuedTakes = await queuedTakesTask;
+				if (queuedTakes.Count > 0)
+				{
+					Postprocessing = true;
+					int takeId = queuedTakes.First().Id;
+					Console.WriteLine($"Starting postprocess of Take {takeId}");
+					await AnalyzeTakeAsync(takeId);
+					await RemixAudioAsync(takeId);
+					if (Config.Normalize)
+					{
+						await NormalizeTakeAsync(takeId);
+					}
+					await ConvertWavToMp3Async(takeId);
+					if (Config.CopyToUsb)
+					{
+						UIRepository uIRepository = new();
+						await uIRepository.CopyToUsb(takeId);
+					}
+					if (Config.PushToCloud)
+					{
+						NetworkRepository.DropBox db = new();
+						await db.PushToDropBoxAsync(takeId);
+					}
+					var take = await _takeRepository.GetTakeByIdAsync(takeId);
+					take.Queued = false;
+					await _takeRepository.SaveChangesAsync();
+				} else { Postprocessing = false; }
+			} while (Postprocessing);
 		}
 		public async Task<int> AddNewTakeToDatabaseAsync(string wavPathAndName, DateTime startTime)
 		{
@@ -202,8 +222,7 @@ namespace HERE
 			using (WaveFileReader wf = new WaveFileReader(wavPathAndName))
 			{
 				newTake.Duration = wf.TotalTime;
-			}
-			;
+			};
 			await _takeRepository.AddTakeAsync(newTake);
 			return newTake.Id;
 		}
@@ -1562,6 +1581,7 @@ namespace HERE
 			audioRepository.AudioDeviceInitAndEnumerate(true);
 			Config.SelectedAudioDevice = Settings.Default.SelectedAudioDevice;
 			audioRepository.SetMyState(1);
+			await audioRepository.PostProcessAudioAsync();
 			if (_os == "Raspberry Pi")
 			{
 				_ = Task.Run(async () => { await GpioWatchAsync(); });
@@ -1728,6 +1748,7 @@ namespace HERE
 		{
 			var take = await _takeRepository.GetTakeByIdAsync(takeId);
 			var inPath = take.WavFilePath;
+			Console.WriteLine($"Removable Drive Path: {_removableDrivePath}");
 			if (_removableDrivePath != null)
 			{
 				string newWavPath = Path.Combine(_removableDrivePath, "Here", _session);
@@ -1738,12 +1759,19 @@ namespace HERE
 					Console.WriteLine($"Checking path: {path}");
 					if (!Directory.Exists(path))
 					{
-						DirectoryInfo di = Directory.CreateDirectory(path);
-						if (_os != "Windows")
+						try
 						{
-							File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+							DirectoryInfo di = Directory.CreateDirectory(path);
+							if (_os != "Windows")
+							{
+								File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+							}
+							Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
 						}
-						Console.WriteLine($"Directory {path} created at {Directory.GetCreationTime(newWavPath)}.");
+						catch
+						{
+							Console.WriteLine($"{path} already exists");
+						}
 					}
 				}
 				string newWavFile = Path.Combine(newWavPath, $"{take.Title}.wav");
@@ -1751,9 +1779,9 @@ namespace HERE
 				try
 				{
 					File.Copy(take.WavFilePath, newWavFile, true);
-					Console.WriteLine($"{newWavFile} copied to USB");
+					Console.WriteLine($"USB Save: {newWavFile}");
 					File.Copy(take.Mp3FilePath, newMp3File, true);
-					Console.WriteLine($"{newMp3File} copied to USB");
+					Console.WriteLine($"USB Save: {newMp3File}");
 				} 
 				catch
 				{
