@@ -14,10 +14,12 @@ using System.Data;
 //using Wifi.Linux;
 using System.Device.Gpio;
 using System.Diagnostics;
+using System.IO;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 using static Dropbox.Api.Files.ListRevisionsMode;
+using static Dropbox.Api.TeamLog.AdminConsoleAppPolicy;
 using Path = System.IO.Path;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
@@ -1466,36 +1468,52 @@ namespace HERE
 			{
 				drives.Clear();
 				//List<string> writableDrives = new List<string>();
-//				List<string> commonMountPoints = new List<string>{ $"/media/{Environment.UserName}/", $"/mnt/{Environment.UserName}/", "/media/", "/mnt/" };
+				//				List<string> commonMountPoints = new List<string>{ $"/media/{Environment.UserName}/", $"/mnt/{Environment.UserName}/", "/media/", "/mnt/" };
 				List<string> commonMountPoints = new List<string> { $"/media/", "/mnt/" };
 
 				foreach (var directory in commonMountPoints)
 				{
 					if (Directory.Exists(directory))
-			//		{
-			//			Console.WriteLine($"Testing {mountPoint}");
-			//			foreach (var directory in Directory.GetDirectories(mountPoint))
+					{
+						//			Console.WriteLine($"Testing {mountPoint}");
+						//			foreach (var directory in Directory.GetDirectories(mountPoint))
+
+						Console.WriteLine($"Testing {directory}");
+						try
 						{
-							Console.WriteLine($"Testing {directory}");
-							try
-							{
-								drives.AddRange(Directory.GetDirectories(directory));
-							}
-							catch (DirectoryNotFoundException)
-							{
-								Console.WriteLine($"Directory not found: {directory}");
-							}
-							catch (UnauthorizedAccessException)
-							{
-								Console.WriteLine($"No access to directory: {directory}");
-							}
-							catch (Exception ex)
-							{
-								Console.WriteLine($"Error accessing {directory}: {ex.Message}");
-							}
+							drives.AddRange(Directory.GetDirectories(directory));
 						}
-					//}
+						catch (DirectoryNotFoundException)
+						{
+							Console.WriteLine($"Directory not found: {directory}");
+						}
+						catch (UnauthorizedAccessException)
+						{
+							Console.WriteLine($"No access to directory: {directory}");
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine($"Error accessing {directory}: {ex.Message}");
+						}
+					}
 				}
+				string? block = null;
+				foreach (var drive in drives)
+				{
+					try
+					{
+						string drivepath = Path.Combine(drive, "cmdline.txt");
+						Console.WriteLine($"Checking {drivepath} for pi Root");
+						if (File.Exists(drivepath))   //ignore raspberry pi root drives
+						{
+							block = drive;
+							Console.WriteLine($"Removing {drive} from list");
+						}
+					}
+					catch (Exception) { }
+
+				}
+				if (block != null) { drives.Remove(block); }
 			}
 			Console.WriteLine($"Number of Drives found: {drives.Count()}");
 			_removableDrivePaths = drives;
