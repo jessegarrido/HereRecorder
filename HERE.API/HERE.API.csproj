@@ -1,27 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Dropbox.Api" Version="7.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="NAudio.Lame.CrossPlatform" Version="2.2.1" />
     <PackageReference Include="PortAudioSharp2" Version="1.0.4" />
+    <PackageReference Include="ppy.SDL2-CS" Version="1.0.741-alpha" />
     <PackageReference Include="SimpleWifi.netstandard" Version="2.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.6" />
     <PackageReference Include="System.Device.Gpio" Version="4.0.1" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Update="Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -29,7 +24,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
-
   <ItemGroup>
     <Content Update="C:\Users\Jesse\.nuget\packages\naudio.lame.crossplatform\2.2.1\contentFiles\any\net8.0\libmp3lame.32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -38,12 +32,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
   <ItemGroup>
     <None Update="Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-
 </Project>

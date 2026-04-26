@@ -45,11 +45,12 @@ namespace HERE
 		{
 			StreamParameters param = new StreamParameters();
 			DeviceInfo info = PortAudio.GetDeviceInfo(Config.SelectedAudioDevice);
+			//param.device = "plughw:0,13";
 			param.device = Config.SelectedAudioDevice;
 			param.channelCount = 2;
 			param.sampleFormat = SampleFormat.Float32;
 			//param.suggestedLatency = info.defaultLowInputLatency;
-			param.suggestedLatency = .9;
+			param.suggestedLatency = .1;
 			param.hostApiSpecificStreamInfo = nint.Zero;
 			return param;
 		}

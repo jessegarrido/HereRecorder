@@ -1,0 +1,12 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-api",
+            "command": "dotnet",
+            "type": "process",
+            "args": ["build", "${workspaceFolder}/HERE.API/HERE.API.csproj"],
+            "problemMatcher": "$msCompile"
+        }   ]
+}
+

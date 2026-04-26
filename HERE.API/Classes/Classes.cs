@@ -21,6 +21,7 @@ using System.Text;
 using static Dropbox.Api.Files.ListRevisionsMode;
 using static Dropbox.Api.TeamLog.AdminConsoleAppPolicy;
 using Path = System.IO.Path;
+using SDL2;
 //using static Dropbox.Api.TeamLog.SharedLinkAccessLevel;
 
 
@@ -75,9 +76,10 @@ namespace HERE
 					Console.WriteLine($"   Name: {deviceInfo.name}");
 					Console.WriteLine($"   Max input channels: {deviceInfo.maxInputChannels}");
 					Console.WriteLine($"   Default sample rate: {deviceInfo.defaultSampleRate}");
-					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && deviceInfo.name.ToString() == "pulse")
+					//if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && deviceInfo.name.ToString() == "pulse")
+					if (deviceInfo.name.ToString() == "pulse" || deviceInfo.name.ToString() == "pipewire")
 					{
-						Settings.Default.SelectedAudioDevice = i; // select pulse audio device if not on windows
+						Settings.Default.SelectedAudioDevice = i; // select pulse or pipewire audio devices for linux
 						Settings.Default.Save();
 					}
 				}
@@ -545,85 +547,190 @@ namespace HERE
 				}
 			}
 		}
+
 		public class PlaybackQueue
 		{
 			private Queue<string>? playlist;
-			private IWavePlayer player;
+			//private IWavePlayer player;
 			private WaveStream fileWaveStream;
+		    private static AudioFileReader? _reader;
+		    private static byte[] _buffer = new byte[8192];
+    		private static readonly object _lock = new();
 
 			public PlaybackQueue(IEnumerable<string> startingPlaylist)
 			{
 				playlist = new Queue<string?>(startingPlaylist);
 
 			}
-			public async Task PlayATakeAsync(CancellationToken ct)
-			{
-				if (fileWaveStream != null)
-				{
-					fileWaveStream.Dispose();
-				}
-				if (playlist == null)
-				{
-					return;
-				}
-				if (playlist.Count > 0)
-				{
-					UIRepository uIRepository = new();
-					uIRepository.SetNowPlaying(playlist.Peek());
-				}
-				else
-				{
-					playlist = null;
-					return;
-				}
-				if (player != null && player.PlaybackState != PlaybackState.Stopped)
-				{
-					player.Stop();
-				}
-				if (player != null)
-				{
-					player.Dispose();
-					player = null;
-				}
-				MyState = 3;
-				List<string> PlaybackQueue = new();
-				using (player = new WaveOutEvent())
-				{
-					Console.WriteLine($"Now playing ");
-					fileWaveStream = new AudioFileReader(playlist.Dequeue());
-					player.Init(fileWaveStream);
-					player.PlaybackStopped += async (sender, evn) => { MyState = 1; await PlayATakeAsync(ct); };
-					player.Play();
-					do
-					{
-						await Task.Delay(1000);
-					} while (MyState == 3);
-					PlaybackQueue = playlist.ToList();
-					Console.WriteLine("Playback stopped");
-					if (playlist != null)
-					{
-						playlist.Clear();
-						playlist = null;
-					}
+		    public async Task PlayATakeAsync(CancellationToken ct, Queue<string> playlist)
+    		{
+        		if (playlist == null || playlist.Count == 0)
+            	return;
 
-					if (fileWaveStream != null)
-					{
-						fileWaveStream.Dispose();
-					}
-					if (player != null)
-					{
-						if (player.PlaybackState != PlaybackState.Stopped)
-						{
-							player.Stop();
-						}
-						player.Dispose();
-						player = null;
-					}
+		        UIRepository ui = new();
+        		ui.SetNowPlaying(playlist.Peek());
+
+        		var file = playlist.Dequeue();
+
+        		_reader = new AudioFileReader(file);
+
+        		int sampleRate = _reader.WaveFormat.SampleRate;
+        		int channels = _reader.WaveFormat.Channels;
+
+       			SDL.SDL_Init(SDL.SDL_INIT_AUDIO);
+
+     		    SDL.SDL_AudioSpec desired = new SDL.SDL_AudioSpec
+     	 	    {
+     		       freq = sampleRate,
+      		      format = SDL.AUDIO_F32SYS,
+        		    channels = (byte)channels,
+         		   samples = 1024,
+          		  callback = AudioCallback,
+          		  userdata = IntPtr.Zero
+      			};
+
+     		    SDL.SDL_AudioSpec obtained;
+
+      		    int device = (int)SDL.SDL_OpenAudioDevice(
+         	    	null,
+         	    	0,
+         	    	ref desired,
+         	    	out obtained,
+        	    	0);
+
+      		    if (device == 0)
+      	      		throw new Exception(SDL.SDL_GetError());
+
+    		  	SDL.SDL_PauseAudioDevice((uint)device, 0);
+
+        	  	try
+  	      	  	{
+    	          MyState = 3;
+
+        	      // Wait until playback finishes or cancellation requested
+            	  while (!ct.IsCancellationRequested)
+            	  {
+                	if (_reader.Position >= _reader.Length)
+                    break;
+	                await Task.Delay(500);
+    		      }
+        		}
+        		finally
+        		{
+            		SDL.SDL_CloseAudioDevice((uint)device);
+            		_reader.Dispose();
+            		_reader = null;
+
+            		SDL.SDL_Quit();
+       			}
+
+        		MyState = 1;
+
+        		// continue playlist
+        		if (playlist.Count > 0)
+        		{
+            		await PlayATakeAsync(ct, playlist);
+        		}
+        		else
+        		{
+            		playlist.Clear();
+        		}
+    		}
+
+private static void AudioCallback(IntPtr userdata, IntPtr stream, int len)
+{
+    if (MyState == 1 || _reader == null)
+    {
+        byte[] silence = new byte[len];
+        Marshal.Copy(silence, 0, stream, len);
+        return;
+    }
+
+    int samplesNeeded = len / sizeof(float);
+    float[] buffer = new float[samplesNeeded];
+
+    int read = _reader.Read(buffer, 0, samplesNeeded);
+
+    if (read <= 0)
+    {
+        MyState = 1;
+        byte[] silence = new byte[len];
+        Marshal.Copy(silence, 0, stream, len);
+        return;
+    }
+
+    Marshal.Copy(buffer, 0, stream, read);
+}
+	//}
+          	// public async Task PlayATakeAsync(CancellationToken ct)
+			// {
+			// 	if (fileWaveStream != null)
+			// 	{
+			// 		fileWaveStream.Dispose();
+			// 	}
+			// 	if (playlist == null)
+			// 	{
+			// 		return;
+			// 	}
+			// 	if (playlist.Count > 0)
+			// 	{
+			// 		UIRepository uIRepository = new();
+			// 		uIRepository.SetNowPlaying(playlist.Peek());
+			// 	}
+			// 	else
+			// 	{
+			// 		playlist = null;
+			// 		return;
+			// 	}
+			// 	if (player != null && player.PlaybackState != PlaybackState.Stopped)
+			// 	{
+			// 		player.Stop();
+			// 	}
+			// 	if (player != null)
+			// 	{
+			// 		player.Dispose();
+			// 		player = null;
+			// 	}
+			// 	MyState = 3;
+			// 	List<string> PlaybackQueue = new();
+			// 	using (player = new WaveOutEvent())
+			// 	{
+			// 		Console.WriteLine($"Now playing ");
+			// 		fileWaveStream = new AudioFileReader(playlist.Dequeue());
+			// 		player.Init(fileWaveStream);
+			// 		player.PlaybackStopped += async (sender, evn) => { MyState = 1; await PlayATakeAsync(ct); };
+			// 		player.Play();
+			// 		do
+			// 		{
+			// 			await Task.Delay(1000);
+			// 		} while (MyState == 3);
+			// 		PlaybackQueue = playlist.ToList();
+			// 		Console.WriteLine("Playback stopped");
+			// 		if (playlist != null)
+			// 		{
+			// 			playlist.Clear();
+			// 			playlist = null;
+			// 		}
+
+			// 		if (fileWaveStream != null)
+			// 		{
+			// 			fileWaveStream.Dispose();
+			// 		}
+			// 		if (player != null)
+			// 		{
+			// 			if (player.PlaybackState != PlaybackState.Stopped)
+			// 			{
+			// 				player.Stop();
+			// 			}
+			// 			player.Dispose();
+			// 			player = null;
+			// 		}
 
 
-				}
-				//  Global.NowPlayingFileName = player.ToString();
-			}
+			// 	}
+			// 	//  Global.NowPlayingFileName = player.ToString();
+			// }
+		//}
 		}
 		public async Task PlaybackAudioAsync(List<string> origPlaylist)
 		{
@@ -633,7 +740,9 @@ namespace HERE
 			if (_os == "Linux") { await ioRepository.TurnOnLEDAsync(Config.GreenLED); }
 			;
 			var playbackQueue = new PlaybackQueue(origPlaylist);
-			await playbackQueue.PlayATakeAsync(tokenSource.Token);
+			var queue = new Queue<string>(origPlaylist);
+			await playbackQueue.PlayATakeAsync(tokenSource.Token, queue);
+			//await playbackQueue.PlayATakeAsync(tokenSource.Token,origPlaylist);
 
 			while (MyState == 3)
 			{
